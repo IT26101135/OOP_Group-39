@@ -1,0 +1,27 @@
+# Maven build output
+/target/
+
+# IntelliJ local settings
+/.idea/
+*.iml
+/out/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+/src/main/resources/application-local.properties
+/src/main/resources/application-local.yml
+/src/main/resources/application-local.yaml
+
+# Runtime records: preserve only the folder placeholder
+/data/*
+!/data/.gitkeep
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Operating system files
+.DS_Store
+Thumbs.db
