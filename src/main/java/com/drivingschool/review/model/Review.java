@@ -1,9 +1,10 @@
 package com.drivingschool.review.model;
 
+import com.drivingschool.common.model.Identifiable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Review {
+public class Review implements Identifiable {
 
     private final String id;
     private final String studentId;
