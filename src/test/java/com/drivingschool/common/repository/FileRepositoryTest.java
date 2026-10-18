@@ -257,4 +257,61 @@ class FileRepositoryTest {
                 )
         );
     }
+
+    @Test
+    void strictReadsReturnValidRecordsAndEmptyForMissingId() {
+        TestRepository repository = new TestRepository(directory);
+
+        repository.save(
+                new TestRecord(repository.nextId("S"), "Sample student")
+        );
+
+        assertEquals(1, repository.readAllStrict().size());
+
+        assertEquals(
+                "Sample student",
+                repository.findByIdStrict("S001")
+                        .orElseThrow()
+                        .getName()
+        );
+
+        assertTrue(repository.findByIdStrict("S002").isEmpty());
+    }
+
+    @Test
+    void strictLookupRejectsCorruptionEvenWhenRequestedRecordExists()
+            throws Exception {
+
+        TestRepository repository = new TestRepository(directory);
+
+        repository.save(
+                new TestRecord(repository.nextId("S"), "Sample student")
+        );
+
+        Path file = directory.resolve("test-records.txt");
+
+        Files.writeString(
+                file,
+                "broken-json\n",
+                StandardOpenOption.APPEND
+        );
+
+        String before = Files.readString(file);
+
+        // Ordinary reads can still return the valid record.
+        assertEquals(1, repository.readAll().size());
+
+        // Strict reads must reject the incomplete file.
+        assertThrows(
+                StorageException.class,
+                () -> repository.readAllStrict()
+        );
+
+        assertThrows(
+                StorageException.class,
+                () -> repository.findByIdStrict("S001")
+        );
+
+        assertEquals(before, Files.readString(file));
+    }
 }

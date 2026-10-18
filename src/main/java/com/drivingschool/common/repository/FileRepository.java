@@ -106,6 +106,30 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    /**
+     * Reads all records, but fails if any non-blank record is invalid.
+     * Use for safety checks that require complete information.
+     */
+    public List<T> readAllStrict() {
+        synchronized (STORAGE_LOCK) {
+            return readRecords(true);
+        }
+    }
+
+    /**
+     * Finds a record only after verifying that the entire file is readable
+     * without invalid records.
+     */
+    public Optional<T> findByIdStrict(String id) {
+        validateId(id);
+
+        synchronized (STORAGE_LOCK) {
+            return readRecords(true).stream()
+                    .filter(record -> id.equals(record.getId()))
+                    .findFirst();
+        }
+    }
+
     public void save(T record) {
         validateRecord(record);
 
