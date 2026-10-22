@@ -1,5 +1,9 @@
 package com.drivingschool.review.model;
 
+import com.drivingschool.common.exception.ValidationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -20,6 +24,22 @@ class ReviewTest {
                 ReviewStatus.PENDING,
                 createdAt,
                 createdAt
+        );
+    }
+
+    private ObjectMapper objectMapper() {
+        return new ObjectMapper().registerModule(new JavaTimeModule());
+    }
+
+    private Review createReviewWithStatus(ReviewStatus status) {
+        return new Review(
+                "R001",
+                "S001",
+                5,
+                "Excellent driving school",
+                status,
+                createdAt,
+                createdAt.plusHours(1)
         );
     }
 
@@ -49,7 +69,7 @@ class ReviewTest {
     @Test
     void rejectsRatingBelowOne() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(0, "Good service")
         );
     }
@@ -57,7 +77,7 @@ class ReviewTest {
     @Test
     void rejectsRatingAboveFive() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(6, "Good service")
         );
     }
@@ -84,7 +104,7 @@ class ReviewTest {
     @Test
     void rejectsCommentWithNineCharactersAfterTrimming() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(4, "  123456789  ")
         );
     }
@@ -92,7 +112,7 @@ class ReviewTest {
     @Test
     void rejectsCommentWithOneThousandAndOneCharacters() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(4, "a".repeat(1001))
         );
     }
@@ -100,7 +120,7 @@ class ReviewTest {
     @Test
     void rejectsNullComment() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(4, null)
         );
     }
@@ -108,7 +128,7 @@ class ReviewTest {
     @Test
     void rejectsBlankComment() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> createReview(4, "          ")
         );
     }
@@ -116,7 +136,7 @@ class ReviewTest {
     @Test
     void rejectsNullStatus() {
         assertThrows(
-                NullPointerException.class,
+                ValidationException.class,
                 () -> new Review(
                         "R001", "S001", 4, "Good service",
                         null, createdAt, createdAt
@@ -125,31 +145,9 @@ class ReviewTest {
     }
 
     @Test
-    void rejectsBlankId() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new Review(
-                        " ", "S001", 4, "Good service",
-                        ReviewStatus.PENDING, createdAt, createdAt
-                )
-        );
-    }
-
-    @Test
-    void rejectsBlankStudentId() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new Review(
-                        "R001", " ", 4, "Good service",
-                        ReviewStatus.PENDING, createdAt, createdAt
-                )
-        );
-    }
-
-    @Test
     void rejectsNullCreatedAt() {
         assertThrows(
-                NullPointerException.class,
+                ValidationException.class,
                 () -> new Review(
                         "R001", "S001", 4, "Good service",
                         ReviewStatus.PENDING, null, createdAt
@@ -160,7 +158,7 @@ class ReviewTest {
     @Test
     void rejectsNullUpdatedAt() {
         assertThrows(
-                NullPointerException.class,
+                ValidationException.class,
                 () -> new Review(
                         "R001", "S001", 4, "Good service",
                         ReviewStatus.PENDING, createdAt, null
@@ -169,15 +167,117 @@ class ReviewTest {
     }
 
     @Test
+    void acceptsValidReviewIdAndStudentIdFormats() {
+        assertDoesNotThrow(() -> new Review(
+                "R001", "S001", 4, "Good service",
+                ReviewStatus.PENDING, createdAt, createdAt
+        ));
+
+        assertDoesNotThrow(() -> new Review(
+                "R999", "S999", 4, "Good service",
+                ReviewStatus.PENDING, createdAt, createdAt
+        ));
+    }
+
+    @Test
+    void rejectsInvalidReviewIds() {
+        String[] invalidIds = {"R000", "R01", "R1000", "abc", " R001"};
+
+        for (String id : invalidIds) {
+            assertThrows(
+                    ValidationException.class,
+                    () -> new Review(
+                            id, "S001", 4, "Good service",
+                            ReviewStatus.PENDING, createdAt, createdAt
+                    ),
+                    "Expected invalid review ID to be rejected: " + id
+            );
+        }
+    }
+
+    @Test
+    void rejectsInvalidStudentIds() {
+        String[] invalidIds = {"S000", "S01", "S1000", "abc", "V001", " S001"};
+
+        for (String studentId : invalidIds) {
+            assertThrows(
+                    ValidationException.class,
+                    () -> new Review(
+                            "R001", studentId, 4, "Good service",
+                            ReviewStatus.PENDING, createdAt, createdAt
+                    ),
+                    "Expected invalid student ID to be rejected: " + studentId
+            );
+        }
+    }
+
+    @Test
     void rejectsUpdatedAtEarlierThanCreatedAt() {
         LocalDateTime earlier = createdAt.minusMinutes(1);
 
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new Review(
                         "R001", "S001", 4, "Good service",
                         ReviewStatus.PENDING, createdAt, earlier
                 )
+        );
+    }
+
+    @Test
+    void jsonRoundTripPreservesAllSevenFields() throws Exception {
+        ObjectMapper mapper = objectMapper();
+        Review original = createReviewWithStatus(ReviewStatus.PENDING);
+
+        String json = mapper.writeValueAsString(original);
+        Review restored = mapper.readValue(json, Review.class);
+
+        assertEquals(original.getId(), restored.getId());
+        assertEquals(original.getStudentId(), restored.getStudentId());
+        assertEquals(original.getRating(), restored.getRating());
+        assertEquals(original.getComment(), restored.getComment());
+        assertEquals(original.getStatus(), restored.getStatus());
+        assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+        assertEquals(original.getUpdatedAt(), restored.getUpdatedAt());
+    }
+
+    @Test
+    void jsonCanReconstructApprovedAndHiddenReviews() throws Exception {
+        ObjectMapper mapper = objectMapper();
+
+        for (ReviewStatus status : new ReviewStatus[]{
+                ReviewStatus.APPROVED, ReviewStatus.HIDDEN
+        }) {
+            Review original = createReviewWithStatus(status);
+            String json = mapper.writeValueAsString(original);
+            Review restored = mapper.readValue(json, Review.class);
+
+            assertEquals(status, restored.getStatus());
+            assertEquals(original.getId(), restored.getId());
+            assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+            assertEquals(original.getUpdatedAt(), restored.getUpdatedAt());
+        }
+    }
+
+    @Test
+    void jsonDeserializationRejectsInvalidStoredReview() throws Exception {
+        ObjectMapper mapper = objectMapper();
+
+        String invalidJson = """
+                {
+                  "id": "R000",
+                  "studentId": "S001",
+                  "rating": 4,
+                  "comment": "Good service",
+                  "status": "PENDING",
+                  "createdAt": "2026-10-18T10:00:00",
+                  "updatedAt": "2026-10-18T10:00:00"
+                }
+                """;
+
+        assertThrows(
+                JsonMappingException.class,
+                () -> mapper.readValue(invalidJson, Review.class)
         );
     }
 
@@ -198,6 +298,34 @@ class ReviewTest {
     }
 
     @Test
+    void ratingOnlyUpdateChangesRating() {
+        Review review = createReview(4, "Good service");
+        LocalDateTime editedAt = createdAt.plusHours(1);
+
+        boolean changed = review.updateContent(5, "Good service", editedAt);
+
+        assertTrue(changed);
+        assertEquals(5, review.getRating());
+        assertEquals("Good service", review.getComment());
+        assertEquals(editedAt, review.getUpdatedAt());
+    }
+
+    @Test
+    void commentOnlyUpdateChangesComment() {
+        Review review = createReview(4, "Good service");
+        LocalDateTime editedAt = createdAt.plusHours(1);
+
+        boolean changed = review.updateContent(
+                4, "Excellent driving school", editedAt
+        );
+
+        assertTrue(changed);
+        assertEquals(4, review.getRating());
+        assertEquals("Excellent driving school", review.getComment());
+        assertEquals(editedAt, review.getUpdatedAt());
+    }
+
+    @Test
     void unchangedContentDoesNotChangeTimestamp() {
         Review review = createReview(4, "Good service");
         LocalDateTime later = createdAt.plusHours(1);
@@ -211,16 +339,72 @@ class ReviewTest {
     }
 
     @Test
-    void rejectsEditTimeEarlierThanUpdatedAt() {
+    void invalidRatingUpdateLeavesStateUnchanged() {
+        assertInvalidUpdateLeavesStateUnchanged(
+                0, "Excellent driving school", createdAt.plusHours(1)
+        );
+    }
+
+    @Test
+    void invalidCommentUpdateLeavesStateUnchanged() {
+        assertInvalidUpdateLeavesStateUnchanged(
+                5, "short", createdAt.plusHours(1)
+        );
+    }
+
+    @Test
+    void nullChangeTimeLeavesStateUnchanged() {
+        assertInvalidUpdateLeavesStateUnchanged(
+                5, "Excellent driving school", null
+        );
+    }
+
+    @Test
+    void backwardsTimestampAfterLastEditLeavesStateUnchanged() {
         Review review = createReview(4, "Good service");
+        LocalDateTime firstEdit = createdAt.plusHours(2);
+        LocalDateTime backwardsTime = createdAt.plusHours(1);
+
+        review.updateContent(5, "Excellent driving school", firstEdit);
 
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> review.updateContent(
-                        5,
-                        "Excellent driving school",
-                        createdAt.minusMinutes(1)
+                        3, "Needs improvement in lessons", backwardsTime
                 )
         );
+
+        assertEquals(5, review.getRating());
+        assertEquals("Excellent driving school", review.getComment());
+        assertEquals(ReviewStatus.PENDING, review.getStatus());
+        assertEquals(createdAt, review.getCreatedAt());
+        assertEquals(firstEdit, review.getUpdatedAt());
+    }
+
+    private void assertInvalidUpdateLeavesStateUnchanged(
+            int newRating,
+            String newComment,
+            LocalDateTime changeTime) {
+
+        Review review = createReview(4, "Good service");
+
+        int originalRating = review.getRating();
+        String originalComment = review.getComment();
+        ReviewStatus originalStatus = review.getStatus();
+        LocalDateTime originalCreatedAt = review.getCreatedAt();
+        LocalDateTime originalUpdatedAt = review.getUpdatedAt();
+
+        assertThrows(
+                ValidationException.class,
+                () -> review.updateContent(
+                        newRating, newComment, changeTime
+                )
+        );
+
+        assertEquals(originalRating, review.getRating());
+        assertEquals(originalComment, review.getComment());
+        assertEquals(originalStatus, review.getStatus());
+        assertEquals(originalCreatedAt, review.getCreatedAt());
+        assertEquals(originalUpdatedAt, review.getUpdatedAt());
     }
 }

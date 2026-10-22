@@ -1,8 +1,11 @@
 package com.drivingschool.review.model;
 
+import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.common.model.Identifiable;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 public class Review implements Identifiable {
 
@@ -16,46 +19,43 @@ public class Review implements Identifiable {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @JsonCreator
     public Review(
-            String id,
-            String studentId,
-            int rating,
-            String comment,
-            ReviewStatus status,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            @JsonProperty("id") String id,
+            @JsonProperty("studentId") String studentId,
+            @JsonProperty("rating") int rating,
+            @JsonProperty("comment") String comment,
+            @JsonProperty("status") ReviewStatus status,
+            @JsonProperty("createdAt") LocalDateTime createdAt,
+            @JsonProperty("updatedAt") LocalDateTime updatedAt) {
 
-        this.id = validateId(id, "id");
-        this.studentId = validateId(studentId, "studentId");
+        this.id = validateId(id, "R");
+        this.studentId = validateId(studentId, "S");
         validateRating(rating);
 
         this.rating = rating;
         this.comment = validateComment(comment);
-
-        this.status = Objects.requireNonNull(
-                status, "status cannot be null");
-
-        this.createdAt = Objects.requireNonNull(
-                createdAt, "createdAt cannot be null");
-
-        this.updatedAt = Objects.requireNonNull(
-                updatedAt, "updatedAt cannot be null");
+        this.status = requireValue(status, "status");
+        this.createdAt = requireValue(createdAt, "createdAt");
+        this.updatedAt = requireValue(updatedAt, "updatedAt");
 
         if (updatedAt.isBefore(createdAt)) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "updatedAt cannot be earlier than createdAt");
         }
     }
 
-    private static String validateId(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    fieldName + " cannot be null or blank");
+    private static String validateId(String value, String prefix) {
+        if (value == null || !value.matches(prefix + "[0-9]{3}")) {
+            throw new ValidationException(
+                    "ID must match " + prefix + "001 to " + prefix + "999");
         }
 
-        if (!value.equals(value.trim())) {
-            throw new IllegalArgumentException(
-                    fieldName + " cannot contain surrounding whitespace");
+        int number = Integer.parseInt(value.substring(1));
+
+        if (number < 1 || number > 999) {
+            throw new ValidationException(
+                    "ID number must be between 001 and 999");
         }
 
         return value;
@@ -63,27 +63,35 @@ public class Review implements Identifiable {
 
     private static void validateRating(int rating) {
         if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "rating must be between 1 and 5");
         }
     }
 
     private static String validateComment(String comment) {
         if (comment == null) {
-            throw new IllegalArgumentException(
-                    "comment cannot be null");
+            throw new ValidationException("comment cannot be null");
         }
 
         String trimmed = comment.trim();
 
         if (trimmed.length() < 10 || trimmed.length() > 1000) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "comment must contain 10 to 1000 characters");
         }
 
         return trimmed;
     }
 
+    private static <T> T requireValue(T value, String fieldName) {
+        if (value == null) {
+            throw new ValidationException(fieldName + " cannot be null");
+        }
+
+        return value;
+    }
+
+    @Override
     public String getId() {
         return id;
     }
@@ -119,13 +127,11 @@ public class Review implements Identifiable {
 
         validateRating(newRating);
         String trimmedComment = validateComment(newComment);
-
-        Objects.requireNonNull(
-                changeTime, "changeTime cannot be null");
+        requireValue(changeTime, "changeTime");
 
         if (changeTime.isBefore(createdAt)
                 || changeTime.isBefore(updatedAt)) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "changeTime cannot be earlier than existing timestamps");
         }
 
