@@ -6,11 +6,24 @@ import com.drivingschool.common.model.Identifiable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.Email;
+
 public class Instructor implements Identifiable {
+
+    private static final Validator EMAIL_VALIDATOR =
+            Validation.buildDefaultValidatorFactory().getValidator();
 
     private final String id;
     private String name;
+
+    @Email(regexp =
+            "^[A-Za-z0-9_+%-]+(?:\\.[A-Za-z0-9_+%-]+)*" +
+                    "@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?" +
+                    "(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$")
     private String email;
+
     private String phone;
     private int yearsOfExperience;
     private boolean active;
@@ -21,8 +34,10 @@ public class Instructor implements Identifiable {
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "email", required = true) String email,
             @JsonProperty(value = "phone", required = true) String phone,
-            @JsonProperty(value = "yearsOfExperience", required = true) Integer yearsOfExperience,
-            @JsonProperty(value = "active", required = true) Boolean active) {
+            @JsonProperty(value = "yearsOfExperience", required = true)
+            Integer yearsOfExperience,
+            @JsonProperty(value = "active", required = true)
+            Boolean active) {
 
         if (id == null || !id.matches("I(?!000)[0-9]{3}")) {
             throw new ValidationException(
@@ -30,6 +45,7 @@ public class Instructor implements Identifiable {
         }
 
         this.id = id;
+
         setName(name);
         setEmail(email);
         setPhone(phone);
@@ -38,12 +54,14 @@ public class Instructor implements Identifiable {
             throw new ValidationException(
                     "Years of experience is required.");
         }
+
         setYearsOfExperience(yearsOfExperience);
 
         if (active == null) {
             throw new ValidationException(
                     "Instructor active status is required.");
         }
+
         setActive(active);
     }
 
@@ -84,8 +102,15 @@ public class Instructor implements Identifiable {
 
         String cleaned = email.trim();
 
-        if (cleaned.length() > 254 ||
-                !cleaned.matches("^[^\\s@]+@[^\\s@.]+(\\.[^\\s@.]+)+$")) {
+        if (cleaned.isEmpty()
+                || cleaned.length() > 254
+                || !EMAIL_VALIDATOR
+                .validateValue(
+                        Instructor.class,
+                        "email",
+                        cleaned)
+                .isEmpty()) {
+
             throw new ValidationException(
                     "Enter a valid instructor email address.");
         }
@@ -107,7 +132,8 @@ public class Instructor implements Identifiable {
 
         if (!cleaned.matches("\\+?[0-9]{7,15}")) {
             throw new ValidationException(
-                    "Phone number must contain 7 to 15 digits, optionally starting with +.");
+                    "Phone number must contain 7 to 15 digits, "
+                            + "optionally starting with +.");
         }
 
         this.phone = cleaned;
@@ -133,6 +159,5 @@ public class Instructor implements Identifiable {
     public void setActive(boolean active) {
         this.active = active;
     }
-
 
 }
