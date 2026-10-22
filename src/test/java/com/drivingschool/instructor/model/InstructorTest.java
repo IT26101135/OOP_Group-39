@@ -335,4 +335,103 @@ class InstructorTest {
     }
 
 
+@Test
+void shouldRejectMalformedEmailAddresses() {
+
+    String[] invalidEmails = {
+            ".name@example.com",
+            "name..surname@example.com",
+            "name@example!.com"
+    };
+
+    for (String email : invalidEmails) {
+        assertThrows(
+                ValidationException.class,
+                () -> new Instructor(
+                        "I019", "Kumar Silva", email,
+                        "0771234567", 5, true
+                )
+        );
+    }
+}
+
+@Test
+void shouldAcceptValidEmailsAndPreserveFailedUpdate() {
+
+    Instructor instructor = new Instructor(
+            "I020", "Kumar Silva",
+            "  kumar.silva@example.com  ",
+            "0771234567", 5, true
+    );
+
+    assertEquals(
+            "kumar.silva@example.com",
+            instructor.getEmail()
+    );
+
+    instructor.setEmail("  kumar+lessons@example.com  ");
+
+    assertEquals(
+            "kumar+lessons@example.com",
+            instructor.getEmail()
+    );
+
+    assertThrows(
+            ValidationException.class,
+            () -> instructor.setEmail("name..surname@example.com")
+    );
+
+    assertEquals(
+            "kumar+lessons@example.com",
+            instructor.getEmail()
+    );
+}
+
+@Test
+void shouldRejectNullExperienceInJson() throws Exception {
+
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
+    String json = """
+            {
+              "id": "I021",
+              "name": "Kumar Silva",
+              "email": "kumar@example.com",
+              "phone": "0771234567",
+              "yearsOfExperience": null,
+              "active": true
+            }
+            """;
+
+    assertThrows(
+            com.fasterxml.jackson.databind.JsonMappingException.class,
+            () -> mapper.readValue(json, Instructor.class)
+    );
+}
+
+@Test
+void shouldRejectNullActiveInJson() throws Exception {
+
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
+    String json = """
+            {
+              "id": "I022",
+              "name": "Kumar Silva",
+              "email": "kumar@example.com",
+              "phone": "0771234567",
+              "yearsOfExperience": 5,
+              "active": null
+            }
+            """;
+
+    assertThrows(
+            com.fasterxml.jackson.databind.JsonMappingException.class,
+            () -> mapper.readValue(json, Instructor.class)
+    );
+}
+
+
 }
