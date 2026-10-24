@@ -1,5 +1,7 @@
 package com.drivingschool.vehicle.model;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.drivingschool.common.exception.ValidationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -226,6 +228,578 @@ class VehicleTest {
     }
 
     @Test
+    void shouldRejectNullMake() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        null,
+                        "Aqua",
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectBlankMake() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        "   ",
+                        "Aqua",
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectNullModel() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        "Toyota",
+                        null,
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectBlankModel() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        "Toyota",
+                        "   ",
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldAcceptMakeLengthOne() {
+
+        Vehicle vehicle = new Vehicle(
+                "V001",
+                "CAR123",
+                "A",
+                "Aqua",
+                TransmissionType.MANUAL,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        assertEquals("A", vehicle.getMake());
+    }
+
+    @Test
+    void shouldAcceptMakeLengthFifty() {
+
+        String make = "A".repeat(50);
+
+        Vehicle vehicle = new Vehicle(
+                "V001",
+                "CAR123",
+                make,
+                "Aqua",
+                TransmissionType.MANUAL,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        assertEquals(make, vehicle.getMake());
+    }
+
+    @Test
+    void shouldRejectMakeLengthFiftyOne() {
+
+        String make = "A".repeat(51);
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        make,
+                        "Aqua",
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldAcceptModelLengthOne() {
+
+        Vehicle vehicle = new Vehicle(
+                "V001",
+                "CAR123",
+                "Toyota",
+                "A",
+                TransmissionType.MANUAL,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        assertEquals("A", vehicle.getModel());
+    }
+
+    @Test
+    void shouldAcceptModelLengthFifty() {
+
+        String model = "A".repeat(50);
+
+        Vehicle vehicle = new Vehicle(
+                "V001",
+                "CAR123",
+                "Toyota",
+                model,
+                TransmissionType.MANUAL,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        assertEquals(model, vehicle.getModel());
+    }
+
+    @Test
+    void shouldRejectModelLengthFiftyOne() {
+
+        String model = "A".repeat(51);
+
+        assertThrows(
+                ValidationException.class,
+                () -> new Vehicle(
+                        "V001",
+                        "CAR123",
+                        "Toyota",
+                        model,
+                        TransmissionType.MANUAL,
+                        VehicleCategory.CAR,
+                        VehicleOperationalStatus.IN_SERVICE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingOperationalStatus()
+            throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(
+                        invalidJson,
+                        Vehicle.class
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullOperationalStatus()
+            throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": null
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(
+                        invalidJson,
+                        Vehicle.class
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingId() throws Exception {
+
+        String invalidJson = """
+            {
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingRegistrationNumber() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullRegistrationNumber() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": null,
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingMake() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullMake() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": null,
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingModel() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullModel() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": null,
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingTransmissionType() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullTransmissionType() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": null,
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithMissingVehicleCategory() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void shouldRejectJsonWithNullVehicleCategory() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": null,
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+
+
+    @Test
+    void shouldRejectJsonWithNullId() throws Exception {
+
+        String invalidJson = """
+            {
+              "id": null,
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(invalidJson, Vehicle.class)
+        );
+    }
+
+    @Test
+    void invalidModelUpdateShouldPreservePreviousValue() {
+
+        Vehicle vehicle = createValidVehicle();
+
+        assertThrows(
+                ValidationException.class,
+                () -> vehicle.setModel("")
+        );
+
+        assertEquals(
+                "Aqua",
+                vehicle.getModel()
+        );
+    }
+
+    @Test
+    void invalidTransmissionUpdateShouldPreservePreviousValue() {
+
+        Vehicle vehicle = createValidVehicle();
+
+        TransmissionType original =
+                vehicle.getTransmissionType();
+
+        assertThrows(
+                ValidationException.class,
+                () -> vehicle.setTransmissionType(null)
+        );
+
+        assertEquals(
+                original,
+                vehicle.getTransmissionType()
+        );
+    }
+
+    @Test
+    void invalidCategoryUpdateShouldPreservePreviousValue() {
+
+        Vehicle vehicle = createValidVehicle();
+
+        VehicleCategory original =
+                vehicle.getVehicleCategory();
+
+        assertThrows(
+                ValidationException.class,
+                () -> vehicle.setVehicleCategory(null)
+        );
+
+        assertEquals(
+                original,
+                vehicle.getVehicleCategory()
+        );
+    }
+
+    @Test
+    void invalidOperationalStatusUpdateShouldPreservePreviousValue() {
+
+        Vehicle vehicle = createValidVehicle();
+
+        VehicleOperationalStatus original =
+                vehicle.getOperationalStatus();
+
+        assertThrows(
+                ValidationException.class,
+                () -> vehicle.setOperationalStatus(null)
+        );
+
+        assertEquals(
+                original,
+                vehicle.getOperationalStatus()
+        );
+    }
+
+    @Test
     void shouldRejectNullEnums() {
 
         assertThrows(
@@ -368,24 +942,57 @@ class VehicleTest {
     }
 
     @Test
-    void shouldRejectInvalidVehicleDuringJsonDeserialization() {
+    void shouldRejectInvalidVehicleDuringJsonDeserialization()
+            throws Exception {
 
         String invalidJson = """
-                {
-                  "id": "V000",
-                  "registrationNumber": "CAB1234",
-                  "make": "Toyota",
-                  "model": "Aqua",
-                  "transmissionType": "AUTOMATIC",
-                  "vehicleCategory": "CAR",
-                  "operationalStatus": "IN_SERVICE"
-                }
-                """;
+            {
+              "id": "V000",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "AUTOMATIC",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ValueInstantiationException exception = assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.readValue(
+                        invalidJson,
+                        Vehicle.class
+                )
+        );
+
+        assertInstanceOf(
+                com.drivingschool.common.exception.ValidationException.class,
+                exception.getCause()
+        );
+    }
+
+    @Test
+    void shouldRejectInvalidEnumDuringJsonDeserialization()
+            throws Exception {
+
+        String invalidJson = """
+            {
+              "id": "V001",
+              "registrationNumber": "CAB1234",
+              "make": "Toyota",
+              "model": "Aqua",
+              "transmissionType": "SEMI_AUTO",
+              "vehicleCategory": "CAR",
+              "operationalStatus": "IN_SERVICE"
+            }
+            """;
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         assertThrows(
-                Exception.class,
+                InvalidFormatException.class,
                 () -> objectMapper.readValue(
                         invalidJson,
                         Vehicle.class
@@ -394,28 +1001,40 @@ class VehicleTest {
     }
 
     @Test
-    void shouldRejectInvalidEnumDuringJsonDeserialization() {
+    void shouldAcceptRegistrationLengthFour() {
 
-        String invalidJson = """
-                {
-                  "id": "V001",
-                  "registrationNumber": "CAB1234",
-                  "make": "Toyota",
-                  "model": "Aqua",
-                  "transmissionType": "SEMI_AUTO",
-                  "vehicleCategory": "CAR",
-                  "operationalStatus": "IN_SERVICE"
-                }
-                """;
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        assertThrows(
-                Exception.class,
-                () -> objectMapper.readValue(
-                        invalidJson,
-                        Vehicle.class
-                )
+        assertEquals(
+                "A123",
+                Vehicle.normalizeRegistrationNumber("A123")
         );
     }
+
+    @Test
+    void shouldAcceptRegistrationLengthTwelve() {
+
+        assertEquals(
+                "ABCDEF123456",
+                Vehicle.normalizeRegistrationNumber("ABCDEF123456")
+        );
+    }
+
+    @Test
+    void shouldRejectRegistrationLengthThree() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> Vehicle.normalizeRegistrationNumber("A12")
+        );
+    }
+
+    @Test
+    void shouldRejectRegistrationLengthThirteen() {
+
+        assertThrows(
+                ValidationException.class,
+                () -> Vehicle.normalizeRegistrationNumber("ABCDEFG1234567")
+        );
+    }
+
+
 }
