@@ -1032,7 +1032,7 @@ class VehicleTest {
 
         assertThrows(
                 ValidationException.class,
-                () -> Vehicle.normalizeRegistrationNumber("ABCDEFG1234567")
+                () -> Vehicle.normalizeRegistrationNumber("ABCDEF1234567")
         );
     }
 
