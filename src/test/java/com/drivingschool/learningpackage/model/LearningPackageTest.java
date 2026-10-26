@@ -1,5 +1,10 @@
 package com.drivingschool.learningpackage.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
+
 import com.drivingschool.common.exception.ValidationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -266,6 +271,7 @@ class LearningPackageTest {
             throws JsonProcessingException {
 
         LearningPackage original = createValidPackage();
+        original.setActive(false);
 
         String json = objectMapper.writeValueAsString(original);
 
@@ -282,46 +288,64 @@ class LearningPackageTest {
         assertEquals(original.isActive(), restored.isActive());
     }
 
-    @Test
-    void rejectsMissingRequiredJsonProperties()
-            throws JsonProcessingException {
 
-        String missingActive = """
-                {
-                  "id": "P001",
-                  "name": "Beginner Package",
-                  "description": "A package for new driving students.",
-                  "price": 15000.00,
-                  "lessonCount": 10,
-                  "validityDays": 30
-                }
-                """;
-
-        assertThrows(JsonProcessingException.class,
-                () -> objectMapper.readValue(
-                        missingActive, LearningPackage.class));
+    private ObjectNode validPackageJson() {
+        return objectMapper.valueToTree(createValidPackage());
     }
 
     @Test
-    void rejectsNullRequiredJsonProperties()
-            throws JsonProcessingException {
+    void rejectsEachMissingRequiredJsonProperty() {
+        String[] properties = {
+                "id", "name", "description", "price",
+                "lessonCount", "validityDays", "active"
+        };
 
-        String nullActive = """
-                {
-                  "id": "P001",
-                  "name": "Beginner Package",
-                  "description": "A package for new driving students.",
-                  "price": 15000.00,
-                  "lessonCount": 10,
-                  "validityDays": 30,
-                  "active": null
-                }
-                """;
+        for (String property : properties) {
+            ObjectNode json = validPackageJson();
+            json.remove(property);
 
-        assertThrows(JsonProcessingException.class,
-                () -> objectMapper.readValue(
-                        nullActive, LearningPackage.class));
+            assertThrows(
+                    MismatchedInputException.class,
+                    () -> objectMapper.treeToValue(json, LearningPackage.class),
+                    "Expected missing property to be rejected: " + property
+            );
+        }
     }
+
+    @Test
+    void rejectsEachExplicitNullRequiredJsonProperty() {
+        String[] properties = {
+                "id", "name", "description", "price",
+                "lessonCount", "validityDays", "active"
+        };
+
+        for (String property : properties) {
+            ObjectNode json = validPackageJson();
+            json.putNull(property);
+
+            ValueInstantiationException exception = assertThrows(
+                    ValueInstantiationException.class,
+                    () -> objectMapper.treeToValue(json, LearningPackage.class),
+                    "Expected null property to be rejected: " + property
+            );
+
+            assertInstanceOf(ValidationException.class, exception.getCause());
+        }
+    }
+
+    @Test
+    void rejectsInvalidDomainValueInValidJsonStructure() {
+        ObjectNode json = validPackageJson();
+        json.put("id", "P000");
+
+        ValueInstantiationException exception = assertThrows(
+                ValueInstantiationException.class,
+                () -> objectMapper.treeToValue(json, LearningPackage.class)
+        );
+
+        assertInstanceOf(ValidationException.class, exception.getCause());
+    }
+
 
     private LearningPackage createPackageWithName(String name) {
         return new LearningPackage(
