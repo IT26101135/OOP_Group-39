@@ -281,12 +281,44 @@ Validation:
 - BCrypt format validation does not generate hashes or verify passwords.
 
 Still pending:
-- PasswordHasher.
 - User/account repository integration.
 - Authentication and session handling.
 - Administrator startup seed.
 - StudentLookup.
 - Authorization checks, controllers and JSP pages.
+
+## PasswordHasher — Phase 2B
+
+Available to other branches after the password-hasher PR is merged
+into develop.
+
+Class:
+com.drivingschool.auth.util.PasswordHasher
+
+Spring component with these public methods:
+
+- String hash(String rawPassword)
+- boolean matches(String rawPassword, String storedHash)
+
+Behaviour:
+- Uses BCrypt with strength 12 and a random salt.
+- New passwords require at least 8 Unicode code points.
+- Passwords must not exceed 72 UTF-8 bytes.
+- Passwords are not trimmed or case-normalized.
+- Invalid new passwords cause ValidationException.
+- Incorrect passwords and invalid verification inputs return false.
+- Generated hashes are compatible with Student and Admin.
+- The helper does not read/write files or manage login sessions.
+
+Call hash() when creating or changing a password.
+Call matches() when checking a login password.
+Do not hash the login input again and compare hash strings.
+
+Do not log plaintext passwords or stored hashes.
+Repository storage failures must still propagate; do not convert them
+into ordinary password mismatches.
+
+Authentication services, account persistence and sessions remain pending.
 
 ## Pending: authentication
 
