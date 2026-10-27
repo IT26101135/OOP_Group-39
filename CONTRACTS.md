@@ -11,8 +11,12 @@ Phase 2B adds PasswordHasher.
 Phase 2C adds UserRepository and account persistence tests.
 Each stage becomes available in develop after its PR is merged.
 
-Authentication services, sessions and cross-module lookup APIs marked
-pending must not be assumed to exist.
+Phase 2D provides student registration and credential verification.
+Phase 2E adds session authentication and role-checking methods.
+The session API becomes available in develop after its PR is merged.
+
+Controllers, route protection, CSRF protection, administrator seeding
+and cross-module lookup APIs marked pending must not be assumed to exist.
 
 Repository:
 https://github.com/IT26101135/OOP_Group-39
@@ -284,14 +288,15 @@ JSON:
 Validation:
 - Constructors and setters validate model fields.
 - Invalid setter input leaves the previous field value unchanged.
-- Email uniqueness is a future service responsibility.
+- AuthService enforces account-wide email uniqueness during registration.
+- Coordinated email updates remain pending.
 - BCrypt format validation does not generate hashes or verify passwords.
 
 Still pending:
-- Authentication and session handling.
+- Web integration of AuthSessionService.
 - Administrator startup seed.
 - StudentLookup.
-- Authorization checks, controllers and JSP pages.
+- Route protection, ownership checks, controllers and JSP pages.
 
 ## PasswordHasher — Phase 2B
 
@@ -324,9 +329,10 @@ Do not log plaintext passwords or stored hashes.
 Repository storage failures must still propagate; do not convert them
 into ordinary password mismatches.
 
-Registration and credential verification are provided by AuthService
-after the Phase 2D PR is merged. HTTP sessions remain pending.
-Account persistence is provided by UserRepository after its PR is merged.
+Registration and credential verification are provided by AuthService.
+Account persistence is provided by UserRepository.
+Session authentication is provided by AuthSessionService after the
+Phase 2E PR is merged. Web integration remains pending.
 
 ## UserRepository — Phase 2C
 
@@ -370,10 +376,8 @@ Do not manually create or reset account files or ID counters.
 Do not commit runtime account records or credentials.
 
 Pending:
-- Session integration and authorization.
-- Coordinated account updates and administrator seeding.
-- Administrator startup seed.
-- Sessions and authorization.
+- Web integration, route protection and ownership checks.
+- Coordinated account updates and administrator startup seeding.
 - StudentLookup and account deletion safeguards.
 
 ## AuthService — Phase 2D
@@ -420,27 +424,79 @@ Concurrency:
   coordination mechanism before they can run concurrently with registration.
 
 Still pending:
-- HTTP sessions and getCurrentUser/isLoggedIn/isAdmin/requireLogin/requireAdmin.
+- Web integration of AuthSessionService, including controllers,
+  JSP pages, route protection, ownership checks and CSRF protection.
 - Administrator startup seed.
 - StudentLookup.
-- Authorization, controllers and JSP pages.
 - Account updates and deletion safeguards.
 
-## Pending: authentication
+## AuthSessionService — Phase 2E
 
-The leader will implement and document these capabilities:
+Available to other branches after the auth-session PR is merged into develop.
 
-- getCurrentUser()
-- isLoggedIn()
-- isAdmin()
-- requireLogin()
-- requireAdmin()
+Class:
+com.drivingschool.auth.service.AuthSessionService
 
-Their exact Java signatures, packages, session attributes and routes are
-not yet published.
+Constructor:
+AuthSessionService(AuthService authService, UserRepository userRepository)
 
-Do not create competing authentication or session implementations.
-Do not treat a temporary stub as production authorization.
+Public API:
+- boolean login(
+  HttpServletRequest request, String email, String rawPassword)
+- Optional<User> getCurrentUser(HttpServletRequest request)
+- boolean isLoggedIn(HttpServletRequest request)
+- boolean isAdmin(HttpServletRequest request)
+- User requireLogin(HttpServletRequest request)
+- User requireAdmin(HttpServletRequest request)
+- void logout(HttpServletRequest request)
+
+Request type:
+jakarta.servlet.http.HttpServletRequest
+
+Behaviour:
+- login delegates credential verification to AuthService.
+- Successful login invalidates any previous session and creates a new one.
+- Failed credentials invalidate any previous session and return false.
+- Storage failures propagate; they are not ordinary credential failures.
+- Successful login sets a 30-minute inactivity timeout.
+- Session identity is stored under drivespark.auth.userId.
+- Only the user ID is stored, not a User object, role or password hash.
+- Other modules must use this service instead of accessing that attribute.
+
+Current account lookup:
+- Uses UserRepository.findByIdStrict on each check.
+- Missing session or anonymous session returns Optional.empty().
+- Invalid session identity or a missing account invalidates the session.
+- StorageException propagates.
+- Checks do not create a session for anonymous users.
+
+Authorization:
+- requireLogin returns the current User or throws ResponseStatusException
+  with HTTP 401.
+- requireAdmin returns the current administrator or throws HTTP 403
+  for an authenticated non-admin.
+- Anonymous requireAdmin calls produce HTTP 401.
+- isLoggedIn and isAdmin may throw StorageException.
+- A role check does not replace ownership checks for student resources.
+
+Logout:
+- Invalidates an existing session.
+- Does not create a new session.
+- Repeated logout without a session is allowed.
+
+Integration:
+- Controllers receive HttpServletRequest from Spring MVC and pass it to
+  this service.
+- Do not expose returned User objects as public JSON.
+- This service does not automatically protect routes.
+- Controllers/interceptors must invoke the appropriate checks.
+
+Still pending:
+- Login/logout controllers and JSP pages.
+- Access interceptor and route configuration.
+- CSRF protection for state-changing browser requests.
+- Browser/session-cookie integration tests.
+- MVC handling and presentation of 401/403 errors.
 
 ## Pending: cross-module lookups
 
