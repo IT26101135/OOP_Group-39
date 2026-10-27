@@ -3,6 +3,7 @@ package com.drivingschool.auth.service;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.util.PasswordHasher;
+import com.drivingschool.auth.util.AccountWriteCoordinator;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.StorageException;
 import com.drivingschool.common.exception.ValidationException;
@@ -36,41 +37,37 @@ public class AuthService {
                 passwordHasher.hash(UUID.randomUUID().toString());
     }
 
-    /**
-     * Serializes registration operations on this service instance.
-     * Production registration must use the same Spring singleton.
-     */
-    public synchronized Student registerStudent(
+    public Student registerStudent(
             String name,
             String email,
             String phone,
             String rawPassword) {
 
-        String normalizedEmail = normalizeRegistrationEmail(email);
+        return AccountWriteCoordinator.execute(() -> {
+            String normalizedEmail = normalizeRegistrationEmail(email);
 
-        // Strict reading prevents registration using incomplete account data.
-        List<User> users = userRepository.readAllStrict();
+            List<User> users = userRepository.readAllStrict();
 
-        if (findUniqueEmail(users, normalizedEmail).isPresent()) {
-            throw new DuplicateRecordException(
-                    "An account with this email already exists."
+            if (findUniqueEmail(users, normalizedEmail).isPresent()) {
+                throw new DuplicateRecordException(
+                        "An account with this email already exists."
+                );
+            }
+
+            String passwordHash = passwordHasher.hash(rawPassword);
+            String id = userRepository.nextId("S");
+
+            Student student = new Student(
+                    id,
+                    name,
+                    normalizedEmail,
+                    passwordHash,
+                    phone
             );
-        }
 
-        String passwordHash = passwordHasher.hash(rawPassword);
-        String id = userRepository.nextId("S");
-
-        // The model validates name, email, phone and the generated hash.
-        Student student = new Student(
-                id,
-                name,
-                normalizedEmail,
-                passwordHash,
-                phone
-        );
-
-        userRepository.save(student);
-        return student;
+            userRepository.save(student);
+            return student;
+        });
     }
 
     public Optional<User> authenticate(
