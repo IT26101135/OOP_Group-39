@@ -6,12 +6,16 @@ import com.drivingschool.common.repository.FileRepository;
 import com.drivingschool.review.model.Review;
 import com.drivingschool.review.model.ReviewStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -25,6 +29,21 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class ReviewRepositoryTest {
 
+    private static final Path SPRING_TEMP_DIR;
+
+    static {
+        try {
+            SPRING_TEMP_DIR = Files.createTempDirectory("review-spring-test-");
+        } catch (IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("app.data-directory", () -> SPRING_TEMP_DIR.toString());
+    }
+
     @TempDir
     Path tempDir;
 
@@ -34,7 +53,8 @@ class ReviewRepositoryTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule());
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         repository = new ReviewRepository(
                 tempDir.toString(),
@@ -107,8 +127,13 @@ class ReviewRepositoryTest {
                 tempDir.resolve("reviews.txt"));
 
         assertEquals(2, lines.size());
-        assertTrue(lines.stream().allMatch(line -> line.startsWith("{")
-                && line.endsWith("}")));
+        assertTrue(lines.stream().allMatch(line -> {
+            try {
+                return objectMapper.readTree(line).isObject();
+            } catch (IOException e) {
+                return false;
+            }
+        }));
     }
 
     @Test
@@ -123,10 +148,14 @@ class ReviewRepositoryTest {
         review.updateContent(4, "Very good driving school", updatedAt);
         repository.update(review);
 
-        Review actual = repository.findByIdStrict("R001").orElseThrow();
+        ReviewRepository reloadedRepository =
+                new ReviewRepository(tempDir.toString(), objectMapper);
+
+        Review actual = reloadedRepository.findByIdStrict("R001").orElseThrow();
 
         assertEquals(4, actual.getRating());
         assertEquals("Very good driving school", actual.getComment());
+        assertEquals(createdAt, actual.getCreatedAt());
         assertEquals(updatedAt, actual.getUpdatedAt());
     }
 
@@ -138,7 +167,10 @@ class ReviewRepositoryTest {
 
         repository.delete("R001");
 
-        assertTrue(repository.findByIdStrict("R001").isEmpty());
+        ReviewRepository reloadedRepository =
+                new ReviewRepository(tempDir.toString(), objectMapper);
+
+        assertTrue(reloadedRepository.findByIdStrict("R001").isEmpty());
     }
 
     @Test
@@ -230,6 +262,29 @@ class ReviewRepositoryTest {
         );
 
         testRepository.save(review);
+
+        String jsonLine;
+        try {
+            jsonLine = Files.readAllLines(
+                    tempDir.resolve("reviews.txt")).get(0);
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+
+        JsonNode json;
+        try {
+            json = objectMapper.readTree(jsonLine);
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+
+        assertTrue(json.get("createdAt").isTextual());
+        assertTrue(json.get("updatedAt").isTextual());
+
+        assertEquals(createdAt,
+                LocalDateTime.parse(json.get("createdAt").asText()));
+        assertEquals(updatedAt,
+                LocalDateTime.parse(json.get("updatedAt").asText()));
 
         Review actual = testRepository
                 .findByIdStrict("R100")
