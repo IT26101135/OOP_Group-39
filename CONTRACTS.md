@@ -2,11 +2,13 @@
 
 ## Status
 
-This document accompanies the Phase 1 common foundation.
+The Phase 1 common foundation is available in develop.
 
-The common API below is available after this change is merged into develop.
-Authentication and cross-module lookup APIs listed as pending must not be
-assumed to exist.
+Phase 2A adds the User, Student and Admin models and their tests.
+These models become available in develop after the model-stage PR is merged.
+
+Authentication, account persistence and cross-module lookup APIs marked
+pending must not be assumed to exist.
 
 Repository:
 https://github.com/IT26101135/OOP_Group-39
