@@ -7,7 +7,11 @@ The Phase 1 common foundation is available in develop.
 Phase 2A adds the User, Student and Admin models and their tests.
 These models become available in develop after the model-stage PR is merged.
 
-Authentication, account persistence and cross-module lookup APIs marked
+Phase 2B adds PasswordHasher.
+Phase 2C adds UserRepository and account persistence tests.
+Each stage becomes available in develop after its PR is merged.
+
+Authentication services, sessions and cross-module lookup APIs marked
 pending must not be assumed to exist.
 
 Repository:
@@ -227,8 +231,11 @@ retained. Timestamp format and User subtype configuration must be verified
 in integration tests before relying on them.
 
 User -> Student/Admin JSON serialization and reconstruction are implemented
-and covered by model tests. FileRepository integration for these models
-remains pending.
+and covered by model tests.
+
+Phase 2C provides FileRepository integration through UserRepository,
+with persistence tests for Student and Admin records.
+This integration becomes available in develop after the Phase 2C PR is merged.
 Do not enable unrestricted polymorphic default typing.
 
 ## User models — Phase 2A
@@ -281,7 +288,6 @@ Validation:
 - BCrypt format validation does not generate hashes or verify passwords.
 
 Still pending:
-- User/account repository integration.
 - Authentication and session handling.
 - Administrator startup seed.
 - StudentLookup.
@@ -318,7 +324,56 @@ Do not log plaintext passwords or stored hashes.
 Repository storage failures must still propagate; do not convert them
 into ordinary password mismatches.
 
-Authentication services, account persistence and sessions remain pending.
+Authentication services and sessions remain pending.
+Account persistence is provided by UserRepository after its PR is merged.
+
+## UserRepository — Phase 2C
+
+Available to other branches after the user-repository PR is merged
+into develop.
+
+Class:
+com.drivingschool.auth.repository.UserRepository
+
+Extends:
+FileRepository<User>
+
+Constructor:
+UserRepository(String dataDirectory, ObjectMapper objectMapper)
+
+Storage:
+- Uses app.data-directory, defaulting to ./data.
+- Records: users.txt.
+- Persistent ID counters: users.txt.ids.txt.
+- Student and Admin records share this file.
+- Student account details are not duplicated in students.txt.
+- Each line contains one JSON object.
+- The type property selects STUDENT or ADMIN.
+- Password hashes are persisted; plaintext passwords are not.
+
+IDs:
+- nextId("S") reserves a student ID.
+- nextId("A") reserves an administrator ID.
+
+Authentication and account-integrity decisions must use strict reads.
+Do not catch StorageException and treat it as an absent account.
+
+The repository inherits storage CRUD operations.
+It does not enforce email uniqueness, authorization, booking safeguards
+or review cleanup. Those are service-layer responsibilities.
+
+Other modules must use the agreed lookup/service APIs once available.
+They must not read users.txt directly or access password hashes.
+
+Do not manually create or reset account files or ID counters.
+Do not commit runtime account records or credentials.
+
+Pending:
+- Authentication and registration services.
+- Email uniqueness across student and administrator accounts.
+- Administrator startup seed.
+- Sessions and authorization.
+- StudentLookup and account deletion safeguards.
 
 ## Pending: authentication
 
