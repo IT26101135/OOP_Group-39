@@ -298,7 +298,6 @@ Validation:
 
 Still pending:
 - Web integration of AuthSessionService.
-- StudentLookup.
 - Route protection, ownership checks, controllers and JSP pages.
 
 ## PasswordHasher — Phase 2B
@@ -381,7 +380,7 @@ Do not commit runtime account records or credentials.
 Pending:
 - Web integration, route protection and ownership checks.
 - Account update operations using AccountWriteCoordinator.
-- StudentLookup and account deletion safeguards.
+- Account deletion safeguards.
 
 ## AuthService — Phase 2D
 
@@ -430,8 +429,6 @@ Concurrency:
 Still pending:
 - Web integration of AuthSessionService, including controllers,
   JSP pages, route protection, ownership checks and CSRF protection.
-- Administrator startup seed.
-- StudentLookup.
 - Account updates and deletion safeguards.
 
 ## AuthSessionService — Phase 2E
@@ -505,6 +502,8 @@ Still pending:
 ## Administrator startup seed — Phase 2F
 
 Available in develop after the admin-seed PR is merged.
+Phase 2G adds StudentLookup and the immutable StudentSummary.
+These become available in develop after the student-lookup PR is merged.
 
 Classes:
 - com.drivingschool.auth.util.AccountWriteCoordinator
@@ -543,11 +542,53 @@ after successful initial creation. Re-enable only for intentional bootstrap.
 Never commit real seed credentials, runtime account files or hashes.
 The seed is not a password-reset mechanism.
 
+## StudentLookup — Phase 2G
+
+Available to other branches after the student-lookup PR is merged into develop.
+
+Interface:
+com.drivingschool.student.api.StudentLookup
+
+Implementation:
+com.drivingschool.student.service.StudentLookupService
+
+Result type:
+com.drivingschool.student.dto.StudentSummary
+
+Public API:
+- boolean exists(String studentId)
+- Optional<StudentSummary> findById(String studentId)
+
+StudentSummary:
+- String getId()
+- String getName()
+- Immutable; no setters.
+- Contains no password hash, email or phone number.
+
+Behaviour:
+- Accepts student IDs S001-S999 exactly; does not trim IDs.
+- Existing student: true / populated summary.
+- Missing valid student ID: false / Optional.empty().
+- Null, blank, malformed or non-student ID: ValidationException.
+- Uses strict account reads.
+- StorageException propagates; never convert it to "student not found".
+- Each call reads current persisted data.
+- Does not modify accounts or require an HTTP session.
+
+Integration:
+- Other modules inject StudentLookup through their constructors.
+- Do not create another implementation or read users.txt directly.
+- This lookup does not authorize an action.
+- Student-owned requests must derive student identity from the
+  authenticated user, not trust a browser-supplied student ID.
+- Administrator actions must enforce administrator authorization.
+- Lookup results are snapshots, not reservations.
+- Coordinating booking creation with student deletion remains pending.
+
 ## Pending: cross-module lookups
 
 These are capability names, not final Java declarations:
 
-- StudentLookup: exists(id), findById(id)
 - InstructorLookup: exists(id), isAvailable(id, dateTime)
 - VehicleLookup: exists(id), isAvailable(id, dateTime)
 - PackageLookup: exists(id)
