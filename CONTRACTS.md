@@ -2,11 +2,13 @@
 
 ## Status
 
-This document accompanies the Phase 1 common foundation.
+The Phase 1 common foundation is available in develop.
 
-The common API below is available after this change is merged into develop.
-Authentication and cross-module lookup APIs listed as pending must not be
-assumed to exist.
+Phase 2A adds the User, Student and Admin models and their tests.
+These models become available in develop after the model-stage PR is merged.
+
+Authentication, account persistence and cross-module lookup APIs marked
+pending must not be assumed to exist.
 
 Repository:
 https://github.com/IT26101135/OOP_Group-39
@@ -172,10 +174,14 @@ Prefixes:
 - V: vehicle
 - P: learning package
 - R: review
+- A: administrator
 
 Format: one uppercase letter plus 001-999.
 Exhausting the three-digit range raises ValidationException.
-Admin ID policy is pending.
+Administrator IDs use A001-A999.
+Administrator accounts will be created through a controlled startup seed;
+public administrator registration is not allowed.
+The startup seed is not implemented yet.
 
 ## Implemented: exceptions
 
@@ -220,8 +226,67 @@ Use the injected Spring ObjectMapper so configured date/time modules are
 retained. Timestamp format and User subtype configuration must be verified
 in integration tests before relying on them.
 
-User -> Student/Admin polymorphic storage remains pending.
+User -> Student/Admin JSON serialization and reconstruction are implemented
+and covered by model tests. FileRepository integration for these models
+remains pending.
 Do not enable unrestricted polymorphic default typing.
+
+## User models — Phase 2A
+
+These models become available to other branches after the model-stage
+pull request is merged into develop.
+
+Classes:
+- com.drivingschool.auth.model.Role
+- com.drivingschool.auth.model.User
+- com.drivingschool.auth.model.Admin
+- com.drivingschool.student.model.Student
+
+User is abstract and implements Identifiable.
+
+Shared fields:
+- id: immutable; S001-S999 for students, A001-A999 for administrators.
+- name: trimmed, 2-100 characters.
+- email: trimmed, lowercase using Locale.ROOT, maximum 254 characters,
+  with basic format validation.
+- passwordHash: BCrypt encoded-format validation.
+
+Student additionally requires:
+- phone: trimmed, 7-15 digits, optionally beginning with +.
+
+Roles:
+- Student.getRole() returns Role.STUDENT.
+- Admin.getRole() returns Role.ADMIN.
+- There is no role setter.
+
+Planned dashboard paths:
+- Student: /student/profile
+- Admin: /admin/dashboard
+
+These paths are model return values only; their controllers and JSP pages
+are not implemented yet.
+
+JSON:
+- The type property identifies STUDENT or ADMIN.
+- Only the explicitly registered subtypes are supported.
+- Role and dashboardPath are derived and excluded from stored JSON.
+- passwordHash must remain serializable for file persistence.
+- Do not expose these persisted models directly as public JSON responses
+  or bind registration forms directly to them.
+
+Validation:
+- Constructors and setters validate model fields.
+- Invalid setter input leaves the previous field value unchanged.
+- Email uniqueness is a future service responsibility.
+- BCrypt format validation does not generate hashes or verify passwords.
+
+Still pending:
+- PasswordHasher.
+- User/account repository integration.
+- Authentication and session handling.
+- Administrator startup seed.
+- StudentLookup.
+- Authorization checks, controllers and JSP pages.
 
 ## Pending: authentication
 
