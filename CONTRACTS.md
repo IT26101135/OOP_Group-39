@@ -15,11 +15,14 @@ Phase 2D provides student registration and credential verification.
 Phase 2E adds session authentication and role-checking methods.
 The session API becomes available in develop after its PR is merged.
 
-Controllers, route protection, CSRF protection, administrator seeding
-and cross-module lookup APIs marked pending must not be assumed to exist.
+Phase 2F adds administrator startup seeding and shared account-write
+coordination. These become available in develop after the admin-seed
+PR is merged.
 
-Repository:
-https://github.com/IT26101135/OOP_Group-39
+Controllers, route protection, CSRF protection and cross-module lookup
+APIs marked pending must not be assumed to exist.
+
+Repository: https://github.com/IT26101135/OOP_Group-39
 
 Leader: IT26101135
 
@@ -189,7 +192,8 @@ Exhausting the three-digit range raises ValidationException.
 Administrator IDs use A001-A999.
 Administrator accounts will be created through a controlled startup seed;
 public administrator registration is not allowed.
-The startup seed is not implemented yet.
+Startup seeding is provided by Phase 2F after its PR is merged.
+See the Administrator startup seed section.
 
 ## Implemented: exceptions
 
@@ -294,7 +298,6 @@ Validation:
 
 Still pending:
 - Web integration of AuthSessionService.
-- Administrator startup seed.
 - StudentLookup.
 - Route protection, ownership checks, controllers and JSP pages.
 
@@ -377,7 +380,7 @@ Do not commit runtime account records or credentials.
 
 Pending:
 - Web integration, route protection and ownership checks.
-- Coordinated account updates and administrator startup seeding.
+- Account update operations using AccountWriteCoordinator.
 - StudentLookup and account deletion safeguards.
 
 ## AuthService — Phase 2D
@@ -416,12 +419,13 @@ Credential verification:
 - Returned User objects are internal and must not be exposed as public JSON.
 
 Concurrency:
-- registerStudent is synchronized on the AuthService instance.
-- Production registration must use the same Spring singleton.
-- This does not coordinate separate AuthService instances, direct repository
-  writes, other services or multiple application processes.
-- Future admin seeding and email updates must share an approved account-write
-  coordination mechanism before they can run concurrently with registration.
+- Registration and administrator seeding execute their complete
+  check/allocate/save operations through AccountWriteCoordinator.
+- AccountWriteCoordinator uses a static synchronized method shared
+  across service instances within the application JVM.
+- Future account updates and deletion must use this coordinator too.
+- Direct repository writes bypass business-operation coordination.
+- Only one application process may use a data directory.
 
 Still pending:
 - Web integration of AuthSessionService, including controllers,
@@ -497,6 +501,47 @@ Still pending:
 - CSRF protection for state-changing browser requests.
 - Browser/session-cookie integration tests.
 - MVC handling and presentation of 401/403 errors.
+
+## Administrator startup seed — Phase 2F
+
+Available in develop after the admin-seed PR is merged.
+
+Classes:
+- com.drivingschool.auth.util.AccountWriteCoordinator
+- com.drivingschool.auth.service.AdminSeedService
+- com.drivingschool.auth.config.AdminSeedRunner
+
+Service method:
+boolean seedIfNeeded(String name, String email, String rawPassword)
+
+Behaviour:
+- Uses strict account reads.
+- Creates an Admin only when no administrator exists.
+- Returns true when created, false when an administrator already exists.
+- When an administrator already exists, leaves account records and ID
+  counters unchanged.
+- Creating a new administrator advances the A-prefixed ID counter.
+- Rejects an email already used by a student.
+- Uses PasswordHasher and an A-prefixed repository-generated ID.
+- Registration and seeding share AccountWriteCoordinator.
+- Invalid input and storage failures propagate.
+- This is a startup operation, not a public administrator-registration API.
+
+Environment variables:
+- DRIVESPARK_ADMIN_SEED_ENABLED: defaults to false.
+- DRIVESPARK_ADMIN_NAME: defaults to System Admin.
+- DRIVESPARK_ADMIN_EMAIL: no default account email.
+- DRIVESPARK_ADMIN_PASSWORD: no default password.
+
+When enabled, a seed failure prevents successful application startup.
+Existing administrators cause seeding to be skipped, even if seed
+credentials are absent.
+
+Disable seeding and remove the password from the local run configuration
+after successful initial creation. Re-enable only for intentional bootstrap.
+
+Never commit real seed credentials, runtime account files or hashes.
+The seed is not a password-reset mechanism.
 
 ## Pending: cross-module lookups
 
