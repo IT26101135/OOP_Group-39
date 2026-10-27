@@ -324,7 +324,8 @@ Do not log plaintext passwords or stored hashes.
 Repository storage failures must still propagate; do not convert them
 into ordinary password mismatches.
 
-Authentication services and sessions remain pending.
+Registration and credential verification are provided by AuthService
+after the Phase 2D PR is merged. HTTP sessions remain pending.
 Account persistence is provided by UserRepository after its PR is merged.
 
 ## UserRepository — Phase 2C
@@ -369,11 +370,61 @@ Do not manually create or reset account files or ID counters.
 Do not commit runtime account records or credentials.
 
 Pending:
-- Authentication and registration services.
-- Email uniqueness across student and administrator accounts.
+- Session integration and authorization.
+- Coordinated account updates and administrator seeding.
 - Administrator startup seed.
 - Sessions and authorization.
 - StudentLookup and account deletion safeguards.
+
+## AuthService — Phase 2D
+
+Available to other branches after the auth-service PR is merged into develop.
+
+Class:
+com.drivingschool.auth.service.AuthService
+
+Constructor:
+AuthService(UserRepository userRepository, PasswordHasher passwordHasher)
+
+Public methods:
+- Student registerStudent(
+  String name, String email, String phone, String rawPassword)
+- Optional<User> authenticate(String email, String rawPassword)
+
+Registration:
+- Always creates a Student; callers cannot select a role or ID.
+- Email is trimmed and converted to lowercase using Locale.ROOT.
+- Email uniqueness covers both Student and Admin accounts.
+- Uses strict repository reads.
+- Hashes the password using PasswordHasher.
+- Reserves an S-prefixed ID and saves the validated Student.
+- Duplicate email raises DuplicateRecordException.
+- Invalid input raises ValidationException.
+- Failed operations may leave unused reserved IDs; gaps are permitted.
+
+Credential verification:
+- Returns the matching User only when the password is correct.
+- Unknown email or incorrect password returns Optional.empty().
+- Does not create or modify an HTTP session.
+- Uses strict reads; StorageException is not converted to login failure.
+- Multiple stored accounts matching the supplied email cause StorageException.
+- Uses a dummy hash for unknown-email password checks.
+- Returned User objects are internal and must not be exposed as public JSON.
+
+Concurrency:
+- registerStudent is synchronized on the AuthService instance.
+- Production registration must use the same Spring singleton.
+- This does not coordinate separate AuthService instances, direct repository
+  writes, other services or multiple application processes.
+- Future admin seeding and email updates must share an approved account-write
+  coordination mechanism before they can run concurrently with registration.
+
+Still pending:
+- HTTP sessions and getCurrentUser/isLoggedIn/isAdmin/requireLogin/requireAdmin.
+- Administrator startup seed.
+- StudentLookup.
+- Authorization, controllers and JSP pages.
+- Account updates and deletion safeguards.
 
 ## Pending: authentication
 
