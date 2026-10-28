@@ -1,5 +1,6 @@
 package com.drivingschool.vehicle.service;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -449,57 +450,68 @@ class VehicleServiceTest {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         CountDownLatch startLatch = new CountDownLatch(1);
 
-        Future<Vehicle> successfulCreate = executor.submit(() -> {
-            startLatch.await();
+        try {
+            Future<Boolean> firstCreate = executor.submit(() -> {
+                startLatch.await();
 
-            return service.createVehicle(
-                    "CAB-8888",
-                    "Toyota",
-                    "Corolla",
-                    TransmissionType.MANUAL,
-                    VehicleCategory.CAR,
-                    VehicleOperationalStatus.IN_SERVICE
+                try {
+                    service.createVehicle(
+                            "CAB-8888",
+                            "Toyota",
+                            "Corolla",
+                            TransmissionType.MANUAL,
+                            VehicleCategory.CAR,
+                            VehicleOperationalStatus.IN_SERVICE
+                    );
+
+                    return true;
+                } catch (DuplicateRecordException exception) {
+                    return false;
+                }
+            });
+
+            Future<Boolean> secondCreate = executor.submit(() -> {
+                startLatch.await();
+
+                try {
+                    service.createVehicle(
+                            "CAB 8888",
+                            "Honda",
+                            "Civic",
+                            TransmissionType.AUTOMATIC,
+                            VehicleCategory.CAR,
+                            VehicleOperationalStatus.IN_SERVICE
+                    );
+
+                    return true;
+                } catch (DuplicateRecordException exception) {
+                    return false;
+                }
+            });
+
+            startLatch.countDown();
+
+            boolean firstSucceeded = firstCreate.get(5, TimeUnit.SECONDS);
+            boolean secondSucceeded = secondCreate.get(5, TimeUnit.SECONDS);
+
+            assertEquals(
+                    1,
+                    (firstSucceeded ? 1 : 0) + (secondSucceeded ? 1 : 0)
             );
-        });
 
-        Future<Throwable> failedCreate = executor.submit(() -> {
-            startLatch.await();
+            VehicleRepository reopenedRepository =
+                    new VehicleRepository(tempDirectory, new ObjectMapper());
 
-            try {
-                service.createVehicle(
-                        "CAB 8888",
-                        "Honda",
-                        "Civic",
-                        TransmissionType.AUTOMATIC,
-                        VehicleCategory.CAR,
-                        VehicleOperationalStatus.IN_SERVICE
-                );
-
-                return null;
-            } catch (Throwable exception) {
-                return exception;
-            }
-        });
-
-        startLatch.countDown();
-
-        Vehicle createdVehicle = successfulCreate.get();
-        Throwable exception = failedCreate.get();
-
-        executor.shutdown();
-
-        assertEquals("CAB8888", createdVehicle.getRegistrationNumber());
-        assertEquals(DuplicateRecordException.class, exception.getClass());
-
-        VehicleRepository reopenedRepository =
-                new VehicleRepository(tempDirectory, new ObjectMapper());
-
-        assertEquals(
-                1,
-                reopenedRepository.readAllStrict().stream()
-                        .filter(vehicle ->
-                                "CAB8888".equals(vehicle.getRegistrationNumber()))
-                        .count()
-        );
+            assertEquals(
+                    1,
+                    reopenedRepository.readAllStrict().stream()
+                            .filter(vehicle ->
+                                    "CAB8888".equals(
+                                            vehicle.getRegistrationNumber()))
+                            .count()
+            );
+        } finally {
+            executor.shutdown();
+        }
     }
 }
