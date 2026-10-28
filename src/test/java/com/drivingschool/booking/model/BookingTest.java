@@ -1,9 +1,12 @@
-
 package com.drivingschool.booking.model;
 
 import com.drivingschool.common.exception.ValidationException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -21,6 +24,13 @@ class BookingTest {
     private final LocalDateTime created =
             LocalDateTime.of(2026, 10, 20, 9, 0);
 
+    private ObjectMapper createMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
+
     private Booking createPendingBooking() {
         return new Booking(
                 "B001",
@@ -33,6 +43,41 @@ class BookingTest {
                 BookingStatus.PENDING,
                 created
         );
+    }
+
+    private Booking createConfirmedBooking() {
+        Booking booking = createPendingBooking();
+        booking.confirm("I001", "V001");
+        return booking;
+    }
+
+    private JsonNode toJson(Booking booking) throws Exception {
+        return createMapper().readTree(
+                createMapper().writeValueAsString(booking)
+        );
+    }
+
+    private void assertRequiredFieldRejected(String field, boolean explicitNull)
+            throws Exception {
+        ObjectMapper mapper = createMapper();
+        ObjectNode json = (ObjectNode) mapper.readTree(
+                mapper.writeValueAsString(createPendingBooking())
+        );
+
+        if (explicitNull) {
+            json.putNull(field);
+        } else {
+            json.remove(field);
+        }
+
+        ValueInstantiationException exception = assertThrows(
+                ValueInstantiationException.class,
+                () -> mapper.treeToValue(json, Booking.class),
+                "Expected field " + field
+                        + " to be rejected; explicitNull=" + explicitNull
+        );
+
+        assertInstanceOf(ValidationException.class, exception.getCause());
     }
 
     @Test
@@ -53,89 +98,73 @@ class BookingTest {
     @Test
     void shouldRejectInvalidBookingId() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B000", "S001", "E001",
+                new Booking("B000", "S001", "E001",
                         start, end, null, null,
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectInvalidStudentId() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S000", "E001",
+                new Booking("B001", "S000", "E001",
                         start, end, null, null,
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectBlankEnrollmentId() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", " ",
+                new Booking("B001", "S001", " ",
                         start, end, null, null,
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectEndTimeBeforeStartTime() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         end, start, null, null,
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectEqualStartAndEndTimes() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, start, null, null,
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectPendingBookingWithAssignments() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, end, "I001", "V001",
-                        BookingStatus.PENDING, created
-                )
-        );
+                        BookingStatus.PENDING, created));
     }
 
     @Test
     void shouldRejectConfirmedBookingWithoutAssignments() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, end, null, null,
-                        BookingStatus.CONFIRMED, created
-                )
-        );
+                        BookingStatus.CONFIRMED, created));
     }
 
     @Test
-    void shouldRejectPartialAssignment() {
+    void shouldRejectPartialAssignmentWithInstructorOnly() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, end, "I001", null,
-                        BookingStatus.CONFIRMED, created
-                )
-        );
+                        BookingStatus.CONFIRMED, created));
+    }
+
+    @Test
+    void shouldRejectPartialAssignmentWithVehicleOnly() {
+        assertThrows(ValidationException.class, () ->
+                new Booking("B001", "S001", "E001",
+                        start, end, null, "V001",
+                        BookingStatus.CONFIRMED, created));
     }
 
     @Test
@@ -151,8 +180,7 @@ class BookingTest {
 
     @Test
     void shouldCompleteConfirmedBooking() {
-        Booking booking = createPendingBooking();
-        booking.confirm("I001", "V001");
+        Booking booking = createConfirmedBooking();
 
         booking.complete();
 
@@ -172,8 +200,7 @@ class BookingTest {
 
     @Test
     void shouldCancelConfirmedBookingAndKeepAssignments() {
-        Booking booking = createPendingBooking();
-        booking.confirm("I001", "V001");
+        Booking booking = createConfirmedBooking();
 
         booking.cancel();
 
@@ -183,9 +210,8 @@ class BookingTest {
     }
 
     @Test
-    void shouldRejectConfirmingBookingTwice() {
-        Booking booking = createPendingBooking();
-        booking.confirm("I001", "V001");
+    void shouldRejectConfirmingBookingTwiceWithoutChangingState() {
+        Booking booking = createConfirmedBooking();
 
         assertThrows(ValidationException.class,
                 () -> booking.confirm("I002", "V002"));
@@ -206,8 +232,7 @@ class BookingTest {
 
     @Test
     void shouldRejectCancellingCompletedBooking() {
-        Booking booking = createPendingBooking();
-        booking.confirm("I001", "V001");
+        Booking booking = createConfirmedBooking();
         booking.complete();
 
         assertThrows(ValidationException.class, booking::cancel);
@@ -216,55 +241,69 @@ class BookingTest {
     }
 
     @Test
-    void shouldPreserveBookingDataAfterJsonRoundTrip() throws Exception {
-        Booking original = createPendingBooking();
-        original.confirm("I001", "V001");
+    void shouldRejectAllLifecycleOperationsOnCancelledBooking()
+            throws Exception {
+        Booking booking = createConfirmedBooking();
+        booking.cancel();
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        assertThrows(ValidationException.class,
+                () -> booking.confirm("I002", "V002"));
+        assertThrows(ValidationException.class, booking::complete);
+        assertThrows(ValidationException.class, booking::cancel);
+
+        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        assertEquals("I001", booking.getInstructorId());
+        assertEquals("V001", booking.getVehicleId());
+    }
+
+    @Test
+    void shouldPreservePendingBookingAfterJsonRoundTrip()
+            throws Exception {
+        Booking original = createPendingBooking();
+        ObjectMapper mapper = createMapper();
 
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(original.getId(), restored.getId());
-        assertEquals(original.getStudentId(), restored.getStudentId());
-        assertEquals(original.getEnrollmentId(), restored.getEnrollmentId());
-        assertEquals(original.getStartTime(), restored.getStartTime());
-        assertEquals(original.getEndTime(), restored.getEndTime());
-        assertEquals(original.getInstructorId(), restored.getInstructorId());
-        assertEquals(original.getVehicleId(), restored.getVehicleId());
-        assertEquals(original.getStatus(), restored.getStatus());
-        assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+        assertEquals(BookingStatus.PENDING, restored.getStatus());
+        assertNull(restored.getInstructorId());
+        assertNull(restored.getVehicleId());
+        assertBookingDataEquals(original, restored);
+    }
+
+    @Test
+    void shouldPreserveConfirmedBookingAfterJsonRoundTrip()
+            throws Exception {
+        Booking original = createConfirmedBooking();
+        ObjectMapper mapper = createMapper();
+
+        String json = mapper.writeValueAsString(original);
+        Booking restored = mapper.readValue(json, Booking.class);
+
+        assertEquals(BookingStatus.CONFIRMED, restored.getStatus());
+        assertBookingDataEquals(original, restored);
     }
 
     @Test
     void shouldPreserveCompletedBookingAfterJsonRoundTrip()
             throws Exception {
-        Booking original = createPendingBooking();
-        original.confirm("I001", "V001");
+        Booking original = createConfirmedBooking();
         original.complete();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        ObjectMapper mapper = createMapper();
 
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
         assertEquals(BookingStatus.COMPLETED, restored.getStatus());
-        assertEquals("I001", restored.getInstructorId());
-        assertEquals("V001", restored.getVehicleId());
-        assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+        assertBookingDataEquals(original, restored);
     }
 
     @Test
-    void shouldPreserveCancelledBookingAfterJsonRoundTrip()
+    void shouldPreserveCancelledConfirmedBookingAfterJsonRoundTrip()
             throws Exception {
-        Booking original = createPendingBooking();
-        original.confirm("I001", "V001");
+        Booking original = createConfirmedBooking();
         original.cancel();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        ObjectMapper mapper = createMapper();
 
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
@@ -272,7 +311,55 @@ class BookingTest {
         assertEquals(BookingStatus.CANCELLED, restored.getStatus());
         assertEquals("I001", restored.getInstructorId());
         assertEquals("V001", restored.getVehicleId());
-        assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+        assertBookingDataEquals(original, restored);
+    }
+
+    @Test
+    void shouldPreserveCancelledPendingBookingAfterJsonRoundTrip()
+            throws Exception {
+        Booking original = createPendingBooking();
+        original.cancel();
+        ObjectMapper mapper = createMapper();
+
+        String json = mapper.writeValueAsString(original);
+        Booking restored = mapper.readValue(json, Booking.class);
+
+        assertEquals(BookingStatus.CANCELLED, restored.getStatus());
+        assertNull(restored.getInstructorId());
+        assertNull(restored.getVehicleId());
+        assertBookingDataEquals(original, restored);
+    }
+
+    @Test
+    void shouldSerializeTimestampsAsIsoTextAndRestoreTheirValues()
+            throws Exception {
+        Booking original = createConfirmedBooking();
+        ObjectMapper mapper = createMapper();
+
+        String json = mapper.writeValueAsString(original);
+        JsonNode jsonNode = mapper.readTree(json);
+
+        assertTrue(jsonNode.get("startTime").isTextual());
+        assertTrue(jsonNode.get("endTime").isTextual());
+        assertTrue(jsonNode.get("createdAt").isTextual());
+
+        assertEquals(start, LocalDateTime.parse(
+                jsonNode.get("startTime").asText()));
+        assertEquals(end, LocalDateTime.parse(
+                jsonNode.get("endTime").asText()));
+        assertEquals(created, LocalDateTime.parse(
+                jsonNode.get("createdAt").asText()));
+
+        Booking restored = mapper.readValue(json, Booking.class);
+        assertBookingDataEquals(original, restored);
+    }
+
+    @Test
+    void shouldRejectCompletedBookingWithoutAssignmentsDuringReconstruction() {
+        assertThrows(ValidationException.class, () ->
+                new Booking("B001", "S001", "E001",
+                        start, end, null, null,
+                        BookingStatus.COMPLETED, created));
     }
 
     @Test
@@ -302,18 +389,49 @@ class BookingTest {
     @Test
     void shouldRejectInvalidInstructorAndVehicleFormats() {
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, end, "INVALID", "V001",
-                        BookingStatus.CONFIRMED, created
-                ));
+                        BookingStatus.CONFIRMED, created));
 
         assertThrows(ValidationException.class, () ->
-                new Booking(
-                        "B001", "S001", "E001",
+                new Booking("B001", "S001", "E001",
                         start, end, "I001", "INVALID",
-                        BookingStatus.CONFIRMED, created
-                ));
+                        BookingStatus.CONFIRMED, created));
     }
 
+    @Test
+    void shouldRejectMissingRequiredJsonFields() throws Exception {
+        String[] fields = {
+                "id", "studentId", "enrollmentId",
+                "startTime", "endTime", "status", "createdAt"
+        };
+
+        for (String field : fields) {
+            assertRequiredFieldRejected(field, false);
+        }
+    }
+
+    @Test
+    void shouldRejectExplicitNullRequiredJsonFields() throws Exception {
+        String[] fields = {
+                "id", "studentId", "enrollmentId",
+                "startTime", "endTime", "status", "createdAt"
+        };
+
+        for (String field : fields) {
+            assertRequiredFieldRejected(field, true);
+        }
+    }
+
+    private void assertBookingDataEquals(Booking expected, Booking actual) {
+        assertEquals(expected.getId(), actual.getId());
+        assertEquals(expected.getStudentId(), actual.getStudentId());
+        assertEquals(expected.getEnrollmentId(), actual.getEnrollmentId());
+        assertEquals(expected.getStartTime(), actual.getStartTime());
+        assertEquals(expected.getEndTime(), actual.getEndTime());
+        assertEquals(expected.getInstructorId(), actual.getInstructorId());
+        assertEquals(expected.getVehicleId(), actual.getVehicleId());
+        assertEquals(expected.getStatus(), actual.getStatus());
+        assertEquals(expected.getCreatedAt(), actual.getCreatedAt());
+    }
 }
