@@ -15,7 +15,7 @@ public class VehicleService {
         this.vehicleRepository = vehicleRepository;
     }
 
-    public Vehicle createVehicle(
+    public synchronized Vehicle createVehicle(
             String registrationNumber,
             String make,
             String model,
@@ -55,14 +55,18 @@ public class VehicleService {
                 );
     }
 
-    public Vehicle updateVehicle(
+    public synchronized Vehicle updateVehicle(
             String id,
             String registrationNumber,
             String make,
             String model) {
 
-        Vehicle existingVehicle = getVehicleById(id);
-
+        Vehicle existingVehicle = vehicleRepository.findByIdStrict(id)
+                .orElseThrow(() ->
+                        new RecordNotFoundException(
+                                "Vehicle not found: " + id
+                        )
+                );
         ensureRegistrationNumberIsUnique(
                 registrationNumber,
                 existingVehicle.getId()
