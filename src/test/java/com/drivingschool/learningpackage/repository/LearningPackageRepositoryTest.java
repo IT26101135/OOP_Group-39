@@ -1,5 +1,6 @@
 package com.drivingschool.learningpackage.repository;
 
+import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.learningpackage.model.LearningPackage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -141,7 +142,7 @@ class LearningPackageRepositoryTest {
         repository.save(createPackage("P001"));
 
         assertThrows(
-                Exception.class,
+                DuplicateRecordException.class,
                 () -> repository.save(createPackage("P001"))
         );
     }
