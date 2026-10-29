@@ -1,0 +1,17 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:url value="/" var="homeUrl" />
+
+<header class="ds-header">
+    <div class="ds-container ds-navbar">
+        <a class="ds-brand" href="${homeUrl}" aria-label="DriveSpark Academy home">
+            <span class="ds-brand-mark" aria-hidden="true">D</span>
+            <span>DriveSpark Academy</span>
+        </a>
+
+        <nav class="ds-nav" aria-label="Main navigation">
+            <a class="ds-nav-link" href="${homeUrl}" aria-current="page">
+                Home
+            </a>
+        </nav>
+    </div>
+</header>
