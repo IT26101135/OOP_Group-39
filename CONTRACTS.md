@@ -2,25 +2,27 @@
 
 ## Status
 
-The Phase 1 common foundation is available in develop.
+The Phase 1 common foundation and Phase 2A–2G authentication backend
+are available in develop.
 
-Phase 2A adds the User, Student and Admin models and their tests.
-These models become available in develop after the model-stage PR is merged.
+Available backend components:
+- User, Student, Admin and Role models.
+- PasswordHasher.
+- UserRepository.
+- AuthService.
+- AuthSessionService.
+- Administrator startup seeding and AccountWriteCoordinator.
+- StudentLookup and StudentSummary.
 
-Phase 2B adds PasswordHasher.
-Phase 2C adds UserRepository and account persistence tests.
-Each stage becomes available in develop after its PR is merged.
+Phase 2H adds authentication controllers and JSPs, CSRF enforcement,
+controller access annotations, navigation integration and web tests.
 
-Phase 2D provides student registration and credential verification.
-Phase 2E adds session authentication and role-checking methods.
-The session API becomes available in develop after its PR is merged.
+Phase 2H is implemented on feature/IT26101135-auth-web.
+It becomes available in develop after the authentication-web PR is merged.
 
-Phase 2F adds administrator startup seeding and shared account-write
-coordination. These become available in develop after the admin-seed
-PR is merged.
-
-Controllers, route protection, CSRF protection and cross-module lookup
-APIs marked pending must not be assumed to exist.
+Student profile management, administrator dashboard functionality,
+account deletion safeguards and cross-module APIs marked pending
+must not be assumed to exist.
 
 Repository: https://github.com/IT26101135/OOP_Group-39
 
@@ -192,7 +194,7 @@ Exhausting the three-digit range raises ValidationException.
 Administrator IDs use A001-A999.
 Administrator accounts will be created through a controlled startup seed;
 public administrator registration is not allowed.
-Startup seeding is provided by Phase 2F after its PR is merged.
+Startup seeding is available through Phase 2F.
 See the Administrator startup seed section.
 
 ## Implemented: exceptions
@@ -223,6 +225,13 @@ Never include passwords, raw records or sensitive internal details.
 
 This handler does not handle every possible Spring error or startup failure.
 
+Phase 2H additionally handles MVC ResponseStatusException with status
+401 or 403 using fixed, user-safe messages and the shared error page.
+This becomes available after the authentication-web PR is merged.
+
+CSRF filter rejections occur outside MVC and use a separate HTTP 403
+response path.
+
 ## Model and serialization responsibilities
 
 Models validate their domain fields; services enforce business rules.
@@ -243,13 +252,12 @@ and covered by model tests.
 
 Phase 2C provides FileRepository integration through UserRepository,
 with persistence tests for Student and Admin records.
-This integration becomes available in develop after the Phase 2C PR is merged.
+This integration is available in develop.
 Do not enable unrestricted polymorphic default typing.
 
 ## User models — Phase 2A
 
-These models become available to other branches after the model-stage
-pull request is merged into develop.
+Available in develop.
 
 Classes:
 - com.drivingschool.auth.model.Role
@@ -296,14 +304,16 @@ Validation:
 - Coordinated email updates remain pending.
 - BCrypt format validation does not generate hashes or verify passwords.
 
+Web authentication and annotation-based controller protection are
+provided by Phase 2H after its PR is merged.
+
 Still pending:
-- Web integration of AuthSessionService.
-- Route protection, ownership checks, controllers and JSP pages.
+- Student profile and administrator dashboard controllers/JSPs.
+- Account updates, resource ownership checks and deletion safeguards.
 
 ## PasswordHasher — Phase 2B
 
-Available to other branches after the password-hasher PR is merged
-into develop.
+Available in develop.
 
 Class:
 com.drivingschool.auth.util.PasswordHasher
@@ -333,13 +343,14 @@ into ordinary password mismatches.
 
 Registration and credential verification are provided by AuthService.
 Account persistence is provided by UserRepository.
-Session authentication is provided by AuthSessionService after the
-Phase 2E PR is merged. Web integration remains pending.
+Session authentication is provided by AuthSessionService.
+
+The browser authentication flow is provided by Phase 2H after its PR
+is merged.
 
 ## UserRepository — Phase 2C
 
-Available to other branches after the user-repository PR is merged
-into develop.
+Available in develop.
 
 Class:
 com.drivingschool.auth.repository.UserRepository
@@ -378,13 +389,16 @@ Do not manually create or reset account files or ID counters.
 Do not commit runtime account records or credentials.
 
 Pending:
-- Web integration, route protection and ownership checks.
 - Account update operations using AccountWriteCoordinator.
-- Account deletion safeguards.
+- Resource ownership enforcement in module business operations.
+- Account deletion safeguards and review cleanup.
+
+Authentication web integration is provided by Phase 2H after its PR
+is merged.
 
 ## AuthService — Phase 2D
 
-Available to other branches after the auth-service PR is merged into develop.
+Available in develop.
 
 Class:
 com.drivingschool.auth.service.AuthService
@@ -426,14 +440,16 @@ Concurrency:
 - Direct repository writes bypass business-operation coordination.
 - Only one application process may use a data directory.
 
+Authentication controllers, JSPs, CSRF enforcement and controller
+access checks are provided by Phase 2H after its PR is merged.
+
 Still pending:
-- Web integration of AuthSessionService, including controllers,
-  JSP pages, route protection, ownership checks and CSRF protection.
 - Account updates and deletion safeguards.
+- Module-specific resource ownership checks.
 
 ## AuthSessionService — Phase 2E
 
-Available to other branches after the auth-session PR is merged into develop.
+Available in develop.
 
 Class:
 com.drivingschool.auth.service.AuthSessionService
@@ -492,18 +508,19 @@ Integration:
 - This service does not automatically protect routes.
 - Controllers/interceptors must invoke the appropriate checks.
 
-Still pending:
-- Login/logout controllers and JSP pages.
-- Access interceptor and route configuration.
-- CSRF protection for state-changing browser requests.
-- Browser/session-cookie integration tests.
-- MVC handling and presentation of 401/403 errors.
+Phase 2H integrates this service with authentication controllers,
+JSPs, navigation, CSRF enforcement and controller access annotations.
+
+Verification includes full Spring application MockMvc tests and
+manual browser checks. MockMvc does not execute JSP rendering or
+replace real-browser cookie verification.
+
+Module controllers must still declare their access requirements
+and enforce resource ownership. See the Phase 2H contract.
 
 ## Administrator startup seed — Phase 2F
 
-Available in develop after the admin-seed PR is merged.
-Phase 2G adds StudentLookup and the immutable StudentSummary.
-These become available in develop after the student-lookup PR is merged.
+Available in develop.
 
 Classes:
 - com.drivingschool.auth.util.AccountWriteCoordinator
@@ -544,7 +561,7 @@ The seed is not a password-reset mechanism.
 
 ## StudentLookup — Phase 2G
 
-Available to other branches after the student-lookup PR is merged into develop.
+Available in develop.
 
 Interface:
 com.drivingschool.student.api.StudentLookup
@@ -584,6 +601,220 @@ Integration:
 - Administrator actions must enforce administrator authorization.
 - Lookup results are snapshots, not reservations.
 - Coordinating booking creation with student deletion remains pending.
+
+## Authentication web integration — Phase 2H
+
+Available to other branches after the authentication-web PR is
+merged into develop.
+
+### Classes and configuration
+
+- com.drivingschool.auth.form.RegistrationForm
+- com.drivingschool.auth.form.LoginForm
+- com.drivingschool.auth.controller.AuthController
+- com.drivingschool.auth.service.CsrfTokenService
+- com.drivingschool.auth.filter.CsrfFilter
+- com.drivingschool.auth.annotation.RequireLogin
+- com.drivingschool.auth.annotation.RequireAdmin
+- com.drivingschool.auth.interceptor.AccessInterceptor
+- com.drivingschool.auth.interceptor.NavigationInterceptor
+- com.drivingschool.common.config.WebConfig
+
+Do not create competing authentication, CSRF or navigation mechanisms.
+Coordinate changes to shared WebConfig, navbar and CSS with the leader.
+
+### Authentication routes
+
+| Method | Route | Behaviour |
+|---|---|---|
+| GET | /register | Displays the student registration form |
+| POST | /register | Registers a student; redirects to /login?registered |
+| GET | /login | Displays the login form |
+| POST | /login | Verifies credentials and establishes a new session |
+| POST | /logout | Invalidates the session; redirects to /login?loggedOut |
+
+Successful login redirects to / until profile/dashboard routes exist.
+
+Authenticated visitors to registration/login GET or POST routes
+are redirected to /. POST requests still require CSRF validation.
+
+There is no GET logout action or public administrator registration.
+
+Registration:
+- Allowed fields: name, email, phone, password, confirmPassword.
+- ID, role and passwordHash cannot be selected through the form.
+- Password confirmation is checked by the controller.
+- Existing service/model/password validation remains authoritative.
+- Invalid registration returns HTTP 400.
+- Duplicate email returns HTTP 409.
+- Successful registration does not automatically log the student in.
+
+Login:
+- Allowed fields: email and password.
+- Incorrect credentials return HTTP 401 with a generic message.
+- Failed credential verification invalidates the previous session.
+- The redisplayed form receives a token for the new anonymous session.
+- StorageException propagates instead of becoming a credential mismatch.
+
+Form objects are temporary input holders, not persisted domain objects.
+Do not store them in sessions or files, log their passwords, or repopulate
+password inputs when displaying an error.
+
+JSPs:
+- src/main/webapp/WEB-INF/views/auth/register.jsp
+- src/main/webapp/WEB-INF/views/auth/login.jsp
+
+### CSRF protection
+
+CsrfTokenService public API:
+- String getOrCreateToken(HttpServletRequest request)
+- boolean isValid(HttpServletRequest request)
+
+Form parameter:
+_csrf
+
+Session attribute:
+drivespark.csrf.token
+
+The token contains 32 cryptographically random bytes encoded as
+URL-safe Base64 without padding.
+
+- getOrCreateToken creates a session/token when needed.
+- isValid never creates a session.
+- Missing, malformed, incorrect or duplicate token parameters fail.
+- Tokens belong to a session and are not persisted in files.
+- Session replacement requires a fresh token for subsequent forms.
+
+CsrfFilter validates requests before controller execution.
+GET, HEAD, OPTIONS and TRACE are exempt from token validation.
+All other request methods require a valid token.
+Exemption from CSRF checks does not authorize an HTTP method or action.
+
+Login, registration and logout POSTs are not exempt.
+Missing/invalid tokens produce HTTP 403 before business logic runs.
+
+Current support is for form parameters. Do not assume JSON bodies or
+custom CSRF headers are supported. Coordinate multipart/AJAX integration
+before introducing it.
+
+Never place tokens in URLs or logs.
+Never perform state-changing business operations through GET.
+
+JSP attributes:
+- csrfParameterName: String
+- csrfToken: String
+
+Example hidden field, with JSTL core declared:
+
+```jsp
+<input type="hidden"
+       name="<c:out value='${csrfParameterName}' />"
+       value="<c:out value='${csrfToken}' />">
+```
+
+Use c:url for form actions and application links.
+
+AuthController supplies tokens for anonymous authentication forms.
+NavigationInterceptor supplies a logout token for authenticated views.
+
+Other form pages must ensure a current token is supplied before rendering.
+Do not hard-code tokens or disable validation when a form fails.
+
+CSRF protection does not replace login, role or ownership checks.
+
+### Controller access requirements
+
+Annotations:
+- com.drivingschool.auth.annotation.RequireLogin
+- com.drivingschool.auth.annotation.RequireAdmin
+
+Apply them to a controller class or individual handler method.
+
+- RequireLogin allows an existing authenticated account of either role.
+- RequireAdmin allows only an authenticated administrator.
+- Administrator requirements take priority.
+- A method-level RequireLogin cannot weaken a class-level RequireAdmin.
+- Anonymous access to a protected handler produces HTTP 401.
+- Authenticated non-admin access to an admin handler produces HTTP 403.
+
+Unannotated handlers remain public.
+A URL beginning with /admin is not automatically protected.
+
+Every new module endpoint must have its access requirements reviewed.
+These annotations apply to Spring MVC controller handling, not arbitrary
+service calls, scheduled tasks or direct repository operations.
+
+Ownership and student-only restrictions remain module responsibilities.
+RequireLogin alone does not enforce either.
+
+Obtain the acting account through AuthSessionService.
+Do not trust IDs or roles supplied by browser forms.
+
+### Shared navigation
+
+NavigationInterceptor adds display attributes after normal controller
+execution and before view rendering:
+
+- navLoggedIn: Boolean
+- navRole: String — PUBLIC, STUDENT or ADMIN
+- navDisplayName: String — empty for anonymous visitors
+- navHomeActive: Boolean
+
+Authenticated views also receive the CSRF attributes for POST logout.
+
+- User objects and password hashes are not exposed through these attributes.
+- Display names must be escaped with c:out.
+- Redirects receive no navigation or CSRF model additions.
+- Navigation-rendered pages use Cache-Control: no-store.
+- Navigation visibility is not authorization.
+
+Current navbar:
+- Anonymous: Home, Login, Register.
+- Authenticated: Home, escaped display name, POST logout.
+
+Profile/dashboard navigation remains pending until those routes exist.
+
+The navigation post-handler callback is not a guarantee that every
+exception-rendered page receives these attributes.
+
+### Authorization error presentation
+
+GlobalExceptionHandler maps MVC ResponseStatusException:
+- HTTP 401 to common/error with a fixed login-required message.
+- HTTP 403 to common/error with a fixed access-denied message.
+
+Other ResponseStatusException status codes retain Spring's handling.
+
+CsrfFilter failures occur before MVC and use sendError(403).
+They do not pass through the MVC exception handler.
+
+### Verification
+
+Tests cover:
+- Token generation, session binding and invalid-token rejection.
+- Filter rejection before controller execution.
+- Form binding and authentication controller behaviour.
+- Safe navigation attributes.
+- Access requirements and HTTP 401/403 presentation.
+- Integrated registration, login, session replacement and logout.
+- Anonymous/student/admin access through test-only protected endpoints.
+
+Integration tests use temporary storage and disable startup seeding.
+An administrator may be created explicitly inside temporary test storage.
+
+Manual browser checks cover:
+- JSP rendering and styling.
+- Registration and duplicate-email rejection.
+- Failed-login retry with a refreshed token.
+- Logged-in/out navbar states and POST logout.
+- Mobile layout and keyboard navigation.
+- Rejection of a tampered CSRF token.
+
+Still pending:
+- Student profile CRUD and ownership rules.
+- Administrator dashboard functionality.
+- Account deletion safeguards and review cleanup.
+- Protection and verification of each future module endpoint.
 
 ## Pending: cross-module lookups
 

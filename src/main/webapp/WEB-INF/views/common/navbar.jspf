@@ -1,17 +1,62 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
 <c:url value="/" var="homeUrl" />
+<c:url value="/login" var="loginUrl" />
+<c:url value="/register" var="registerUrl" />
+<c:url value="/logout" var="logoutUrl" />
 
 <header class="ds-header">
     <div class="ds-container ds-navbar">
-        <a class="ds-brand" href="${homeUrl}" aria-label="DriveSpark Academy home">
+        <a class="ds-brand"
+           href="<c:out value='${homeUrl}' />"
+           aria-label="DriveSpark Academy home">
             <span class="ds-brand-mark" aria-hidden="true">D</span>
             <span>DriveSpark Academy</span>
         </a>
 
         <nav class="ds-nav" aria-label="Main navigation">
-            <a class="ds-nav-link" href="${homeUrl}" aria-current="page">
-                Home
-            </a>
+            <c:choose>
+                <c:when test="${navHomeActive}">
+                    <a class="ds-nav-link"
+                       href="<c:out value='${homeUrl}' />"
+                       aria-current="page">Home</a>
+                </c:when>
+                <c:otherwise>
+                    <a class="ds-nav-link"
+                       href="<c:out value='${homeUrl}' />">Home</a>
+                </c:otherwise>
+            </c:choose>
+
+            <c:choose>
+                <c:when test="${navLoggedIn}">
+                    <span class="ds-nav-user">
+                        Hello, <c:out value="${navDisplayName}" />
+                    </span>
+
+                    <form class="ds-nav-logout"
+                          method="post"
+                          action="<c:out value='${logoutUrl}' />">
+                        <input type="hidden"
+                               name="<c:out value='${csrfParameterName}' />"
+                               value="<c:out value='${csrfToken}' />">
+
+                        <button class="ds-button" type="submit">
+                            Log out
+                        </button>
+                    </form>
+                </c:when>
+
+                <c:otherwise>
+                    <a class="ds-nav-link"
+                       href="<c:out value='${loginUrl}' />">
+                        Login
+                    </a>
+                    <a class="ds-nav-link"
+                       href="<c:out value='${registerUrl}' />">
+                        Register
+                    </a>
+                </c:otherwise>
+            </c:choose>
         </nav>
     </div>
 </header>
