@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -58,6 +59,32 @@ public class GlobalExceptionHandler {
                 "We could not complete the operation. "
                         + "Please contact the administrator."
         );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ModelAndView handleResponseStatus(
+            ResponseStatusException exception) {
+
+        int status = exception.getStatusCode().value();
+
+        if (status == HttpStatus.UNAUTHORIZED.value()) {
+            return errorPage(
+                    HttpStatus.UNAUTHORIZED,
+                    "Login required",
+                    "Please log in to continue."
+            );
+        }
+
+        if (status == HttpStatus.FORBIDDEN.value()) {
+            return errorPage(
+                    HttpStatus.FORBIDDEN,
+                    "Access denied",
+                    "You do not have permission to access this resource."
+            );
+        }
+
+        // Preserve Spring's normal handling of other HTTP status errors.
+        throw exception;
     }
 
     private ModelAndView errorPage(

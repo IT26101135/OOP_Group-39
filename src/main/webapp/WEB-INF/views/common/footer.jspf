@@ -1,0 +1,12 @@
+<c:url value="/" var="homeUrl" />
+
+<footer class="ds-footer">
+    <div class="ds-container ds-footer-inner">
+        <a class="ds-footer-brand" href="${homeUrl}">
+            DriveSpark Academy
+        </a>
+        <p class="ds-footer-text">
+            Learn with confidence. Drive with care.
+        </p>
+    </div>
+</footer>
