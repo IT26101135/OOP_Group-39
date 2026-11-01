@@ -339,6 +339,37 @@ class ReviewTest {
     }
 
     @Test
+    void approvingReviewUpdatesStatusAndTimestamp() {
+        Review review = createReview(4, "Good service");
+        LocalDateTime approvedAt = createdAt.plusHours(1);
+
+        boolean changed = review.updateStatus(
+                ReviewStatus.APPROVED,
+                approvedAt
+        );
+
+        assertTrue(changed);
+        assertEquals(ReviewStatus.APPROVED, review.getStatus());
+        assertEquals(createdAt, review.getCreatedAt());
+        assertEquals(approvedAt, review.getUpdatedAt());
+    }
+
+    @Test
+    void approvingAlreadyApprovedReviewDoesNotChangeTimestamp() {
+        Review review = createReviewWithStatus(ReviewStatus.APPROVED);
+        LocalDateTime originalUpdatedAt = review.getUpdatedAt();
+
+        boolean changed = review.updateStatus(
+                ReviewStatus.APPROVED,
+                createdAt.plusHours(2)
+        );
+
+        assertFalse(changed);
+        assertEquals(ReviewStatus.APPROVED, review.getStatus());
+        assertEquals(originalUpdatedAt, review.getUpdatedAt());
+    }
+
+    @Test
     void invalidRatingUpdateLeavesStateUnchanged() {
         assertInvalidUpdateLeavesStateUnchanged(
                 0, "Excellent driving school", createdAt.plusHours(1)
