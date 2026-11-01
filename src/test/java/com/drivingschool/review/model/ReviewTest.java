@@ -3,6 +3,7 @@ package com.drivingschool.review.model;
 import com.drivingschool.common.exception.ValidationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,9 @@ class ReviewTest {
     }
 
     private ObjectMapper objectMapper() {
-        return new ObjectMapper().registerModule(new JavaTimeModule());
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     private Review createReviewWithStatus(ReviewStatus status) {
@@ -339,6 +342,37 @@ class ReviewTest {
     }
 
     @Test
+    void approvingReviewUpdatesStatusAndTimestamp() {
+        Review review = createReview(4, "Good service");
+        LocalDateTime approvedAt = createdAt.plusHours(1);
+
+        boolean changed = review.updateStatus(
+                ReviewStatus.APPROVED,
+                approvedAt
+        );
+
+        assertTrue(changed);
+        assertEquals(ReviewStatus.APPROVED, review.getStatus());
+        assertEquals(createdAt, review.getCreatedAt());
+        assertEquals(approvedAt, review.getUpdatedAt());
+    }
+
+    @Test
+    void approvingAlreadyApprovedReviewDoesNotChangeTimestamp() {
+        Review review = createReviewWithStatus(ReviewStatus.APPROVED);
+        LocalDateTime originalUpdatedAt = review.getUpdatedAt();
+
+        boolean changed = review.updateStatus(
+                ReviewStatus.APPROVED,
+                createdAt.plusHours(2)
+        );
+
+        assertFalse(changed);
+        assertEquals(ReviewStatus.APPROVED, review.getStatus());
+        assertEquals(originalUpdatedAt, review.getUpdatedAt());
+    }
+
+    @Test
     void invalidRatingUpdateLeavesStateUnchanged() {
         assertInvalidUpdateLeavesStateUnchanged(
                 0, "Excellent driving school", createdAt.plusHours(1)
@@ -406,5 +440,54 @@ class ReviewTest {
         assertEquals(originalStatus, review.getStatus());
         assertEquals(originalCreatedAt, review.getCreatedAt());
         assertEquals(originalUpdatedAt, review.getUpdatedAt());
+    }
+
+    @Test
+    void serializesAndDeserializesTimestampsAsIsoStrings() throws Exception {
+        Review original = createReview(5, "Excellent driving school");
+        String json = objectMapper().writeValueAsString(original);
+
+        com.fasterxml.jackson.databind.JsonNode node =
+                objectMapper().readTree(json);
+        assertTrue(node.get("createdAt").isTextual());
+        assertTrue(node.get("updatedAt").isTextual());
+        assertEquals(createdAt, LocalDateTime.parse(node.get("createdAt").asText()));
+        assertEquals(createdAt, LocalDateTime.parse(node.get("updatedAt").asText()));
+
+        Review restored = objectMapper().readValue(json, Review.class);
+        assertEquals(original.getCreatedAt(), restored.getCreatedAt());
+        assertEquals(original.getUpdatedAt(), restored.getUpdatedAt());
+    }
+
+    @Test
+    void editingApprovedReviewResetsStatusToPending() {
+        Review review = createReviewWithStatus(ReviewStatus.APPROVED);
+        assertTrue(review.updateContent(4, "Helpful and friendly instructors", createdAt.plusHours(2)));
+        assertEquals(ReviewStatus.PENDING, review.getStatus());
+    }
+
+    @Test
+    void editingHiddenReviewResetsStatusToPending() {
+        Review review = createReviewWithStatus(ReviewStatus.HIDDEN);
+        assertTrue(review.updateContent(4, "Helpful and friendly instructors", createdAt.plusHours(2)));
+        assertEquals(ReviewStatus.PENDING, review.getStatus());
+    }
+
+    @Test
+    void unchangedApprovedReviewContentPreservesStatusAndTimestamp() {
+        Review review = createReviewWithStatus(ReviewStatus.APPROVED);
+        LocalDateTime before = review.getUpdatedAt();
+        assertFalse(review.updateContent(5, "Excellent driving school", createdAt.plusHours(2)));
+        assertEquals(ReviewStatus.APPROVED, review.getStatus());
+        assertEquals(before, review.getUpdatedAt());
+    }
+
+    @Test
+    void unchangedHiddenReviewContentPreservesStatusAndTimestamp() {
+        Review review = createReviewWithStatus(ReviewStatus.HIDDEN);
+        LocalDateTime before = review.getUpdatedAt();
+        assertFalse(review.updateContent(5, "Excellent driving school", createdAt.plusHours(2)));
+        assertEquals(ReviewStatus.HIDDEN, review.getStatus());
+        assertEquals(before, review.getUpdatedAt());
     }
 }
