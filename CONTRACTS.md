@@ -26,9 +26,10 @@ Phase 2H (PR #24) and Phase 3A (PR #27) are merged into develop,
 as confirmed by the leader. Update feature branches from origin/develop
 before depending on these APIs.
 
-Phase 3B is prepared on feature/IT26101135-student-profile-web. Its web
-implementation requires local verification and PR review/merge before
-other branches may rely on it. No passing Phase 3B build is claimed yet.
+Phase 3B is implemented on feature/IT26101135-student-profile-web.
+The leader reported successful focused tests, full Maven clean verify
+and manual browser checks. PR review and merge into develop remain pending.
+Other branches must include the merged changes before relying on these APIs.
 
 Student profile controllers/forms/JSPs (Phase 3B), administrator dashboard
 functionality, password changes, account deletion safeguards and cross-module
@@ -828,8 +829,8 @@ Manual browser checks cover:
 - Rejection of a tampered CSRF token.
 
 Still pending:
-- Student profile web integration (Phase 3B); the authenticated read/update
-  service and its self-profile authorization are implemented in Phase 3A.
+- Merge of the locally verified student profile web integration (Phase 3B).
+  The authenticated read/update service is available through Phase 3A.
 - Password changes and administrator account editing.
 - Administrator dashboard functionality.
 - Account deletion safeguards and review cleanup.
@@ -926,7 +927,8 @@ password hasher). These are service tests, not full Spring/CSRF/browser tests.
 The leader reported successful focused tests and full clean verify with
 app.admin-seed.enabled=false. This does not establish profile web behaviour.
 
-Pending Phase 3B:
+Phase 3B is implemented and locally verified on its feature branch;
+review and merge into develop remain pending. It adds:
 - Profile controller, form binding, display/edit JSPs and navigation link.
 - Controller access annotations, CSRF integration and escaped display values.
 - Web integration tests and browser checks.
@@ -938,8 +940,9 @@ separate work. Booking-reference checks and review cleanup remain pending.
 
 ## Student profile web integration — Phase 3B
 
-Prepared on feature/IT26101135-student-profile-web; verification and merge
-are pending. The following describes this increment, not availability in develop.
+Implemented and locally verified on feature/IT26101135-student-profile-web.
+PR review and merge into develop remain pending. The following describes
+this increment, not availability in develop.
 
 Classes:
 - com.drivingschool.student.form.StudentProfileForm
@@ -982,12 +985,17 @@ StudentProfileWebIntegrationTest contains ten application MockMvc tests for
 access rules, safe profile/form output, persistence, navigation refresh,
 form tampering, validation/conflict redisplay, CSRF rejection, missing-account
 sessions and generic storage errors. Temporary storage is configured before
-startup and administrator seeding is disabled. Tests are supplied but have
-not been executed in the preparation environment.
+startup and administrator seeding is disabled.
 
-MockMvc does not render JSP HTML. Browser verification must cover rendering,
-escaping, navigation visibility, form interaction, mobile layout and keyboard
-access before this increment is considered verified.
+The leader reported that the focused profile service, profile web and
+authentication web tests and full Maven clean verify passed with
+app.admin-seed.enabled=false. The staged git diff --check also passed.
+
+MockMvc does not render JSP HTML. Separately, the leader reported successful
+manual browser checks for profile updates, validation, CSRF rejection,
+administrator restrictions, navigation visibility, mobile layout, keyboard
+navigation and HTML escaping. These are reported local verification results,
+not an independently executed build or browser review.
 
 Password changes, administrator account editing, account deletion, booking
 and package data on the profile, and the coordinated redesign remain separate.
