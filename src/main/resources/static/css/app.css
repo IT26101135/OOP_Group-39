@@ -404,3 +404,47 @@ a:focus-visible {
         animation-iteration-count: 1 !important;
     }
 }
+/* Authentication navigation: coordinated with the shared UI owner. */
+.ds-navbar {
+    flex-wrap: wrap;
+    padding-block: 12px;
+}
+
+.ds-nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.ds-nav-user {
+    max-width: 18rem;
+    overflow-wrap: anywhere;
+    color: var(--ds-navy);
+    font-weight: 600;
+}
+
+.ds-nav-logout {
+    margin: 0;
+}
+
+.ds-nav-logout .ds-button {
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ds-nav-logout .ds-button:focus-visible {
+    outline: 3px solid var(--ds-navy);
+    outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+    .ds-nav {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 16px;
+    }
+
+    .ds-nav-user {
+        max-width: 100%;
+    }
+}
