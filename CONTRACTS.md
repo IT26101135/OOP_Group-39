@@ -14,15 +14,26 @@ Available backend components:
 - Administrator startup seeding and AccountWriteCoordinator.
 - StudentLookup and StudentSummary.
 
-Phase 2H adds authentication controllers and JSPs, CSRF enforcement,
-controller access annotations, navigation integration and web tests.
+Phase 2H implements authentication controllers and JSPs, CSRF enforcement,
+controller access annotations, navigation integration and web tests (PR #24).
 
-Phase 2H is implemented on feature/IT26101135-auth-web.
-It becomes available in develop after the authentication-web PR is merged.
+Phase 3A implements authenticated student profile reading and updates to
+name, email and phone through StudentProfileService (PR #27).
+The leader reported BUILD SUCCESS for the focused profile tests and full
+Maven clean verify with administrator startup seeding disabled.
 
-Student profile management, administrator dashboard functionality,
-account deletion safeguards and cross-module APIs marked pending
-must not be assumed to exist.
+Phase 2H (PR #24) and Phase 3A (PR #27) are merged into develop,
+as confirmed by the leader. Update feature branches from origin/develop
+before depending on these APIs.
+
+Phase 3B is implemented on feature/IT26101135-student-profile-web.
+The leader reported successful focused tests, full Maven clean verify
+and manual browser checks. PR review and merge into develop remain pending.
+Other branches must include the merged changes before relying on these APIs.
+
+Student profile controllers/forms/JSPs (Phase 3B), administrator dashboard
+functionality, password changes, account deletion safeguards and cross-module
+APIs marked pending must not be assumed to exist.
 
 Repository: https://github.com/IT26101135/OOP_Group-39
 
@@ -227,7 +238,7 @@ This handler does not handle every possible Spring error or startup failure.
 
 Phase 2H additionally handles MVC ResponseStatusException with status
 401 or 403 using fixed, user-safe messages and the shared error page.
-This becomes available after the authentication-web PR is merged.
+See Status for Phase 2H branch availability (PR #24).
 
 CSRF filter rejections occur outside MVC and use a separate HTTP 403
 response path.
@@ -301,15 +312,17 @@ Validation:
 - Constructors and setters validate model fields.
 - Invalid setter input leaves the previous field value unchanged.
 - AuthService enforces account-wide email uniqueness during registration.
-- Coordinated email updates remain pending.
+- StudentProfileService coordinates student email updates in Phase 3A.
+  See Status for branch availability.
 - BCrypt format validation does not generate hashes or verify passwords.
 
 Web authentication and annotation-based controller protection are
-provided by Phase 2H after its PR is merged.
+provided by Phase 2H; see Status for branch availability (PR #24).
 
 Still pending:
 - Student profile and administrator dashboard controllers/JSPs.
-- Account updates, resource ownership checks and deletion safeguards.
+- Password changes, administrator account editing and deletion safeguards.
+- Ownership checks for other modules; student self-profile access is in Phase 3A.
 
 ## PasswordHasher — Phase 2B
 
@@ -345,8 +358,8 @@ Registration and credential verification are provided by AuthService.
 Account persistence is provided by UserRepository.
 Session authentication is provided by AuthSessionService.
 
-The browser authentication flow is provided by Phase 2H after its PR
-is merged.
+The browser authentication flow is provided by Phase 2H.
+See Status for branch availability (PR #24).
 
 ## UserRepository — Phase 2C
 
@@ -388,13 +401,16 @@ They must not read users.txt directly or access password hashes.
 Do not manually create or reset account files or ID counters.
 Do not commit runtime account records or credentials.
 
+Student self-profile updates use AccountWriteCoordinator through
+StudentProfileService in Phase 3A; see Status for branch availability.
+
 Pending:
-- Account update operations using AccountWriteCoordinator.
+- Password changes and administrator account editing.
 - Resource ownership enforcement in module business operations.
 - Account deletion safeguards and review cleanup.
 
-Authentication web integration is provided by Phase 2H after its PR
-is merged.
+Authentication web integration is provided by Phase 2H.
+See Status for branch availability (PR #24).
 
 ## AuthService — Phase 2D
 
@@ -436,15 +452,17 @@ Concurrency:
   check/allocate/save operations through AccountWriteCoordinator.
 - AccountWriteCoordinator uses a static synchronized method shared
   across service instances within the application JVM.
-- Future account updates and deletion must use this coordinator too.
+- Phase 3A student profile updates use this same coordinator for the complete
+  authentication reload, validation, uniqueness check and update operation.
+- Future password changes, other account updates and deletion must use it too.
 - Direct repository writes bypass business-operation coordination.
 - Only one application process may use a data directory.
 
 Authentication controllers, JSPs, CSRF enforcement and controller
-access checks are provided by Phase 2H after its PR is merged.
+access checks are provided by Phase 2H; see Status for branch availability (PR #24).
 
 Still pending:
-- Account updates and deletion safeguards.
+- Password changes, administrator account editing and deletion safeguards.
 - Module-specific resource ownership checks.
 
 ## AuthSessionService — Phase 2E
@@ -604,8 +622,8 @@ Integration:
 
 ## Authentication web integration — Phase 2H
 
-Available to other branches after the authentication-web PR is
-merged into develop.
+Available in develop through merged PR #24.
+Other branches must include the merged changes before using these APIs.
 
 ### Classes and configuration
 
@@ -811,10 +829,176 @@ Manual browser checks cover:
 - Rejection of a tampered CSRF token.
 
 Still pending:
-- Student profile CRUD and ownership rules.
+- Merge of the locally verified student profile web integration (Phase 3B).
+  The authenticated read/update service is available through Phase 3A.
+- Password changes and administrator account editing.
 - Administrator dashboard functionality.
 - Account deletion safeguards and review cleanup.
 - Protection and verification of each future module endpoint.
+
+## Student profile service — Phase 3A
+
+Available in develop through merged PR #27.
+This increment provides a service and tests, not HTTP routes or JSP pages.
+
+Classes:
+- com.drivingschool.student.dto.StudentProfile
+- com.drivingschool.student.service.StudentProfileService
+
+Constructor:
+
+```java
+StudentProfileService(
+        UserRepository userRepository,
+        AuthSessionService authSessionService)
+```
+
+Public API (request type: jakarta.servlet.http.HttpServletRequest):
+
+```java
+StudentProfile getOwnProfile(HttpServletRequest request)
+StudentProfile updateOwnProfile(
+        HttpServletRequest request, String name, String email, String phone)
+```
+
+StudentProfile is immutable and exposes only:
+- String getId()
+- String getName()
+- String getEmail()
+- String getPhone()
+
+It contains no password hash or role and has no setters. It is profile output,
+not a browser form model. Other modules should continue using StudentLookup
+for the agreed minimal student lookup rather than accessing private profile data.
+
+### Authorization and identity
+
+- Both methods require an existing authenticated Student through AuthSessionService.
+- Anonymous callers and sessions whose account no longer exists receive HTTP 401.
+- Administrators receive HTTP 403; this is not an administrator student-edit API.
+- The acting student ID comes from the session service, not a request field.
+- Callers cannot select the account ID, role or password hash to update.
+- Reads use the current persisted account, not a cached session User object.
+
+### Validation and updates
+
+- Name: trimmed, 2-100 characters.
+- Email: trimmed, lowercase using Locale.ROOT, maximum 254 characters,
+  with the existing User model's email validation.
+- Phone: trimmed, 7-15 digits, optionally beginning with +.
+- A replacement Student is validated before any existing model is changed.
+- ID and password hash are preserved; no new account ID is allocated.
+- Email uniqueness covers Student and Admin accounts using strict reads.
+- An email belonging to another account raises DuplicateRecordException.
+- An existing duplicate email anywhere in the strict account list causes
+  StorageException during an otherwise valid update, including a no-op.
+  This operation does not repair account data.
+- Invalid replacement values raise ValidationException.
+- A normalized unchanged submission returns the current profile without writing,
+  after strict account/email-integrity checks.
+- Changed values are persisted through UserRepository.update().
+- StorageException propagates; it is not converted to missing-account or
+  duplicate-email responses.
+
+### Coordination and sessions
+
+- The complete update runs inside AccountWriteCoordinator.execute(), including
+  the authenticated account reload, validation, uniqueness check and write.
+- Registration, administrator seeding and student profile updates share this
+  coordinator across service instances within one JVM.
+- Direct repository writes bypass these business rules and coordination.
+- Only one application process may use a data directory.
+- Profile updates do not replace or invalidate the session. AuthSessionService
+  reloads the account by ID, so subsequent reads observe the updated details.
+- Future account deletion still needs agreed cross-module safeguards.
+
+### Verification and remaining work
+
+StudentProfileServiceTest contains 14 tests covering safe DTO output,
+anonymous/admin rejection, own-profile persistence, unchanged submissions,
+invalid input, student/admin email conflicts, duplicate stored emails,
+missing accounts, storage failures and concurrent email claims.
+
+Tests use temporary file storage and real session handling with mocked
+credential authentication. Concurrency cases cover two profile service
+instances and profile updates racing with AuthService registration (mocked
+password hasher). These are service tests, not full Spring/CSRF/browser tests.
+
+The leader reported successful focused tests and full clean verify with
+app.admin-seed.enabled=false. This does not establish profile web behaviour.
+
+Phase 3B is implemented and locally verified on its feature branch;
+review and merge into develop remain pending. It adds:
+- Profile controller, form binding, display/edit JSPs and navigation link.
+- Controller access annotations, CSRF integration and escaped display values.
+- Web integration tests and browser checks.
+
+No profile HTTP endpoint is introduced by Phase 3A. Login redirects and
+navigation remain as documented in Phase 2H until the web increment changes them.
+Password changes, administrator profile management and account deletion are
+separate work. Booking-reference checks and review cleanup remain pending.
+
+## Student profile web integration — Phase 3B
+
+Implemented and locally verified on feature/IT26101135-student-profile-web.
+PR review and merge into develop remain pending. The following describes
+this increment, not availability in develop.
+
+Classes:
+- com.drivingschool.student.form.StudentProfileForm
+- com.drivingschool.student.controller.StudentProfileController
+
+| Method | Route | Behaviour |
+|---|---|---|
+| GET | /student/profile | Displays the authenticated student's profile DTO |
+| GET | /student/profile/edit | Displays name, email and phone in an edit form |
+| POST | /student/profile/edit | Updates own profile, then redirects to /student/profile |
+
+- The controller declares RequireLogin and calls StudentProfileService,
+  which additionally rejects administrators with HTTP 403.
+- Anonymous GET requests receive HTTP 401. POSTs first pass through the
+  existing CSRF filter; missing/invalid tokens produce HTTP 403 before MVC.
+  An anonymous POST with a valid anonymous-session token still receives HTTP 401.
+- Only name, email and phone are allowed form fields. Extra fields are
+  suppressed; browser IDs, roles and credentials cannot select or modify accounts.
+- Binding/validation errors return HTTP 400 with the edit form and safe error text.
+- Duplicate email returns HTTP 409 with the submitted form values and a CSRF token.
+- Successful writes use redirect-after-POST and a one-time profileUpdated flash flag.
+  Private form values are not added to the redirect URL.
+- StorageException propagates to the existing generic HTTP 500 handler.
+- Profile handlers set Cache-Control: no-store.
+- GET requests do not save profile data.
+- The session and password remain unchanged. Subsequent login uses the updated email.
+
+Views:
+- src/main/webapp/WEB-INF/views/student/profile.jsp
+- src/main/webapp/WEB-INF/views/student/profile-edit.jsp
+
+Both views use c:url and escape dynamic output with c:out. The edit form
+includes the existing CSRF parameter/token and never binds the persisted User.
+A new /css/profile.css adds scoped styles while retaining app.css branding.
+The shared navbar adds My profile only for authenticated STUDENT navigation.
+Visibility is not authorization; service checks apply to direct requests too.
+Login continues redirecting to /; AuthController is unchanged.
+
+StudentProfileWebIntegrationTest contains ten application MockMvc tests for
+access rules, safe profile/form output, persistence, navigation refresh,
+form tampering, validation/conflict redisplay, CSRF rejection, missing-account
+sessions and generic storage errors. Temporary storage is configured before
+startup and administrator seeding is disabled.
+
+The leader reported that the focused profile service, profile web and
+authentication web tests and full Maven clean verify passed with
+app.admin-seed.enabled=false. The staged git diff --check also passed.
+
+MockMvc does not render JSP HTML. Separately, the leader reported successful
+manual browser checks for profile updates, validation, CSRF rejection,
+administrator restrictions, navigation visibility, mobile layout, keyboard
+navigation and HTML escaping. These are reported local verification results,
+not an independently executed build or browser review.
+
+Password changes, administrator account editing, account deletion, booking
+and package data on the profile, and the coordinated redesign remain separate.
 
 ## Pending: cross-module lookups
 

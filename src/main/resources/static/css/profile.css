@@ -1,0 +1,17 @@
+/* Profile-only styles; shared branding stays in app.css. */
+.ds-profile { max-width: 760px; }
+.ds-profile h1 { color: var(--ds-navy); }
+.ds-profile-details { padding: 24px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius); }
+.ds-profile-details dt { color: var(--ds-muted); font-weight: 700; }
+.ds-profile-details dd { margin: 0 0 20px; overflow-wrap: anywhere; }
+.ds-profile-details dd:last-child { margin-bottom: 0; }
+.ds-profile-form { max-width: 560px; }
+.ds-profile-form label { display: block; margin-bottom: 6px; font-weight: 700; }
+.ds-profile-form input:not([type="hidden"]) { display: block; width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--ds-muted); border-radius: 6px; font: inherit; }
+.ds-profile-form small { display: block; margin-top: 5px; color: var(--ds-muted); }
+.ds-profile-form input:focus-visible, .ds-profile-form button:focus-visible { outline: 3px solid var(--ds-navy); outline-offset: 3px; }
+.ds-profile-form button { font: inherit; font-weight: 700; cursor: pointer; }
+.ds-profile-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-top: 24px; }
+.ds-profile-error, .ds-profile-message { padding: 16px; border: 1px solid currentColor; border-radius: 6px; overflow-wrap: anywhere; }
+.ds-profile-error { color: #8b1d25; background: #fff4f4; }
+.ds-profile-message { color: #18542b; background: #f0faf2; }
