@@ -4,6 +4,7 @@
 <c:url value="/login" var="loginUrl" />
 <c:url value="/register" var="registerUrl" />
 <c:url value="/logout" var="logoutUrl" />
+<c:url value="/student/profile" var="navStudentProfileUrl" />
 
 <header class="ds-header">
     <div class="ds-container ds-navbar">
@@ -29,6 +30,18 @@
 
             <c:choose>
                 <c:when test="${navLoggedIn}">
+                    <c:if test="${navRole eq 'STUDENT'}">
+                        <c:choose>
+                            <c:when test="${navProfileActive}">
+                                <a class="ds-nav-link" href="<c:out value='${navStudentProfileUrl}' />"
+                                   aria-current="page">My profile</a>
+                            </c:when>
+                            <c:otherwise>
+                                <a class="ds-nav-link" href="<c:out value='${navStudentProfileUrl}' />">My profile</a>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:if>
+
                     <span class="ds-nav-user">
                         Hello, <c:out value="${navDisplayName}" />
                     </span>

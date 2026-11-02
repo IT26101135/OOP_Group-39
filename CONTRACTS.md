@@ -22,10 +22,13 @@ name, email and phone through StudentProfileService (PR #27).
 The leader reported BUILD SUCCESS for the focused profile tests and full
 Maven clean verify with administrator startup seeding disabled.
 
-Branch availability: Phase 2H requires PR #24 to be merged into develop;
-Phase 3A requires PR #27 to be merged into develop. Confirm the relevant
-PR is marked Merged and update your branch before depending on these APIs.
-Implementation and passing local tests alone do not confirm a PR merge.
+Phase 2H (PR #24) and Phase 3A (PR #27) are merged into develop,
+as confirmed by the leader. Update feature branches from origin/develop
+before depending on these APIs.
+
+Phase 3B is prepared on feature/IT26101135-student-profile-web. Its web
+implementation requires local verification and PR review/merge before
+other branches may rely on it. No passing Phase 3B build is claimed yet.
 
 Student profile controllers/forms/JSPs (Phase 3B), administrator dashboard
 functionality, password changes, account deletion safeguards and cross-module
@@ -618,7 +621,7 @@ Integration:
 
 ## Authentication web integration — Phase 2H
 
-Implemented in PR #24. See Status for branch availability.
+Available in develop through merged PR #24.
 Other branches must include the merged changes before using these APIs.
 
 ### Classes and configuration
@@ -834,7 +837,7 @@ Still pending:
 
 ## Student profile service — Phase 3A
 
-Implemented in PR #27. See Status for branch availability.
+Available in develop through merged PR #27.
 This increment provides a service and tests, not HTTP routes or JSP pages.
 
 Classes:
@@ -932,6 +935,62 @@ No profile HTTP endpoint is introduced by Phase 3A. Login redirects and
 navigation remain as documented in Phase 2H until the web increment changes them.
 Password changes, administrator profile management and account deletion are
 separate work. Booking-reference checks and review cleanup remain pending.
+
+## Student profile web integration — Phase 3B
+
+Prepared on feature/IT26101135-student-profile-web; verification and merge
+are pending. The following describes this increment, not availability in develop.
+
+Classes:
+- com.drivingschool.student.form.StudentProfileForm
+- com.drivingschool.student.controller.StudentProfileController
+
+| Method | Route | Behaviour |
+|---|---|---|
+| GET | /student/profile | Displays the authenticated student's profile DTO |
+| GET | /student/profile/edit | Displays name, email and phone in an edit form |
+| POST | /student/profile/edit | Updates own profile, then redirects to /student/profile |
+
+- The controller declares RequireLogin and calls StudentProfileService,
+  which additionally rejects administrators with HTTP 403.
+- Anonymous GET requests receive HTTP 401. POSTs first pass through the
+  existing CSRF filter; missing/invalid tokens produce HTTP 403 before MVC.
+  An anonymous POST with a valid anonymous-session token still receives HTTP 401.
+- Only name, email and phone are allowed form fields. Extra fields are
+  suppressed; browser IDs, roles and credentials cannot select or modify accounts.
+- Binding/validation errors return HTTP 400 with the edit form and safe error text.
+- Duplicate email returns HTTP 409 with the submitted form values and a CSRF token.
+- Successful writes use redirect-after-POST and a one-time profileUpdated flash flag.
+  Private form values are not added to the redirect URL.
+- StorageException propagates to the existing generic HTTP 500 handler.
+- Profile handlers set Cache-Control: no-store.
+- GET requests do not save profile data.
+- The session and password remain unchanged. Subsequent login uses the updated email.
+
+Views:
+- src/main/webapp/WEB-INF/views/student/profile.jsp
+- src/main/webapp/WEB-INF/views/student/profile-edit.jsp
+
+Both views use c:url and escape dynamic output with c:out. The edit form
+includes the existing CSRF parameter/token and never binds the persisted User.
+A new /css/profile.css adds scoped styles while retaining app.css branding.
+The shared navbar adds My profile only for authenticated STUDENT navigation.
+Visibility is not authorization; service checks apply to direct requests too.
+Login continues redirecting to /; AuthController is unchanged.
+
+StudentProfileWebIntegrationTest contains ten application MockMvc tests for
+access rules, safe profile/form output, persistence, navigation refresh,
+form tampering, validation/conflict redisplay, CSRF rejection, missing-account
+sessions and generic storage errors. Temporary storage is configured before
+startup and administrator seeding is disabled. Tests are supplied but have
+not been executed in the preparation environment.
+
+MockMvc does not render JSP HTML. Browser verification must cover rendering,
+escaping, navigation visibility, form interaction, mobile layout and keyboard
+access before this increment is considered verified.
+
+Password changes, administrator account editing, account deletion, booking
+and package data on the profile, and the coordinated redesign remain separate.
 
 ## Pending: cross-module lookups
 
