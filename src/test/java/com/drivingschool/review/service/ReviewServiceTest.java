@@ -5,6 +5,7 @@ import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.RecordNotFoundException;
+import com.drivingschool.common.exception.StorageException;
 import com.drivingschool.review.model.Review;
 import com.drivingschool.review.model.ReviewStatus;
 import com.drivingschool.review.repository.ReviewRepository;
@@ -107,6 +108,8 @@ class ReviewServiceTest {
                 ReviewStatus.PENDING,
                 result.getStatus()
         );
+        assertEquals(NOW, result.getCreatedAt());
+        assertEquals(NOW, result.getUpdatedAt());
 
         verify(reviewRepository).save(any(Review.class));
     }
@@ -497,4 +500,147 @@ class ReviewServiceTest {
         assertEquals(originalUpdatedAt, review.getUpdatedAt());
         verify(reviewRepository, never()).update(any());
     }
+
+
+    // 8. Strict storage failure propagation
+
+    @Test
+    void createReviewPropagatesStrictReadStorageExceptionWithoutAllocatingOrSaving() {
+        when(authSessionService.requireLogin(request)).thenReturn(student);
+        when(studentLookup.exists("S001")).thenReturn(true);
+
+        StorageException storageException =
+                new StorageException("Review storage is unavailable.", new RuntimeException("disk error"));
+        when(reviewRepository.readAllStrict()).thenThrow(storageException);
+
+        StorageException thrown = assertThrows(
+                StorageException.class,
+                () -> reviewService.createReview(request, 5, "Very good driving school")
+        );
+
+        assertSame(storageException, thrown);
+        verify(reviewRepository, never()).nextId(anyString());
+        verify(reviewRepository, never()).save(any(Review.class));
+    }
+
+    @Test
+    void updateOwnReviewPropagatesStrictLookupStorageExceptionWithoutUpdating() {
+        when(authSessionService.requireLogin(request)).thenReturn(student);
+        when(studentLookup.exists("S001")).thenReturn(true);
+
+        StorageException storageException =
+                new StorageException("Review storage is unavailable.", new RuntimeException("disk error"));
+        when(reviewRepository.findByIdStrict("R001")).thenThrow(storageException);
+
+        StorageException thrown = assertThrows(
+                StorageException.class,
+                () -> reviewService.updateOwnReview(
+                        request, "R001", 5, "Excellent driving school"
+                )
+        );
+
+        assertSame(storageException, thrown);
+        verify(reviewRepository, never()).update(any(Review.class));
+    }
+
+    @Test
+    void deleteOwnReviewPropagatesStrictLookupStorageExceptionWithoutDeleting() {
+        when(authSessionService.requireLogin(request)).thenReturn(student);
+        when(studentLookup.exists("S001")).thenReturn(true);
+
+        StorageException storageException =
+                new StorageException("Review storage is unavailable.", new RuntimeException("disk error"));
+        when(reviewRepository.findByIdStrict("R001")).thenThrow(storageException);
+
+        StorageException thrown = assertThrows(
+                StorageException.class,
+                () -> reviewService.deleteOwnReview(request, "R001")
+        );
+
+        assertSame(storageException, thrown);
+        verify(reviewRepository, never()).delete(anyString());
+    }
+
+    // 9. Unchanged student content
+
+    @Test
+    void updatingApprovedReviewWithEquivalentTrimmedCommentDoesNotChangeReviewOrWrite() {
+        LocalDateTime originalCreatedAt = NOW.minusDays(3);
+        LocalDateTime originalUpdatedAt = NOW.minusDays(2);
+        Review review = new Review(
+                "R001", "S001", 4, "Good driving school",
+                ReviewStatus.APPROVED, originalCreatedAt, originalUpdatedAt
+        );
+
+        when(authSessionService.requireLogin(request)).thenReturn(student);
+        when(studentLookup.exists("S001")).thenReturn(true);
+        when(reviewRepository.findByIdStrict("R001")).thenReturn(Optional.of(review));
+
+        Review result = reviewService.updateOwnReview(
+                request, "R001", 4, "  Good driving school  "
+        );
+
+        assertSame(review, result);
+        assertEquals(ReviewStatus.APPROVED, result.getStatus());
+        assertEquals(originalCreatedAt, result.getCreatedAt());
+        assertEquals(originalUpdatedAt, result.getUpdatedAt());
+        assertEquals("Good driving school", result.getComment());
+        verify(reviewRepository, never()).update(any(Review.class));
+    }
+
+    @Test
+    void updatingHiddenReviewWithEquivalentTrimmedCommentDoesNotChangeReviewOrWrite() {
+        LocalDateTime originalCreatedAt = NOW.minusDays(3);
+        LocalDateTime originalUpdatedAt = NOW.minusDays(2);
+        Review review = new Review(
+                "R001", "S001", 4, "Good driving school",
+                ReviewStatus.HIDDEN, originalCreatedAt, originalUpdatedAt
+        );
+
+        when(authSessionService.requireLogin(request)).thenReturn(student);
+        when(studentLookup.exists("S001")).thenReturn(true);
+        when(reviewRepository.findByIdStrict("R001")).thenReturn(Optional.of(review));
+
+        Review result = reviewService.updateOwnReview(
+                request, "R001", 4, "  Good driving school  "
+        );
+
+        assertSame(review, result);
+        assertEquals(ReviewStatus.HIDDEN, result.getStatus());
+        assertEquals(originalCreatedAt, result.getCreatedAt());
+        assertEquals(originalUpdatedAt, result.getUpdatedAt());
+        assertEquals("Good driving school", result.getComment());
+        verify(reviewRepository, never()).update(any(Review.class));
+    }
+
+    // 10. Administrator restrictions
+
+    @Test
+    void administratorCannotUpdateStudentReview() {
+        when(authSessionService.requireLogin(request)).thenReturn(admin);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> reviewService.updateOwnReview(
+                        request, "R001", 5, "Excellent driving school"
+                )
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verifyNoInteractions(reviewRepository);
+    }
+
+    @Test
+    void administratorCannotDeleteStudentReview() {
+        when(authSessionService.requireLogin(request)).thenReturn(admin);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> reviewService.deleteOwnReview(request, "R001")
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verifyNoInteractions(reviewRepository);
+    }
+
 }
