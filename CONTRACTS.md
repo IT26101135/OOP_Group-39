@@ -1000,6 +1000,132 @@ not an independently executed build or browser review.
 Password changes, administrator account editing, account deletion, booking
 and package data on the profile, and the coordinated redesign remain separate.
 
+
+## Learning Package Service — IT26101136
+
+Implemented locally on:
+feature/IT26101136-learning-package-service
+
+Focused service and configuration tests have passed locally.
+The increment is not confirmed as merged into develop.
+
+Class:
+com.drivingschool.learningpackage.service.LearningPackageService
+
+Repository:
+com.drivingschool.learningpackage.repository.LearningPackageRepository
+
+Model:
+com.drivingschool.learningpackage.model.LearningPackage
+
+### Constructor
+
+```java
+LearningPackageService(LearningPackageRepository repository)
+```
+
+The service is registered through LearningPackageConfig using
+the configured app.data-directory and Spring's injected ObjectMapper.
+
+### Public API
+
+```java
+LearningPackage createPackage(
+        String name,
+        String description,
+        BigDecimal price,
+        int lessonCount,
+        int validityDays,
+        boolean active);
+
+List<LearningPackage> listPackages();
+
+Optional<LearningPackage> findPackageById(String id);
+
+LearningPackage updatePackageMetadata(
+        String id,
+        String name,
+        String description);
+```
+
+### Behaviour and validation
+
+- Package IDs use P001-P999 and are allocated through repository.nextId("P").
+- IDs are immutable after creation.
+- Name and description validation is performed by LearningPackage.
+- Package names must be unique across active and inactive packages.
+- Name uniqueness ignores leading/trailing whitespace and letter case
+  using trim() and Locale.ROOT. Internal whitespace is preserved.
+- The stored/displayed name retains its capitalization and internal
+  whitespace, with leading/trailing whitespace removed by model validation.
+- Duplicate names raise DuplicateRecordException.
+- Invalid input and malformed IDs raise ValidationException.
+- Package ID lookup accepts only the exact P001-P999 format;
+  IDs are not trimmed or case-normalized.
+- A valid but missing ID returns Optional.empty() from findPackageById().
+- A valid but missing ID in updatePackageMetadata() raises
+  RecordNotFoundException.
+- listPackages() includes active and inactive packages.
+- All service reads used for business decisions are strict.
+  StorageException propagates and must not be treated as missing data.
+
+### Metadata updates
+
+updatePackageMetadata() changes only name and description.
+
+It preserves:
+- ID
+- Price
+- Lesson count
+- Validity days
+- Active status
+
+A package may retain its own name, including a case-only or
+whitespace-normalized equivalent. A name used by another package
+is rejected with DuplicateRecordException.
+
+The service validates a replacement model before persisting it.
+Invalid or duplicate updates do not modify the existing record.
+
+### Concurrency and persistence
+
+- Create and metadata-update operations use one static service-level
+  write lock shared across LearningPackageService instances in one JVM.
+- The complete check/allocate/save or check/update sequence is coordinated.
+- Repository operations also use the shared FileRepository storage lock.
+- Direct repository writes bypass service-level package-name uniqueness
+  and service coordination.
+- Only one application process may use a data directory.
+- nextId() reserves IDs immediately. Gaps are permitted if a later
+  save operation fails.
+- Strict read or validation failures before allocation prevent ID allocation.
+
+### Current scope and pending work
+
+This service does not provide:
+- Package deletion or deactivation operations.
+- Price, lesson-count, validity or active-status update operations.
+- Enrollment, booking or package-entitlement integration.
+- PackageLookup or BookingLookup cross-module APIs.
+- Controllers, JSP pages or browser forms.
+
+Package entitlement rules, purchased-package terms and cross-module
+lookup contracts remain pending leader agreement. Do not infer these
+rules or access another module's files directly.
+
+### Verification
+
+LearningPackageServiceTest: 18 tests passed.
+LearningPackageConfigTest: 1 test passed.
+
+Focused test results:
+19 tests, 0 failures, 0 errors, 0 skipped.
+
+Full Maven verification:
+Command: .\mvnw.cmd "-Dapp.admin-seed.enabled=false" clean verify
+414 tests, 0 failures, 0 errors, 0 skipped.
+BUILD SUCCESS.
+
 ## Pending: cross-module lookups
 
 These are capability names, not final Java declarations:
