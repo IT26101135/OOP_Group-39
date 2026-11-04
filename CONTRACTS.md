@@ -1115,15 +1115,14 @@ rules or access another module's files directly.
 
 ### Verification
 
-LearningPackageServiceTest: 16 tests passed.
+LearningPackageServiceTest: 18 tests passed.
 LearningPackageConfigTest: 1 test passed.
 
 Focused test results:
-17 tests, 0 failures, 0 errors, 0 skipped.
+19 tests, 0 failures, 0 errors, 0 skipped.
 
 Full Maven verification:
-Command: .\mvnw.cmd "-Dapp.admin-seed.enabled=false" clean verify
-412 tests, 0 failures, 0 errors, 0 skipped.
+394 tests, 0 failures, 0 errors, 0 skipped.
 BUILD SUCCESS.
 
 ## Pending: cross-module lookups
