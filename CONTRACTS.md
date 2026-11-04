@@ -1122,7 +1122,8 @@ Focused test results:
 19 tests, 0 failures, 0 errors, 0 skipped.
 
 Full Maven verification:
-394 tests, 0 failures, 0 errors, 0 skipped.
+Command: .\mvnw.cmd "-Dapp.admin-seed.enabled=false" clean verify
+414 tests, 0 failures, 0 errors, 0 skipped.
 BUILD SUCCESS.
 
 ## Pending: cross-module lookups
