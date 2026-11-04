@@ -141,9 +141,38 @@ public class Review implements Identifiable {
         if (changed) {
             this.rating = newRating;
             this.comment = trimmedComment;
+            this.status = ReviewStatus.PENDING;
             this.updatedAt = changeTime;
         }
 
         return changed;
+    }
+
+    public boolean updateStatus(
+            ReviewStatus newStatus,
+            LocalDateTime changeTime) {
+
+        requireValue(newStatus, "status");
+        requireValue(changeTime, "changeTime");
+
+        if (newStatus == ReviewStatus.PENDING) {
+            throw new ValidationException(
+                    "Moderation status must be APPROVED or HIDDEN.");
+        }
+
+        if (this.status == newStatus) {
+            return false;
+        }
+
+        if (changeTime.isBefore(createdAt)
+                || changeTime.isBefore(updatedAt)) {
+            throw new ValidationException(
+                    "changeTime cannot be earlier than existing timestamps");
+        }
+
+        this.status = newStatus;
+        this.updatedAt = changeTime;
+
+        return true;
     }
 }
