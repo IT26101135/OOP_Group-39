@@ -51,6 +51,39 @@ class LearningPackageServiceTest {
                 active
         );
     }
+    private static class FailingLearningPackageRepository
+            extends LearningPackageRepository {
+
+        private final StorageException failure;
+        private boolean failOnSave;
+        private boolean failOnUpdate;
+
+        FailingLearningPackageRepository(
+                Path directory,
+                StorageException failure) {
+
+            super(directory, new ObjectMapper());
+            this.failure = failure;
+        }
+
+        @Override
+        public void save(LearningPackage record) {
+            if (failOnSave) {
+                throw failure;
+            }
+
+            super.save(record);
+        }
+
+        @Override
+        public void update(LearningPackage record) {
+            if (failOnUpdate) {
+                throw failure;
+            }
+
+            super.update(record);
+        }
+    }
 
     @Test
     void createPackageShouldGenerateIdAndPersistRecord() {
@@ -273,6 +306,22 @@ class LearningPackageServiceTest {
         assertEquals(original.getLessonCount(), updated.getLessonCount());
         assertEquals(original.getValidityDays(), updated.getValidityDays());
         assertEquals(original.isActive(), updated.isActive());
+
+        LearningPackage persisted = createRepository()
+                .findByIdStrict(original.getId())
+                .orElseThrow();
+
+        assertEquals("Updated Package", persisted.getName());
+        assertEquals(
+                "An updated package for beginner drivers.",
+                persisted.getDescription()
+        );
+
+        assertEquals(original.getId(), persisted.getId());
+        assertEquals(original.getPrice(), persisted.getPrice());
+        assertEquals(original.getLessonCount(), persisted.getLessonCount());
+        assertEquals(original.getValidityDays(), persisted.getValidityDays());
+        assertEquals(original.isActive(), persisted.isActive());
     }
 
     @Test
@@ -325,6 +374,18 @@ class LearningPackageServiceTest {
                         .orElseThrow()
                         .getName()
         );
+
+        LearningPackage persisted = createRepository()
+                .findByIdStrict(first.getId())
+                .orElseThrow();
+
+        assertEquals(first.getId(), persisted.getId());
+        assertEquals(first.getName(), persisted.getName());
+        assertEquals(first.getDescription(), persisted.getDescription());
+        assertEquals(first.getPrice(), persisted.getPrice());
+        assertEquals(first.getLessonCount(), persisted.getLessonCount());
+        assertEquals(first.getValidityDays(), persisted.getValidityDays());
+        assertEquals(first.isActive(), persisted.isActive());
     }
 
     @Test
@@ -369,6 +430,27 @@ class LearningPackageServiceTest {
                 )
         );
 
+        assertThrows(
+                ValidationException.class,
+                () -> service.updatePackageMetadata(
+                        original.getId(),
+                        "Valid Replacement Name",
+                        "Short"
+                )
+        );
+
+        LearningPackage persisted = createRepository()
+                .findByIdStrict(original.getId())
+                .orElseThrow();
+
+        assertEquals(original.getId(), persisted.getId());
+        assertEquals(original.getName(), persisted.getName());
+        assertEquals(original.getDescription(), persisted.getDescription());
+        assertEquals(original.getPrice(), persisted.getPrice());
+        assertEquals(original.getLessonCount(), persisted.getLessonCount());
+        assertEquals(original.getValidityDays(), persisted.getValidityDays());
+        assertEquals(original.isActive(), persisted.isActive());
+
         LearningPackage stored = service.findPackageById(
                 original.getId()
         ).orElseThrow();
@@ -378,31 +460,58 @@ class LearningPackageServiceTest {
     }
 
     @Test
-    void corruptedRecordsShouldPreventStrictReadsAndCreation()
+    void corruptedRecordsShouldPreventAllOperationsWithoutChangingFiles()
             throws IOException {
 
         LearningPackageService service = createService();
 
-        Path recordsFile = tempDirectory.resolve("packages.txt");
+        LearningPackage original = createPackage(
+                "Beginner Package",
+                "A complete package for beginner drivers.",
+                true
+        );
 
-        Files.writeString(recordsFile, "{invalid json}\n");
+        Path recordsFile = tempDirectory.resolve("packages.txt");
+        Path counterFile = tempDirectory.resolve("packages.txt.ids.txt");
+
+        Files.writeString(
+                recordsFile,
+                Files.readString(recordsFile) + "{invalid json}\n"
+        );
+
+        String recordsBefore = Files.readString(recordsFile);
+        String counterBefore = Files.readString(counterFile);
+
+        assertThrows(StorageException.class, service::listPackages);
 
         assertThrows(
                 StorageException.class,
-                service::listPackages
+                () -> service.findPackageById(original.getId())
         );
 
         assertThrows(
                 StorageException.class,
                 () -> service.createPackage(
-                        "Beginner Package",
-                        "A complete package for beginner drivers.",
-                        new BigDecimal("15000"),
-                        10,
-                        90,
+                        "Advanced Package",
+                        "A complete package for experienced drivers.",
+                        new BigDecimal("25000"),
+                        20,
+                        120,
                         true
                 )
         );
+
+        assertThrows(
+                StorageException.class,
+                () -> service.updatePackageMetadata(
+                        original.getId(),
+                        "Updated Package",
+                        "An updated package for beginner drivers."
+                )
+        );
+
+        assertEquals(recordsBefore, Files.readString(recordsFile));
+        assertEquals(counterBefore, Files.readString(counterFile));
     }
 
     @Test
@@ -526,5 +635,97 @@ class LearningPackageServiceTest {
             executor.shutdownNow();
             assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
         }
+    }
+
+    @Test
+    void createShouldPropagateSaveFailure() {
+
+        StorageException expected = new StorageException(
+                "Simulated save failure",
+                new IOException("Disk write failed")
+        );
+
+        FailingLearningPackageRepository repository =
+                new FailingLearningPackageRepository(
+                        tempDirectory,
+                        expected
+                );
+
+        LearningPackageService service =
+                new LearningPackageService(repository);
+
+        repository.failOnSave = true;
+
+        StorageException actual = assertThrows(
+                StorageException.class,
+                () -> service.createPackage(
+                        "Beginner Package",
+                        "A complete package for beginner drivers.",
+                        new BigDecimal("15000"),
+                        10,
+                        90,
+                        true
+                )
+        );
+
+        assertSame(expected, actual);
+    }
+
+    @Test
+    void updateShouldPropagateRepositoryFailureWithoutMutatingOriginal() {
+
+        LearningPackage original = createPackage(
+                "Beginner Package",
+                "A complete package for beginner drivers.",
+                true
+        );
+
+        StorageException expected = new StorageException(
+                "Simulated update failure",
+                new IOException("Disk write failed")
+        );
+
+        FailingLearningPackageRepository repository =
+                new FailingLearningPackageRepository(
+                        tempDirectory,
+                        expected
+                );
+
+        LearningPackageService service =
+                new LearningPackageService(repository);
+
+        repository.failOnUpdate = true;
+
+        StorageException actual = assertThrows(
+                StorageException.class,
+                () -> service.updatePackageMetadata(
+                        original.getId(),
+                        "Updated Package",
+                        "An updated package for beginner drivers."
+                )
+        );
+
+        assertSame(expected, actual);
+
+        assertEquals("Beginner Package", original.getName());
+        assertEquals(
+                "A complete package for beginner drivers.",
+                original.getDescription()
+        );
+
+        assertEquals(new BigDecimal("15000.00"), original.getPrice());
+        assertEquals(10, original.getLessonCount());
+        assertEquals(90, original.getValidityDays());
+        assertTrue(original.isActive());
+        LearningPackage persisted = createRepository()
+                .findByIdStrict(original.getId())
+                .orElseThrow();
+
+        assertEquals(original.getName(), persisted.getName());
+        assertEquals(original.getDescription(), persisted.getDescription());
+        assertEquals(original.getPrice(), persisted.getPrice());
+        assertEquals(original.getLessonCount(), persisted.getLessonCount());
+        assertEquals(original.getValidityDays(), persisted.getValidityDays());
+        assertEquals(original.isActive(), persisted.isActive());
     }
 }
