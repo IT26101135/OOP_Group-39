@@ -1000,7 +1000,6 @@ not an independently executed build or browser review.
 Password changes, administrator account editing, account deletion, booking
 and package data on the profile, and the coordinated redesign remain separate.
 
-
 ## Learning Package Service — IT26101136
 
 Implemented locally on:
@@ -1126,21 +1125,82 @@ Command: .\mvnw.cmd "-Dapp.admin-seed.enabled=false" clean verify
 414 tests, 0 failures, 0 errors, 0 skipped.
 BUILD SUCCESS.
 
-## Pending: cross-module lookups
+## Cross-module lookups
 
-These are capability names, not final Java declarations:
+### VehicleLookup — approved contract
+
+Implementation branch: `feature/IT26101132-vehicle-booking-contracts`
+
+Status: Implemented; review and merge into `develop` are pending.
+
+Package: `com.drivingschool.vehicle.api`
+
+Interface: `VehicleLookup`
+
+```java
+package com.drivingschool.vehicle.api;
+
+import java.util.Optional;
+
+public interface VehicleLookup {
+    Optional<VehicleBookingInfo> findBookingInfo(String vehicleId);
+}
+```
+
+Result record: `VehicleBookingInfo`
+
+```java
+package com.drivingschool.vehicle.api;
+
+import com.drivingschool.vehicle.model.TransmissionType;
+import com.drivingschool.vehicle.model.VehicleCategory;
+
+public record VehicleBookingInfo(
+        String id,
+        VehicleCategory vehicleCategory,
+        TransmissionType transmissionType,
+        boolean operationallyEligible
+) {
+}
+```
+
+Behaviour:
+
+- Accepts exact vehicle IDs V001-V999 only.
+- Does not trim, normalize or change the case of IDs.
+- Null, malformed, lowercase, whitespace-containing and out-of-range IDs throw `ValidationException`.
+- A valid ID that does not exist returns `Optional.empty()`.
+- `IN_SERVICE` vehicles are operationally eligible.
+- `MAINTENANCE` and `RETIRED` vehicles are not operationally eligible.
+- Uses `VehicleRepository.findByIdStrict(vehicleId)`.
+- `StorageException` propagates and must not be converted into an empty result.
+- Returns an immutable `VehicleBookingInfo` record, not the mutable `Vehicle` entity.
+
+Integration boundaries:
+
+- The Vehicle module provides vehicle information and operational eligibility only.
+- Booking overlap checks belong to the Booking module.
+- CONFIRMED and COMPLETED bookings block overlapping reservations.
+- PENDING and CANCELLED bookings do not block reservations.
+- Back-to-back bookings are allowed.
+- Vehicle category and transmission type are descriptive information; package and licence eligibility rules are not implemented by this lookup.
+- No maintenance scheduling or booking conflict logic belongs in the Vehicle module.
+- Other modules must inject `VehicleLookup` rather than access VehicleRepository or vehicle storage directly.
+- Exactly one `VehicleLookup` bean is registered through `VehicleConfig`.
+
+### Other pending cross-module contracts
 
 - InstructorLookup: exists(id), isAvailable(id, dateTime)
-- VehicleLookup: exists(id), isAvailable(id, dateTime)
 - PackageLookup: exists(id)
 - BookingLookup: student/instructor/vehicle reference checks
 - Review-owned cleanup operation for student account deletion
 
-Exact types, packages, status semantics and failure behaviour require
-agreement with the leader and the owning member.
+Exact types, packages, status semantics and failure behaviour for these remaining contracts require agreement with the leader and the owning member.
 
 Additional package-entitlement and scheduling contracts remain pending.
+
 Never read or modify another module's files directly.
+
 
 ## Agreed review policies
 
