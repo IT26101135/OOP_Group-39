@@ -1188,9 +1188,96 @@ Integration boundaries:
 - Other modules must inject `VehicleLookup` rather than access VehicleRepository or vehicle storage directly.
 - Exactly one `VehicleLookup` bean is registered through `VehicleConfig`.
 
+### InstructorLookup - approved booking integration contract
+
+Owner: IT26101133.
+
+Implementation branch:
+`feature/IT26101133-instructor-booking-contracts`
+
+Status: Implemented locally; full verification, PR review and merge into
+`develop` remain pending. Do not assume availability in `develop`.
+
+API package: `com.drivingschool.instructor.api`
+
+Interface: `InstructorLookup`
+
+```java
+public interface InstructorLookup {
+    Optional<InstructorBookingInfo> findById(String instructorId);
+
+    boolean isWorkingAvailable(
+            String instructorId,
+            LocalDateTime start,
+            LocalDateTime end);
+}
+```
+
+Result: Immutable `InstructorBookingInfo` record with id, name and active.
+
+Lookup and validation:
+- Accept exact instructor IDs I001-I999; do not trim or normalize IDs.
+- Invalid IDs and null, equal or reversed intervals raise ValidationException.
+- Validate arguments before returning missing or inactive results.
+- A valid missing ID returns Optional.empty() from findById().
+- Inactive instructors remain visible with active=false.
+- Missing and inactive instructors are unavailable.
+- Unknown working schedules mean unavailable.
+- Booking decisions use strict repository reads.
+- StorageException propagates and must not become an empty or false result.
+- Preserve InstructorService.getInstructorById() missing-record behaviour.
+- Exactly one InstructorLookup Spring bean is registered.
+
+Working availability:
+- Model: com.drivingschool.instructor.model.InstructorAvailability.
+- Repository: InstructorAvailabilityRepository.
+- Service: InstructorAvailabilityService.
+- Availability implements Identifiable and is immutable.
+- IDs: T001-T999, allocated using repository.nextId("T").
+- Required fields: id, instructorId, startTime and endTime.
+- startTime must be strictly earlier than endTime.
+- Storage file: instructor-availability.txt.
+- Counter file: instructor-availability.txt.ids.txt.
+- Use app.data-directory and the injected ObjectMapper.
+- Explicit available intervals only; no default working hours.
+- The entire requested [start, end) interval must be covered.
+- Adjacent or overlapping intervals may combine for full coverage.
+- Any positive uncovered gap makes the request unavailable.
+- Strict reads reject invalid persisted records.
+
+Availability administration:
+```java
+InstructorAvailability addAvailability(
+        HttpServletRequest request,
+        String instructorId,
+        LocalDateTime start,
+        LocalDateTime end);
+```
+
+- Uses AuthSessionService.requireAdmin(request).
+- Anonymous and non-admin callers are rejected.
+- Valid missing instructor IDs raise RecordNotFoundException.
+- Inactive instructors raise ValidationException.
+- Validate before reserving an availability ID.
+- Compound availability writes use a static service-level lock.
+- This lock does not provide cross-module booking concurrency protection.
+- No availability controller, JSP or browser form is introduced.
+
+Booking integration boundaries:
+- Booking owns instructor booking-conflict checks.
+- CONFIRMED and COMPLETED bookings block overlapping reservations.
+- PENDING and CANCELLED bookings do not block reservations.
+- Back-to-back bookings are allowed.
+- Lookup results are snapshots, not booking reservations.
+- Booking creation, instructor deactivation and deletion require
+  separately agreed cross-module safeguards.
+- Do not expose booking-unsafe instructor deactivation operations.
+- Other modules must inject InstructorLookup instead of reading
+  instructor repositories or storage files directly.
+
 ### Other pending cross-module contracts
 
-- InstructorLookup: exists(id), isAvailable(id, dateTime)
+
 - PackageLookup: exists(id)
 - BookingLookup: student/instructor/vehicle reference checks
 - Review-owned cleanup operation for student account deletion
