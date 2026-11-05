@@ -1000,6 +1000,42 @@ not an independently executed build or browser review.
 Password changes, administrator account editing, account deletion, booking
 and package data on the profile, and the coordinated redesign remain separate.
 
+## Administrator dashboard foundation — IT26101135
+
+Implemented on feature/IT26101135-admin-dashboard.
+Review and merge into develop are pending.
+
+Controller:
+com.drivingschool.admin.controller.AdminDashboardController
+
+Route:
+GET /admin/dashboard
+
+Behaviour:
+- Administrator-only access through the existing @RequireAdmin interceptor.
+- Anonymous requests receive HTTP 401.
+- Authenticated students receive HTTP 403.
+- Responses use Cache-Control: no-store.
+- Displays an escaped administrator display name.
+- Links to /admin/vehicles.
+- Shared navigation shows Dashboard only for administrators.
+- Existing student navigation and CSRF-protected POST logout are preserved.
+- Login continues redirecting to /.
+- No statistics, storage writes or new cross-module APIs are introduced.
+
+Files:
+- src/main/webapp/WEB-INF/views/admin/dashboard.jsp
+- src/main/resources/static/css/admin-dashboard.css
+- src/test/java/com/drivingschool/admin/AdminDashboardWebIntegrationTest.java
+
+Verification:
+The leader reported successful focused tests and full Maven clean verify
+with administrator startup seeding disabled.
+Manual browser checks passed, including dashboard rendering, access
+restrictions, vehicle navigation and logout.
+
+Additional management links and dashboard statistics remain separate work.
+
 ## Learning Package Service — IT26101136
 
 Implemented locally on:
