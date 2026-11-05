@@ -514,4 +514,88 @@ class VehicleServiceTest {
             executor.shutdown();
         }
     }
+
+    @Test
+    void shouldFindExistingVehicleUsingStrictLookup() {
+        VehicleRepository repository =
+                new VehicleRepository(tempDirectory, new ObjectMapper());
+
+        VehicleService service = new VehicleService(repository);
+
+        Vehicle createdVehicle = service.createVehicle(
+                "CAB-1234",
+                "Toyota",
+                "Corolla",
+                TransmissionType.MANUAL,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        Vehicle foundVehicle =
+                service.getVehicleByIdStrict(createdVehicle.getId());
+
+        assertEquals(createdVehicle.getId(), foundVehicle.getId());
+        assertEquals("CAB1234", foundVehicle.getRegistrationNumber());
+    }
+
+    @Test
+    void shouldRejectInvalidIdUsingStrictLookup() {
+        VehicleService service = new VehicleService(
+                new VehicleRepository(tempDirectory, new ObjectMapper())
+        );
+
+        assertThrows(
+                ValidationException.class,
+                () -> service.getVehicleByIdStrict("INVALID")
+        );
+
+        assertThrows(
+                ValidationException.class,
+                () -> service.getVehicleByIdStrict("V000")
+        );
+    }
+
+    @Test
+    void shouldThrowRecordNotFoundForValidMissingIdUsingStrictLookup() {
+        VehicleService service = new VehicleService(
+                new VehicleRepository(tempDirectory, new ObjectMapper())
+        );
+
+        assertThrows(
+                RecordNotFoundException.class,
+                () -> service.getVehicleByIdStrict("V999")
+        );
+    }
+
+    @Test
+    void shouldThrowStorageExceptionWhenStrictLookupFindsCorruptedStorage()
+            throws Exception {
+
+        VehicleRepository repository =
+                new VehicleRepository(tempDirectory, new ObjectMapper());
+
+        VehicleService service = new VehicleService(repository);
+
+        Vehicle createdVehicle = service.createVehicle(
+                "CAB-4321",
+                "Honda",
+                "Civic",
+                TransmissionType.AUTOMATIC,
+                VehicleCategory.CAR,
+                VehicleOperationalStatus.IN_SERVICE
+        );
+
+        Path vehiclesFile = tempDirectory.resolve("vehicles.txt");
+
+        Files.writeString(
+                vehiclesFile,
+                "{malformed-json}\n",
+                StandardOpenOption.APPEND
+        );
+
+        assertThrows(
+                StorageException.class,
+                () -> service.getVehicleByIdStrict(createdVehicle.getId())
+        );
+    }
 }

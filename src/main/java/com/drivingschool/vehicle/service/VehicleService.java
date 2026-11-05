@@ -1,5 +1,6 @@
 package com.drivingschool.vehicle.service;
 
+import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.vehicle.model.Vehicle;
@@ -52,6 +53,27 @@ public class VehicleService {
                         new RecordNotFoundException(
                                 "Vehicle not found: " + id
                         )
+                );
+    }
+
+    public Vehicle getVehicleByIdStrict(String id) {
+        if (id == null || !id.matches("V\\d{3}")) {
+            throw new ValidationException(
+                    "Vehicle ID must use the format V001 to V999."
+            );
+        }
+
+        int number = Integer.parseInt(id.substring(1));
+
+        if (number < 1 || number > 999) {
+            throw new ValidationException(
+                    "Vehicle ID must be between V001 and V999."
+            );
+        }
+
+        return vehicleRepository.findByIdStrict(id)
+                .orElseThrow(() ->
+                        new RecordNotFoundException("Vehicle not found: " + id)
                 );
     }
 
