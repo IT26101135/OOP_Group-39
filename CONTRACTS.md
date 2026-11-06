@@ -1477,3 +1477,46 @@ historical booking retention and instructor/package deletion eligibility.
 When the foundation is merged, each member must update their feature
 branch from develop and provide this document plus relevant shared source
 files to their AI assistant.
+
+## Review Web Implementation
+
+Owner: IT26101137.
+
+### Student Review Routes
+
+| HTTP Method | Route | Purpose |
+|---|---|---|
+| GET | `/reviews` | View student reviews |
+| GET | `/reviews/create` | Display review creation form |
+| POST | `/reviews/create` | Submit a new review |
+| GET | `/reviews/{id}/edit` | Display edit review form |
+| POST | `/reviews/{id}/edit` | Update an existing review |
+| POST | `/reviews/{id}/delete` | Delete an existing review |
+
+### Administrator Review Routes
+
+| HTTP Method | Route | Purpose |
+|---|---|---|
+| GET | `/admin/reviews` | View and manage all reviews |
+| POST | `/admin/reviews/{id}/approve` | Approve a review |
+| POST | `/admin/reviews/{id}/hide` | Hide a review |
+
+### Web Implementation Details
+
+- Student review pages require an authenticated student account.
+- Administrator review pages require administrator access.
+- Students can edit and delete only their own reviews.
+- Review forms accept rating and comment fields.
+- CSRF protection is required for POST requests.
+- Review content is displayed using escaped output.
+- JSP views are located under `/WEB-INF/views/review/`.
+- Review form styles use the `review-page` CSS scope.
+- Navbar and footer are included using static JSP includes.
+
+### Verification
+
+- Student review listing and editing were tested in the browser.
+- The Edit Review page successfully displays the existing rating and comment.
+- Successful updates redirect to the reviews page.
+- Updated reviews return to PENDING status.
+- Review web integration tests are included in `ReviewWebIntegrationTest.java`.
