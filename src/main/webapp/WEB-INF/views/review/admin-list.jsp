@@ -3,7 +3,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <c:url value="/css/app.css" var="appCssUrl" />
-<c:url value="/admin/reviews" var="adminReviewsUrl" />
+<c:url value="/css/review.css" var="reviewCssUrl" />
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,18 +12,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Reviews - DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
+    <link rel="stylesheet" href="<c:out value='${reviewCssUrl}' />">
 </head>
-<body>
+<body class="review-page">
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="container">
+<main class="ds-container ds-section">
 
-    <section class="form-section">
+    <section class="form-section review-list">
 
         <h1>Manage Reviews</h1>
 
         <p>View and moderate student reviews.</p>
+        <c:if test="${not empty moderationSuccess}">
+            <p class="success-message" role="status"><c:out value="${moderationSuccess}" /></p>
+        </c:if>
 
         <c:if test="${empty reviews}">
             <p>No reviews available.</p>
@@ -59,7 +63,7 @@
 
                     <p>
                         <strong>Status:</strong>
-                        <c:out value="${review.status}" />
+                        <span class="review-status"><c:out value="${review.status}" /></span>
                     </p>
 
                     <p>
@@ -77,13 +81,13 @@
 
                         <c:if test="${review.status != 'APPROVED'}">
 
-                            <form method="post" action="${approveUrl}">
+                            <form method="post" action="<c:out value='${approveUrl}' />">
 
                                 <input type="hidden"
                                        name="<c:out value='${csrfParameterName}' />"
                                        value="<c:out value='${csrfToken}' />">
 
-                                <button type="submit">
+                                <button type="submit" class="ds-button">
                                     Approve
                                 </button>
 
@@ -93,13 +97,13 @@
 
                         <c:if test="${review.status != 'HIDDEN'}">
 
-                            <form method="post" action="${hideUrl}">
+                            <form method="post" action="<c:out value='${hideUrl}' />">
 
                                 <input type="hidden"
                                        name="<c:out value='${csrfParameterName}' />"
                                        value="<c:out value='${csrfToken}' />">
 
-                                <button type="submit">
+                                <button type="submit" class="ds-button">
                                     Hide
                                 </button>
 
@@ -110,8 +114,6 @@
                     </div>
 
                 </article>
-
-                <hr>
 
             </c:forEach>
 

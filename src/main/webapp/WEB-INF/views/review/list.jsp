@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <c:url value="/css/app.css" var="appCssUrl" />
+<c:url value="/css/review.css" var="reviewCssUrl" />
 <c:url value="/reviews/create" var="createReviewUrl" />
 
 <c:set var="hasOwnReview" value="false" />
@@ -19,8 +20,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reviews | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
+    <link rel="stylesheet" href="<c:out value='${reviewCssUrl}' />">
 </head>
-<body>
+<body class="review-page">
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
@@ -31,15 +33,15 @@
     <p>Read reviews about DriveSpark Academy.</p>
 
     <c:if test="${reviewSubmitted eq true}">
-        <p role="status">Your review has been submitted successfully.</p>
+        <p class="success-message" role="status">Your review was submitted and is waiting for approval.</p>
     </c:if>
 
     <c:if test="${reviewUpdated eq true}">
-        <p role="status">Your review has been updated successfully.</p>
+        <p class="success-message" role="status">Your review was updated and is waiting for approval again.</p>
     </c:if>
 
     <c:if test="${reviewDeleted eq true}">
-        <p role="status">Your review has been deleted successfully.</p>
+        <p class="success-message" role="status">Your review was deleted.</p>
     </c:if>
 
     <c:if test="${not hasOwnReview}">
@@ -61,7 +63,7 @@
 
             <c:forEach var="review" items="${reviews}">
 
-                <article class="ds-section">
+                <article class="review-card">
 
                     <h2>Rating: <c:out value="${review.rating}" /> / 5</h2>
 
@@ -100,7 +102,7 @@
                                    name="<c:out value='${csrfParameterName}' />"
                                    value="<c:out value='${csrfToken}' />">
 
-                            <button type="submit">
+                            <button type="submit" class="ds-button">
                                 Delete
                             </button>
 

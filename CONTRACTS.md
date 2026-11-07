@@ -1481,6 +1481,7 @@ files to their AI assistant.
 ## Review Web Implementation
 
 Owner: IT26101137.
+Status: PR #38 open; review pending; not merged into develop.
 
 ### Student Review Routes
 
@@ -1512,11 +1513,21 @@ Owner: IT26101137.
 - JSP views are located under `/WEB-INF/views/review/`.
 - Review form styles use the `review-page` CSS scope.
 - Navbar and footer are included using static JSP includes.
+- Review styles are in `static/css/review.css`; `app.css` is unchanged.
+- Editing or deleting another student's review returns HTTP 404.
+- Administrators receive HTTP 403 when attempting student edit/delete actions.
+- Student success messages are shown for reviewSubmitted, reviewUpdated and reviewDeleted.
+- Administrator moderation success messages use moderationSuccess.
+- Navigation links to `/reviews` and `/admin/reviews` are added by the project leader, not this PR.
 
 ### Verification
 
-- Student review listing and editing were tested in the browser.
-- The Edit Review page successfully displays the existing rating and comment.
-- Successful updates redirect to the reviews page.
-- Updated reviews return to PENDING status.
-- Review web integration tests are included in `ReviewWebIntegrationTest.java`.
+- Student review listing, edit form and update flow were tested successfully in the browser.
+- The Edit Review page displayed the existing rating and comment.
+- Successful updates redirected to the reviews page and returned the review status to PENDING.
+- Student review deletion was tested successfully, including the success message.
+- Administrator review page, Approve and Hide actions, status changes and success messages were verified in the browser.
+- Student review listing displayed the student's own HIDDEN review with Edit and Delete controls.
+- Focused review tests: 48 passed, 0 failures, 0 errors, 0 skipped.
+- Full project verification: 542 tests passed, 0 failures, 0 errors, 0 skipped.
+- `mvnw.cmd clean verify` completed successfully.

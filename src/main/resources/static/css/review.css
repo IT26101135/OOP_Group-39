@@ -1,0 +1,85 @@
+/* Review pages — scoped to .review-page; uses tokens from app.css. */
+.review-page .form-section {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px;
+    background: var(--ds-white);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius);
+}
+
+.review-page .form-section.review-list { max-width: 900px; }
+.review-page .form-section h1 { margin: 0 0 12px; color: var(--ds-navy); }
+.review-page .form-section > p { margin: 0 0 24px; color: var(--ds-muted); }
+.review-page .form-group { margin-bottom: 22px; }
+
+.review-page .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--ds-navy);
+}
+
+.review-page .form-group select,
+.review-page .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--ds-border);
+    border-radius: 8px;
+    font: inherit;
+    color: var(--ds-text);
+    background: var(--ds-white);
+}
+
+.review-page .form-group textarea { resize: vertical; }
+.review-page .form-group small { display: block; margin-top: 6px; color: var(--ds-muted); }
+
+.review-page .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    margin-top: 25px;
+}
+
+.review-page .form-actions form { margin: 0; }
+.review-page .error-message { color: #b42318; margin-bottom: 15px; }
+
+.review-page .success-message {
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #ecfdf3;
+    border: 1px solid #abefc6;
+    color: #05603a;
+}
+
+.review-page .review-card {
+    padding: 20px;
+    margin-bottom: 18px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius);
+    background: var(--ds-white);
+}
+
+.review-page .review-card h3 { margin: 0 0 10px; color: var(--ds-navy); }
+.review-page .review-card p { margin: 0 0 8px; overflow-wrap: anywhere; }
+
+.review-page .review-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--ds-background);
+    border: 1px solid var(--ds-border);
+    color: var(--ds-navy);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.review-page a:focus-visible,
+.review-page button:focus-visible,
+.review-page select:focus-visible,
+.review-page textarea:focus-visible {
+    outline: 3px solid var(--ds-amber);
+    outline-offset: 3px;
+}

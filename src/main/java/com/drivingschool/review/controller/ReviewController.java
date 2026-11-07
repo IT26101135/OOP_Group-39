@@ -221,6 +221,8 @@ public class ReviewController {
 
         response.setHeader("Cache-Control", "no-store");
 
+        requireOwnReview(request, id);
+
         reviewService.deleteOwnReview(request, id);
 
         redirectAttributes.addFlashAttribute(

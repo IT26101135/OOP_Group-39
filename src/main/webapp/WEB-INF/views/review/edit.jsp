@@ -3,6 +3,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <c:url value="/css/app.css" var="appCssUrl" />
+<c:url value="/css/review.css" var="reviewCssUrl" />
 <c:url value="/reviews/${reviewId}/edit" var="editReviewUrl" />
 <c:url value="/reviews" var="reviewsUrl" />
 
@@ -13,12 +14,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Review - DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
+    <link rel="stylesheet" href="<c:out value='${reviewCssUrl}' />">
 </head>
 <body class="review-page">
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="container">
+<main class="ds-container ds-section">
 
     <section class="form-section">
 
@@ -96,9 +98,7 @@
             <!-- Buttons -->
             <div class="form-actions">
 
-                <button type="submit">
-                    Update Review
-                </button>
+                <button type="submit" class="ds-button">Update Review</button>
 
                 <a href="<c:out value='${reviewsUrl}' />">
                     Cancel
