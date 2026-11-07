@@ -4,6 +4,7 @@ import com.drivingschool.auth.filter.CsrfFilter;
 import com.drivingschool.auth.interceptor.AccessInterceptor;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.auth.service.CsrfTokenService;
+import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.GlobalExceptionHandler;
 import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.common.exception.StorageException;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 class InstructorControllerTest {
 
@@ -277,6 +279,310 @@ class InstructorControllerTest {
         mockMvc.perform(get("/admin/instructors"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(view().name("common/error"));
+    }
+
+    @Test
+    void createDuplicateEmailReturnsConflict() throws Exception {
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/create")).andReturn();
+
+        when(instructorService.createInstructor(
+                "Test Instructor", "test@example.com", "0771234567", 5))
+                .thenThrow(new DuplicateRecordException(
+                        "Instructor email already exists."));
+
+        mockMvc.perform(post("/admin/instructors/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("name", "Test Instructor")
+                        .param("email", "test@example.com")
+                        .param("phone", "0771234567")
+                        .param("yearsOfExperience", "5"))
+                .andExpect(status().isConflict())
+                .andExpect(view().name("instructor/create"))
+                .andExpect(model().attributeExists(
+                        "formError", "csrfToken"));
+    }
+
+    @Test
+    void createServiceValidationErrorReturnsBadRequest() throws Exception {
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/create")).andReturn();
+
+        when(instructorService.createInstructor(
+                "Test Instructor", "test@example.com", "0771234567", 5))
+                .thenThrow(new ValidationException(
+                        "Invalid instructor information."));
+
+        mockMvc.perform(post("/admin/instructors/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("name", "Test Instructor")
+                        .param("email", "test@example.com")
+                        .param("phone", "0771234567")
+                        .param("yearsOfExperience", "5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/create"))
+                .andExpect(model().attributeExists(
+                        "formError", "csrfToken"));
+    }
+
+    @Test
+    void editDuplicateEmailReturnsConflict() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/edit")).andReturn();
+
+        when(instructorService.updateInstructor(
+                "I001", "Updated Instructor",
+                "updated@example.com", "0777654321", 8))
+                .thenThrow(new DuplicateRecordException(
+                        "Instructor email already exists."));
+
+        mockMvc.perform(post("/admin/instructors/I001/edit")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("name", "Updated Instructor")
+                        .param("email", "updated@example.com")
+                        .param("phone", "0777654321")
+                        .param("yearsOfExperience", "8"))
+                .andExpect(status().isConflict())
+                .andExpect(view().name("instructor/edit"))
+                .andExpect(model().attributeExists(
+                        "instructor", "formError", "csrfToken"));
+    }
+
+    @Test
+    void editInvalidExperienceDoesNotUpdate() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/edit")).andReturn();
+
+        mockMvc.perform(post("/admin/instructors/I001/edit")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("name", "Updated Instructor")
+                        .param("email", "updated@example.com")
+                        .param("phone", "0777654321")
+                        .param("yearsOfExperience", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/edit"))
+                .andExpect(model().attributeExists(
+                        "formError", "csrfToken"));
+
+        verify(instructorService, never()).updateInstructor(
+                anyString(), anyString(), anyString(),
+                anyString(), anyInt());
+    }
+
+    @Test
+    void editPostForMissingInstructorReturnsNotFound() throws Exception {
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/create")).andReturn();
+
+        when(instructorService.getInstructorById("I999"))
+                .thenThrow(new RecordNotFoundException(
+                        "Instructor not found: I999"));
+
+        mockMvc.perform(post("/admin/instructors/I999/edit")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("name", "Updated Instructor")
+                        .param("email", "updated@example.com")
+                        .param("phone", "0777654321")
+                        .param("yearsOfExperience", "8"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("common/error"));
+
+        verify(instructorService, never()).updateInstructor(
+                anyString(), anyString(), anyString(),
+                anyString(), anyInt());
+    }
+
+    @Test
+    void availabilityPostForMissingInstructorReturnsNotFound() throws Exception {
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/create")).andReturn();
+
+        when(instructorService.getInstructorById("I999"))
+                .thenThrow(new RecordNotFoundException(
+                        "Instructor not found: I999"));
+
+        mockMvc.perform(post("/admin/instructors/I999/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("startTime", "2026-11-10T09:00")
+                        .param("endTime", "2026-11-10T10:00"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("common/error"));
+
+        verifyNoInteractions(availabilityService);
+    }
+
+    @Test
+    void availabilityPostForInactiveInstructorIsRejected() throws Exception {
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/create")).andReturn();
+
+        Instructor inactive = new Instructor(
+                "I002", "Inactive Instructor",
+                "inactive@example.com", "0771234567", 3, false);
+
+        when(instructorService.getInstructorById("I002"))
+                .thenReturn(inactive);
+
+        mockMvc.perform(post("/admin/instructors/I002/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("startTime", "2026-11-10T09:00")
+                        .param("endTime", "2026-11-10T10:00"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(availabilityService);
+    }
+
+    @Test
+    void availabilityBlankTimesRejected() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/availability/create")).andReturn();
+
+        mockMvc.perform(post("/admin/instructors/I001/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("start", "")
+                        .param("end", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/availability-create"))
+                .andExpect(model().attributeExists("formError"));
+
+        verifyNoInteractions(availabilityService);
+    }
+
+    @Test
+    void availabilityMalformedTimeRejected() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/availability/create")).andReturn();
+
+        mockMvc.perform(post("/admin/instructors/I001/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("start", "not-a-date")
+                        .param("end", "2026-11-10T10:00"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/availability-create"))
+                .andExpect(model().attributeExists("formError"));
+
+        verifyNoInteractions(availabilityService);
+    }
+
+    @Test
+    void availabilityEqualTimesRejected() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/availability/create")).andReturn();
+
+        mockMvc.perform(post("/admin/instructors/I001/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("start", "2026-11-10T09:00")
+                        .param("end", "2026-11-10T09:00"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/availability-create"))
+                .andExpect(model().attributeExists("formError"));
+
+        verifyNoInteractions(availabilityService);
+    }
+
+    @Test
+    void availabilityServiceValidationErrorRedisplaysForm() throws Exception {
+        when(instructorService.getInstructorById("I001"))
+                .thenReturn(sampleInstructor());
+
+        MvcResult page = mockMvc.perform(
+                get("/admin/instructors/I001/availability/create")).andReturn();
+
+        doThrow(new ValidationException("Invalid availability."))
+                .when(availabilityService)
+                .addAvailability(
+                        any(HttpServletRequest.class),
+                        eq("I001"),
+                        any(LocalDateTime.class),
+                        any(LocalDateTime.class));
+
+        mockMvc.perform(post("/admin/instructors/I001/availability/create")
+                        .session(sessionOf(page))
+                        .param("_csrf", tokenOf(page))
+                        .param("start", "2026-11-10T09:00")
+                        .param("end", "2026-11-10T10:00"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("instructor/availability-create"))
+                .andExpect(model().attributeExists("formError"));
+
+    }
+
+    @Test
+    void editAndAvailabilityPostsRequireCsrf() throws Exception {
+        mockMvc.perform(post("/admin/instructors/I001/edit")
+                        .param("name", "Updated Instructor"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/admin/instructors/I001/availability/create")
+                        .param("start", "2026-11-10T09:00")
+                        .param("end", "2026-11-10T10:00"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(instructorService, availabilityService);
+    }
+
+    @Test
+    void adminRoutesRejectAnonymousAndStudent() throws Exception {
+        String[] paths = {
+                "/admin/instructors/create",
+                "/admin/instructors/I001/edit",
+                "/admin/instructors/I001/availability/create"
+        };
+
+        doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED))
+                .when(sessionService).requireAdmin(any(HttpServletRequest.class));
+
+        for (String path : paths) {
+            mockMvc.perform(get(path))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        reset(sessionService);
+
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+                .when(sessionService).requireAdmin(any(HttpServletRequest.class));
+
+        for (String path : paths) {
+            mockMvc.perform(get(path))
+                    .andExpect(status().isForbidden());
+        }
+
+        verifyNoInteractions(instructorService, availabilityService);
+    }
+
+    @Test
+    void responsesAreNotCached() throws Exception {
+        when(instructorService.getInstructorsSortedByExperience())
+                .thenReturn(List.of(sampleInstructor()));
+
+        mockMvc.perform(get("/admin/instructors"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"));
     }
 
     private Instructor sampleInstructor() {

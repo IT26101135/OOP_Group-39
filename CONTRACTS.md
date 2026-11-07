@@ -1231,12 +1231,10 @@ Owner: IT26101133.
 Implementation branch:
 `feature/IT26101133-instructor-booking-contracts`
 
-Status: Implementation completed at commit `2918c70`.
-Full Maven verification passed: 502 tests, 0 failures, 0 errors,
-BUILD SUCCESS.
-Fresh verification is required after merging the latest `develop`.
-PR #32 review and merge into `develop` remain pending.
-Do not assume availability in `develop`.
+Status: Implemented and merged into `develop` through PR #32
+(implementation commit `2918c70`). Other modules may now inject
+`InstructorLookup`. The 502-test result was reported before the merge;
+run a fresh clean verify on current `develop` before relying on it.
 
 API package: `com.drivingschool.instructor.api`
 
@@ -1301,7 +1299,8 @@ InstructorAvailability addAvailability(
 - Validate before reserving an availability ID.
 - Compound availability writes use a static service-level lock.
 - This lock does not provide cross-module booking concurrency protection.
-- No availability controller, JSP or browser form is introduced.
+- This contract adds no controller or JSP. Availability administration
+  pages are a separate increment (Instructor Administration Web, PR #39).
 
 Booking integration boundaries:
 - Booking owns instructor booking-conflict checks.
@@ -1479,6 +1478,18 @@ branch from develop and provide this document plus relevant shared source
 files to their AI assistant.
 
 ## Instructor Administration Web — Group 39
+
+Status: PR #39 open; review pending; not merged into `develop`.
+
+Verification (2026-11-07):
+- InstructorControllerTest: 28 tests passed.
+- InstructorWebIntegrationTest: 11 tests passed.
+- InstructorConfigTest: 1 test passed.
+- Combined instructor web verification: 40 tests passed.
+- Full Maven clean verify: 560 tests, 0 failures, 0 errors, 0 skipped.
+- WAR packaging: BUILD SUCCESS.
+- Invalid instructor ID request (abc/edit): HTTP 400.
+- Authenticated administrator browser verification remains pending.
 
 Implementation branch:
 `feature/IT26101133-instructor-web`
