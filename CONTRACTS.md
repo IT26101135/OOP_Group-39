@@ -1003,7 +1003,7 @@ Views:
 
 Both views use c:url and escape dynamic output with c:out. The edit form
 includes the existing CSRF parameter/token and never binds the persisted User.
-A new /css/profile.css adds scoped styles while retaining app.css branding.
+Current profile styling comes from shared app.css components built into /css/tailwind.css.
 The shared navbar adds My profile only for authenticated STUDENT navigation.
 Visibility is not authorization; service checks apply to direct requests too.
 Login continues redirecting to /; AuthController is unchanged.
@@ -1052,7 +1052,7 @@ Behaviour:
 
 Files:
 - src/main/webapp/WEB-INF/views/admin/dashboard.jsp
-- src/main/resources/static/css/admin-dashboard.css
+- src/main/resources/static/css/tailwind.css (generated shared styles; source is app.css)
 - src/test/java/com/drivingschool/admin/AdminDashboardWebIntegrationTest.java
 
 Verification:
@@ -1329,8 +1329,8 @@ Listing policy:
 
 CSS:
 
-- `static/css/vehicle.css`
-- Styles are scoped to vehicle administration pages.
+- `static/css/tailwind.css` (generated from shared `static/css/app.css`)
+- Vehicle administration uses the shared workspace styles.
 
 ### Other pending cross-module contracts
 

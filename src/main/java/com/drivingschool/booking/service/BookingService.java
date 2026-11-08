@@ -529,25 +529,6 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         }
     }
 
-    // Refuses overlapping instructor or vehicle assignments.
-    private void ensureResourceAvailable(Booking target, String instructorId,
-                                         String vehicleId) {
-        for (Booking existing : bookings.readAllStrict()) {
-            if (existing.getId().equals(target.getId())
-                    || existing.getStatus() == BookingStatus.CANCELLED
-                    || existing.getStatus() == BookingStatus.COMPLETED) {
-                continue;
-            }
-            boolean sameInstructor = instructorId.equals(existing.getInstructorId());
-            boolean sameVehicle = vehicleId.equals(existing.getVehicleId());
-            if ((sameInstructor || sameVehicle)
-                    && LessonIntervalUtils.overlaps(target.getStartTime(),
-                    target.getEndTime(), existing.getStartTime(), existing.getEndTime())) {
-                throw new ValidationException("That instructor or vehicle is already booked.");
-            }
-        }
-    }
-
     // Looks up one booking and reports a friendly error if it is missing.
     private Booking findBooking(String id) {
         return bookings.findByIdStrict(id)

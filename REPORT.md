@@ -37,7 +37,7 @@ The opt-in loader creates these deterministic totals when run against an empty d
 - Each of the five instructors receives one approved seed rating; ratings are 2, 4, 1, 3 and 5 respectively. Hidden/Pending reviews do not contribute.
 
 ## Verification
-The project has JUnit tests for the bubble sort keys/directions and edge cases, FIFO operations/order, conflict reasons, the 24-hour boundary, rating recalculation and repeat-safe sample seeding/report arithmetic. Run `mvnw.cmd clean verify` on Windows. Final verification on 2026-11-07: `mvnw.cmd clean verify` completed successfully; 504 tests ran with 0 failures, 0 errors and 0 skipped. This result is automated test evidence, not a substitute for the manual browser scenarios. Refresh it after future code changes. Manual browser checklist rows remain unrun until the team records them.
+The project has JUnit tests for the bubble sort keys/directions and edge cases, FIFO operations/order, conflict reasons, the 24-hour boundary, rating recalculation and repeat-safe sample seeding/report arithmetic. Run `mvnw.cmd clean verify` on Windows. Final verification on 2026-11-08: `mvnw.cmd clean verify` completed successfully; 575 tests ran with 0 failures, 0 errors and 0 skipped. This result is automated test evidence, not a substitute for the manual browser scenarios. Refresh it after future code changes. Manual browser checklist rows remain unrun until the team records them.
 
 ## Screenshots
 - [Placeholder: visitor home and package list]

@@ -17,6 +17,7 @@
 # Runtime records: preserve only the folder placeholder
 /data/*
 !/data/.gitkeep
+/data-demo/
 
 # Logs and temporary files
 *.log

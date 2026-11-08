@@ -18,7 +18,6 @@ import com.drivingschool.booking.model.Booking;
 import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
 import com.drivingschool.common.exception.*;
-import com.drivingschool.instructor.model.Instructor;
 import com.drivingschool.instructor.repository.InstructorRepository;
 import com.drivingschool.learningpackage.model.LearningPackage;
 import com.drivingschool.learningpackage.repository.LearningPackageRepository;

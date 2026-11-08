@@ -93,9 +93,8 @@ The five-click scripts assume the stated login and starting page. Typing prepare
 - [student/profile.jsp](../src/main/webapp/WEB-INF/views/student/profile.jsp)
 - [student/progress.jsp](../src/main/webapp/WEB-INF/views/student/progress.jsp)
 
-**CSS / JS (2):**
+**CSS / JS (1):**
 
-- [static/css/profile.css](../src/main/resources/static/css/profile.css)
 - [tailwind.config.js](../tailwind.config.js)
 
 Integration documents: `README.md`, `docs/CRUD_MAP.md`, `docs/OOP_SOLID_MAP.md`, `docs/VIVA_GUIDE.md` and `docs/TAILWIND_LICENSE.txt`. Shared npm build wiring in `package.json` also belongs to 135.
@@ -187,11 +186,10 @@ Sign in as an active student and start on Home. Use temporary demo data for any 
 - [instructor/service/InstructorService.java](../src/main/java/com/drivingschool/instructor/service/InstructorService.java)
 - [instructor/service/InstructorSorter.java](../src/main/java/com/drivingschool/instructor/service/InstructorSorter.java)
 
-**JSP / JSPF (5):**
+**JSP / JSPF (4):**
 
 - [admin/instructors.jsp](../src/main/webapp/WEB-INF/views/admin/instructors.jsp)
 - [instructor/availability.jsp](../src/main/webapp/WEB-INF/views/instructor/availability.jsp)
-- [instructor/dashboard.jsp](../src/main/webapp/WEB-INF/views/instructor/dashboard.jsp)
 - [instructor/lesson-dashboard.jsp](../src/main/webapp/WEB-INF/views/instructor/lesson-dashboard.jsp)
 - [public/instructors.jsp](../src/main/webapp/WEB-INF/views/public/instructors.jsp)
 
@@ -199,7 +197,7 @@ Sign in as an active student and start on Home. Use temporary demo data for any 
 
 No separately owned files in this group; these pages use the shared UI maintained by 136.
 
-`instructor/dashboard.jsp` is retained legacy view code. The routed page is `instructor/lesson-dashboard.jsp`; the legacy view remains visually UNVERIFIED.
+The URL `/instructor/dashboard` renders `instructor/lesson-dashboard.jsp`, which contains the assigned lessons, profile and feedback sections.
 
 ### My module in five sentences
 
@@ -380,11 +378,13 @@ Sign in as student1 in temporary demo data. Prepare an instructor and a free dat
 - [vehicle/edit.jsp](../src/main/webapp/WEB-INF/views/vehicle/edit.jsp)
 - [vehicle/list.jsp](../src/main/webapp/WEB-INF/views/vehicle/list.jsp)
 
-**CSS / JS (1):**
+**CSS / JS (0):**
 
-- [static/css/vehicle.css](../src/main/resources/static/css/vehicle.css)
+Vehicle pages use the shared Tailwind styles owned by IT26101136.
 
-[TEST_CHECKLIST.md](TEST_CHECKLIST.md) also belongs to this member. `static/css/vehicle.css` is a retained compatibility asset; vehicle pages use generated Tailwind CSS.
+[TEST_CHECKLIST.md](TEST_CHECKLIST.md) also belongs to this member.
+
+
 
 ### My module in five sentences
 
@@ -488,9 +488,8 @@ Sign in as the demo administrator in temporary data. Prepare a unique plate such
 - [public/faq.jsp](../src/main/webapp/WEB-INF/views/public/faq.jsp)
 - [student/enrollments.jsp](../src/main/webapp/WEB-INF/views/student/enrollments.jsp)
 
-**CSS / JS (4):**
+**CSS / JS (3):**
 
-- [static/css/admin-dashboard.css](../src/main/resources/static/css/admin-dashboard.css)
 - [static/css/app.css](../src/main/resources/static/css/app.css)
 - [static/css/tailwind.css](../src/main/resources/static/css/tailwind.css)
 - [static/js/site.js](../src/main/resources/static/js/site.js)
@@ -671,12 +670,9 @@ Sign in as student6 in temporary demo data. This account owns seeded reviews; re
 | [src/main/webapp/WEB-INF/views/common/footer.jspf](../src/main/webapp/WEB-INF/views/common/footer.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/navbar.jspf](../src/main/webapp/WEB-INF/views/common/navbar.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/setup-check.jsp](../src/main/webapp/WEB-INF/views/common/setup-check.jsp) | IT26101136 |
-| [src/main/resources/static/css/admin-dashboard.css](../src/main/resources/static/css/admin-dashboard.css) | IT26101136 |
 | [src/main/resources/static/css/app.css](../src/main/resources/static/css/app.css) | IT26101136 |
-| [src/main/resources/static/css/profile.css](../src/main/resources/static/css/profile.css) | IT26101135 |
 | [src/main/resources/static/css/report.css](../src/main/resources/static/css/report.css) | IT26101137 |
 | [src/main/resources/static/css/tailwind.css](../src/main/resources/static/css/tailwind.css) | IT26101136 |
-| [src/main/resources/static/css/vehicle.css](../src/main/resources/static/css/vehicle.css) | IT26101132 |
 | [src/main/resources/static/js/site.js](../src/main/resources/static/js/site.js) | IT26101136 |
 | [tailwind.config.js](../tailwind.config.js) | IT26101135 |
 

@@ -3,7 +3,6 @@ package com.drivingschool.review.repository;
 
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.RecordNotFoundException;
-import com.drivingschool.common.repository.FileRepository;
 import com.drivingschool.review.model.Review;
 import com.drivingschool.review.model.ReviewStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
 import java.nio.file.Files;

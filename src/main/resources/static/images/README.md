@@ -20,7 +20,7 @@ These are optional replacement filenames, **not missing dependencies**. None of 
 | `flexible-bg.jpg` | 8. Flexible schedule; `.ds-home-flexible .ds-cinematic-background` | Original diagonal-line gradients, IT26101136. No external photo used. |
 | `mission.jpg` | 11. Mission; `.ds-home-mission` | Original subtle neutral gradient, IT26101136. No external photo used. |
 
-Existing SVG assets are project-authored: `favicon.svg`, `logo.svg`, `logo-icon.svg`, `hero-night-road.svg`, and `error-road.svg`. The current header/footer use an HTML text wordmark, and Home/About use CSS scenery. Legacy SVG illustrations remain available locally; the favicon and error illustration are still used.
+The remaining SVG assets are project-authored: `favicon.svg`, `logo.svg`, and `error-road.svg`. The current header/footer use an HTML text wordmark, and Home/About use CSS scenery. The password-reset page uses the local logo; browser tabs and error pages use the other two illustrations.
 
 ## Adding a photo later
 

@@ -165,7 +165,7 @@ Headings use a light-to-medium weight and responsive sizes up to 88px. Shared fo
 
 `common/navbar.jspf` owns the role-aware navigation, `common/dashboard-sidebar.jspf` supplies the workspace rail/native mobile menu, and `common/footer.jspf` supplies the black footer and shared toast/confirmation dialog. Reusable fragments live in `common/components/`; shared styles live in `app.css`. Rebuild `tailwind.css` after changing CSS or JSP classes.
 
-The current header and footer use our HTML text wordmark. Home and About use original CSS road scenery and gradients; `images/favicon.svg` is our own monochrome car icon. Earlier local `logo.svg`, `logo-icon.svg`, `hero-night-road.svg` and `error-road.svg` assets remain available; the error illustration is still used. No Rivian logo, media, font file, icon or code is included.
+The current header and footer use our HTML text wordmark. Home and About use original CSS road scenery and gradients; `images/favicon.svg` is our own monochrome car icon. The remaining local `logo.svg` is used by password reset, and `error-road.svg` illustrates error pages. No Rivian logo, media, font file, icon or code is included.
 
 The [image guide](src/main/resources/static/images/README.md) lists eight optional photo filenames and the current fallback credit for each. No photo is shipped or requested by default, so absent optional photos do not create 404 requests. Download and credit any future photo locally before adding its CSS reference.
 

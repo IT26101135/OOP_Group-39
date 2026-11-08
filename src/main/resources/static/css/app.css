@@ -50,12 +50,9 @@ CRUD     : Displays existing data; does not save records
   .ds-navbar { @apply flex min-h-[72px] items-center justify-between gap-4; }
   .ds-brand, .ds-footer-brand { @apply inline-flex shrink-0 items-center gap-3 font-display text-base font-bold text-white no-underline; }
   .ds-brand img, .ds-footer-brand img { @apply h-10 w-[190px] shrink-0 object-contain; }
-  .ds-brand-mark, .ds-panel-icon { @apply grid h-10 w-10 shrink-0 place-items-center rounded-none    font-black text-white  ; }
   .ds-nav { @apply flex items-center gap-1; }
   .ds-nav-link { @apply rounded-lg px-3 py-2 text-sm font-medium text-neutral-300 no-underline hover:bg-white/5 hover:text-white; }
   .ds-nav-link[aria-current="page"] { @apply bg-primary/15 text-neutral-200; }
-  .ds-nav-user { @apply rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300; }
-  .ds-role-badge { @apply mr-1 rounded-full bg-neutral-500/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-200; }
   .skip-link { @apply fixed left-4 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-2 font-semibold text-ink  focus:translate-y-0; }
   .ds-button, button:not([class]), input[type="submit"] { @apply inline-flex min-h-12 cursor-pointer items-center justify-center border border-transparent bg-accent px-7 py-3 text-sm font-medium text-black transition-colors duration-200 hover:bg-amber-400 disabled:pointer-events-none disabled:opacity-50; }
   .ds-button-accent { @apply bg-accent text-black hover:bg-amber-400; }
@@ -64,59 +61,20 @@ CRUD     : Displays existing data; does not save records
   .ds-section { @apply py-12 md:py-16; }
   .ds-section h1, main > h1 { margin-bottom: 1.5rem; font-size: clamp(40px,5.7vw,88px); font-weight: 400; }
   main > h1 { color: #FFFFFF; }
-  .ds-hero { @apply relative isolate overflow-hidden; background: linear-gradient(155deg,#171717,#050505 65%); }
-  .ds-hero-grid { @apply grid min-h-[560px] items-center gap-12 py-16 md:grid-cols-2 md:py-24; }
-  .ds-hero-content h1 { max-width: 960px; font-size: clamp(40px,6.5vw,88px); font-weight: 400; color: #FFFFFF; }
   .ds-eyebrow { @apply mb-3 text-xs font-bold uppercase tracking-[.22em] text-neutral-300; }
-  .ds-hero-description, .ds-section-heading > p:last-child { @apply max-w-xl text-lg leading-8 text-secondary; }
-  .ds-hero-panel, .ds-feature-card, .ds-card, .ds-profile-card { @apply rounded-none border border-white/10 bg-surface/90 p-6  ; }
-  .ds-hero-panel { @apply relative overflow-hidden p-8 md:p-10; }
-  .ds-hero-actions { @apply mt-7 flex flex-wrap gap-3; }
-  .ds-hero-art { @apply relative mx-auto w-full max-w-[620px]; }
-  .ds-hero-art img { @apply h-auto w-full rounded-[2rem] border border-white/10  ; }
-  .ds-float-chip { @apply absolute rounded-full border border-white/10 bg-neutral-900/85 px-4 py-2 text-xs font-semibold text-neutral-100  backdrop-blur; }
-  .ds-chip-top { @apply -left-2 top-8 sm:left-4; }
-  .ds-chip-bottom { @apply bottom-8 right-0 sm:right-4; }
-
-  .ds-panel-label { @apply mt-6 text-xs font-bold tracking-[.18em] text-amber-300; }
-  .ds-panel-note { @apply text-sm text-secondary; }
-  .ds-section-heading { @apply mb-8 max-w-2xl; }
+  .ds-feature-card, .ds-card { @apply rounded-none border border-white/10 bg-surface/90 p-6  ; }
   .ds-section h2 { font-size: clamp(28px,3vw,44px); font-weight: 400; }
-  .ds-feature-grid { @apply grid gap-5 sm:grid-cols-2 lg:grid-cols-3; }
   .ds-feature-card { @apply transition duration-200 hover:-translate-y-1 hover:border-neutral-400/30 ; }
-  .ds-feature-grid > :nth-child(2) { @apply border-neutral-400/35  ; }
   .ds-avatar, .ds-avatar-photo { @apply grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-full border-2 border-neutral-300/40    text-2xl font-bold text-white  ; }
   .ds-avatar-photo { @apply object-cover; }
   .ds-feature-card h2, .ds-feature-card h3 { @apply mb-2 text-xl font-semibold; }
   .ds-feature-card p { @apply text-base leading-7 text-secondary; }
-  .ds-feature-number { @apply mb-5 inline-flex text-sm font-bold text-neutral-300; }
-
-  .ds-footer-inner { @apply flex flex-col gap-3 py-8 sm:flex-row sm:items-center sm:justify-between; }
   .ds-footer-grid { @apply grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4; }
   .ds-footer-grid h2 { @apply mb-3 text-sm font-bold text-neutral-100; }
   .ds-footer-grid > div:not(:first-child) { @apply flex flex-col items-start gap-2 text-sm text-secondary; }
   .ds-footer-grid a:not(.ds-footer-brand) { @apply text-secondary no-underline hover:text-white; }
-  .ds-social-icons { @apply flex items-center gap-3; }
-  .ds-social-icons svg { @apply h-5 w-5 fill-none stroke-current text-secondary; stroke-width: 1.7; }
-  .ds-social-icons svg:nth-child(2) { fill: currentColor; stroke: none; }
-  .ds-social-icons svg:nth-child(3) path { fill: currentColor; stroke: none; }
   .ds-footer-about p { @apply mt-4 max-w-xs text-base leading-7 text-secondary; }
   .ds-footer-bottom { @apply flex flex-col gap-2 border-t border-white/5 py-4 text-xs text-secondary sm:flex-row sm:justify-between; }
-  .ds-stats-strip { @apply border-y border-white/5 bg-white/[.02]; }
-  .ds-stats-grid { @apply grid grid-cols-2 items-center gap-5 py-6 md:grid-cols-4; }
-  .ds-stats-grid > div { @apply flex flex-col; }
-  .ds-stats-grid strong { @apply text-2xl font-bold text-neutral-200; }
-  .ds-stats-grid span, .ds-stats-grid > p { @apply text-xs text-secondary; }
-  .ds-steps { @apply grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4; }
-  .ds-steps li { @apply rounded-none border border-white/10 bg-surface p-5; }
-  .ds-steps li > span { @apply mb-5 inline-flex rounded-lg bg-neutral-500/15 px-2.5 py-1 text-xs font-bold text-neutral-200; }
-  .ds-steps h3 { @apply text-base font-semibold; }
-  .ds-steps p, .ds-reviews-banner p:not(.ds-eyebrow) { @apply text-base leading-7 text-secondary; }
-  .ds-reviews-banner { @apply flex flex-col items-start justify-between gap-6 rounded-none border border-neutral-400/20     p-7 md:flex-row md:items-center md:p-10; }
-  .ds-reviews-banner h2 { @apply text-2xl font-bold md:text-3xl; }
-  .ds-cta-section { @apply border-y border-neutral-400/15    ; }
-  .ds-cta-content { @apply flex flex-col items-start justify-between gap-6 md:flex-row md:items-center; }
-  .ds-cta-content h2 { @apply max-w-2xl text-2xl font-bold md:text-3xl; }
   .ds-error-shell { @apply mx-auto flex min-h-[80vh] w-[min(720px,calc(100%-2rem))] flex-col items-center justify-center py-16 text-center; }
   .ds-error-art { @apply mb-6 flex w-full max-w-sm items-center justify-center overflow-hidden rounded-none border border-neutral-300/20 bg-neutral-500/10 ; }
   .ds-error-art img { @apply h-auto w-full; }
@@ -125,13 +83,6 @@ CRUD     : Displays existing data; does not save records
   .ds-auth-page form { @apply mt-6 rounded-none border border-white/5 bg-white/[.02] p-5 md:p-7; }
   .ds-auth-page form label { @apply w-full; }
   .ds-auth-page form input:not([type="hidden"]) { @apply mt-1 w-full; }
-  .ds-contact-grid { @apply grid items-start gap-6 lg:grid-cols-[.85fr_1.15fr]; }
-  .ds-contact-grid form { @apply rounded-none border border-white/10 bg-surface p-6 md:p-8; }
-  .ds-contact-grid form label { @apply w-full; }
-  .ds-contact-grid form input:not([type="hidden"]), .ds-contact-grid form textarea { @apply mt-1 w-full; }
-  .ds-contact-detail { @apply mt-5 flex flex-col gap-1 border-t border-white/5 pt-4 text-sm; }
-  .ds-contact-detail strong { @apply text-neutral-100; }
-  .ds-contact-detail span { @apply text-secondary; }
   .ds-dashboard-shell { @apply grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start; }
   .ds-dashboard-content { @apply min-w-0; }
   .ds-dashboard-sidebar { @apply hidden rounded-none border border-white/10 bg-surface p-4 lg:sticky lg:top-24 lg:block; }
@@ -152,58 +103,19 @@ CRUD     : Displays existing data; does not save records
   .ds-profile-details dt, .ds-profile-details dd { @apply border-b border-white/5 py-3; }
   .ds-profile-details dt { @apply text-xs font-semibold uppercase tracking-wide text-secondary; }
   .ds-profile-details dd { @apply m-0 break-words text-sm text-neutral-100; }
-  .ds-vehicle-status { @apply inline-flex rounded-full border border-neutral-300/20 bg-neutral-400/10 px-3 py-1 text-xs font-semibold text-neutral-100; }
   .ds-vehicle-message { @apply rounded-none border border-neutral-300/20 bg-neutral-400/10 p-3 text-sm text-neutral-100; }
   .ds-filter-pills { @apply mb-6 flex flex-wrap gap-2; }
   .ds-filter-pill { @apply rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-neutral-300/30 hover:bg-neutral-500/10 hover:text-white; }
   .ds-filter-pill.is-active { @apply border-neutral-300/40 bg-neutral-500/20 text-neutral-100; }
-  .ds-package-mark { @apply mb-4 grid h-12 w-12 place-items-center rounded-none    text-neutral-200; }
-  .ds-package-mark svg { @apply h-7 w-7 fill-none stroke-current; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .ds-featured-package { @apply relative border-neutral-300/50     ; }
-  .ds-popular-ribbon { @apply absolute right-4 top-4 rounded-full    px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-neutral-950; }
-  .ds-faq-teaser { @apply grid items-center gap-5 rounded-none border border-white/10 bg-surface p-6 md:grid-cols-[1fr_1fr_auto]; }
-  .ds-faq-teaser > div p:last-child, .ds-page-intro { @apply text-base leading-7 text-neutral-300; }
-  .ds-faq-teaser details { @apply border-neutral-300/15 bg-white/[.02]; }
-  .ds-faq-teaser details p { @apply text-neutral-300; }
-  .ds-about-hero { @apply mb-6     p-8 md:p-12; }
-  .ds-about-hero h1 { @apply max-w-3xl text-4xl font-extrabold md:text-5xl; }
-  .ds-about-hero > p:not(.ds-eyebrow) { @apply mb-6 max-w-2xl text-lg leading-8 text-neutral-300; }
-  .ds-about-grid { @apply mb-10 grid gap-5 md:grid-cols-2; }
-  .ds-about-grid h2 { @apply mb-3 text-2xl font-bold; }
-  .ds-about-grid p:not(.ds-eyebrow) { @apply leading-7 text-neutral-300; }
-  .ds-about-stats { @apply mb-10 grid grid-cols-2 gap-4 rounded-none border border-white/10 bg-white/[.02] p-6 md:grid-cols-3; }
-  .ds-about-stats > div { @apply flex flex-col gap-1; }
-  .ds-about-stats strong { @apply text-xl font-bold text-neutral-200; }
-  .ds-about-stats span { @apply text-sm text-neutral-300; }
   .ds-review-card { @apply flex flex-col items-start; }
-  .ds-review-quote { @apply mt-4 text-base leading-7 text-neutral-100; }
   .ds-review-meta { @apply mt-auto pt-5 text-xs text-neutral-300; }
   .ds-instructor-rating { @apply flex flex-wrap items-center gap-2; }
-  .ds-package-detail-hero { @apply mb-7 rounded-none border border-neutral-300/15     p-6 md:p-10; }
-  .ds-package-detail-hero h1 { @apply mb-3 text-4xl font-extrabold md:text-5xl; }
-  .ds-package-detail-grid { @apply grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]; }
-  .ds-package-detail-copy { @apply rounded-none border border-white/10 bg-surface p-6 md:p-8; }
-  .ds-package-detail-copy h2 { @apply mb-3 mt-5 text-2xl font-bold; }
-  .ds-package-detail-copy h2:first-child { @apply mt-0; }
-  .ds-package-detail-copy p, .ds-package-detail-copy li { @apply leading-7 text-neutral-300; }
-  .ds-package-detail-copy ul { @apply list-disc space-y-2 pl-6; }
-  .ds-enroll-card { @apply rounded-none border border-neutral-300/25 bg-surface p-6  lg:sticky lg:top-24; }
-  .ds-enroll-card dl { @apply mb-5 divide-y divide-white/10; }
-  .ds-enroll-card dl > div { @apply flex items-center justify-between gap-3 py-3; }
-  .ds-enroll-card dt { @apply text-sm text-neutral-300; }
-  .ds-enroll-card dd { @apply m-0 text-sm font-semibold text-neutral-100; }
-  .ds-enroll-card > p:last-child { @apply mt-4 text-xs leading-5 text-neutral-300; }
-  .ds-package-price { @apply mb-4 text-3xl font-extrabold text-amber-300; }
   .ds-auth-logo { @apply mb-5 inline-flex; }
   .ds-auth-logo img { @apply h-10 w-[190px] object-contain; }
   .ds-auth-page form { @apply relative; }
   .ds-auth-page form small, form label small { @apply mt-2 block text-xs leading-5 text-neutral-300; }
   [data-password-wrap] input { @apply pr-16; }
   .ds-auth-page { @apply mx-auto; }
-  .ds-package-tag { @apply mb-3 inline-flex rounded-full border border-neutral-300/20 bg-neutral-400/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-neutral-100; }
-  .ds-package-tag[data-type="AUTOMATIC"] { @apply border-neutral-300/20 bg-neutral-400/10 text-neutral-100; }
-  .ds-package-tag[data-type="MOTORCYCLE"] { @apply border-amber-300/20 bg-amber-400/10 text-amber-100; }
-  .ds-package-tag[data-type="REFRESHER"] { @apply border-neutral-300/20 bg-neutral-400/10 text-neutral-100; }
   .ds-filter-empty { @apply rounded-none border border-white/10 bg-surface p-5 text-secondary; }
   .ds-status-badge { @apply inline-flex items-center rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-neutral-100; }
   .ds-status-badge[data-status="PENDING"], .ds-status-badge[data-status="UNPAID"], .ds-status-badge[data-status="WARNING"] { @apply border-amber-300/30 bg-amber-400/15 text-amber-100; }
@@ -250,10 +162,6 @@ CRUD     : Displays existing data; does not save records
   .ds-pagination { @apply mt-5 items-center justify-between text-sm text-neutral-200; }
   .ds-pagination button:disabled { @apply cursor-not-allowed opacity-50; }
   .ds-password-toggle { @apply absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-bold text-neutral-200 hover:bg-white/10; }
-  .ds-wizard-steps { @apply my-6 grid grid-cols-2 gap-2 sm:grid-cols-4; }
-  .ds-wizard-steps li { @apply flex items-center gap-2 rounded-none border border-white/10 bg-surface px-3 py-3 text-sm font-bold text-neutral-200; }
-  .ds-wizard-steps li[aria-current="step"] { @apply border-neutral-300/40 bg-neutral-500/15 text-neutral-100; }
-  .ds-wizard-steps li span { @apply font-medium; }
   .ds-booking-panel { @apply rounded-none border border-neutral-300/15    p-5 md:p-7; }
   .ds-slot-fieldset { @apply my-5 border-0 p-0; }
   .ds-slot-fieldset legend { @apply mb-3 text-sm font-semibold text-neutral-100; }
@@ -272,7 +180,6 @@ CRUD     : Displays existing data; does not save records
   .ds-status-badge[data-status="CANCELLED"], .ds-status-badge[data-status="REJECTED"], .status-badge[data-status="CANCELLED"], .status-badge[data-status="REJECTED"] { color: #FEE2E2; }
   .ds-status-badge[data-status="NO_SHOW"], .ds-status-badge[data-status="HIDDEN"], .status-badge[data-status="NO_SHOW"], .status-badge[data-status="HIDDEN"] { color: #FFFFFF; }
   .ds-footer-brand { @apply text-white; }
-  .ds-footer-text { @apply text-sm text-secondary; }
   form { @apply max-w-full; }
   label { @apply mb-1 inline-block text-sm font-medium text-neutral-300; }
   input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea { @apply max-w-full rounded-none border border-white/10 bg-raised px-3.5 py-2.5 text-sm text-neutral-100 placeholder:text-secondary focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/30; }
@@ -305,10 +212,6 @@ CRUD     : Displays existing data; does not save records
     .ds-nav { @apply absolute left-0 right-0 top-full hidden max-h-[80vh] flex-col items-stretch overflow-y-auto border-b border-white/10 bg-ink/95 p-4 backdrop-blur-xl; }
     .ds-nav.is-open { @apply flex; }
     .ds-navbar { @apply relative; }
-    .ds-hero-grid { @apply min-h-0 grid-cols-1; }
-    .ds-hero-content h1 { @apply text-4xl; }
-    .ds-feature-grid { @apply grid-cols-1; }
-    .ds-stats-grid { @apply grid-cols-2; }
     table { @apply min-w-[640px]; }
   }
   @media (max-width: 767px) { .ds-container { @apply px-0; } }
@@ -324,9 +227,7 @@ CRUD     : Displays existing data; does not save records
 }
 
 @layer utilities {
-  .text-gradient { color: #FFFFFF; }
   .safe-scroll { overflow-x: auto; overscroll-behavior-inline: contain; }
-  .animate-enter { animation: enter .45s ease-out both; }
   @keyframes enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ds-toast-out { 0%,85% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-.5rem); } }
   /* JavaScript dismisses success messages; without it they remain readable. */
@@ -363,15 +264,11 @@ CRUD     : Displays existing data; does not save records
 
 /* Shared cinematic layout. Page-specific section composition follows in Phase B. */
 .ds-container { width: min(1440px,calc(100% - 3rem)); }
-.ds-card, .ds-feature-card, .ds-profile-card, .ds-hero-panel { border-color: #262626; background: transparent; box-shadow: none; }
+.ds-card, .ds-feature-card { border-color: #262626; background: transparent; box-shadow: none; }
 .ds-feature-card:hover, .ds-admin-dashboard-card:hover { transform: none; box-shadow: none; border-color: #525252; }
-.ds-feature-grid > :nth-child(2) { border-color: #262626; box-shadow: none; }
 .ds-eyebrow { color: #D4D4D4; font-size: 11px; font-weight: 500; letter-spacing: .22em; }
-.ds-hero-grid { min-height: 100svh; padding-top: 9rem; padding-bottom: 5rem; }
-.ds-hero-art img, .ds-error-art img { filter: grayscale(1); box-shadow: none; }
-.ds-float-chip { border-color: #262626; background: #0A0A0A; }
-.ds-hero-content h1 { background: none; -webkit-text-fill-color: #FFFFFF; font-size: clamp(40px,6.5vw,88px); }
-.ds-hero-panel, .ds-auth-page { backdrop-filter: none; box-shadow: none; }
+.ds-error-art img { filter: grayscale(1); box-shadow: none; }
+.ds-auth-page { backdrop-filter: none; box-shadow: none; }
 .ds-cinematic-section { position: relative; isolation: isolate; display: flex; min-height: 100vh; min-height: 100svh; align-items: flex-end; overflow: hidden; background: linear-gradient(150deg,#262626,#050505 75%); }
 .ds-cinematic-section > .ds-container { position: relative; z-index: 1; padding-block: clamp(5rem,10vh,9rem); }
 .ds-cinematic-background { position: absolute; z-index: -2; inset: -4%; background-size: cover; background-position: center; transform: translateY(var(--ds-parallax,0px)); }
@@ -384,8 +281,8 @@ CRUD     : Displays existing data; does not save records
 /* The header background lives on its own layer so it cannot constrain the fixed mobile menu. */
 .ds-header { position: sticky; inset: 0 0 auto; z-index: 60; width: 100%; border: 0; background: transparent; backdrop-filter: none; }
 .ds-header::before { content: ''; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / .94); backdrop-filter: blur(14px); transition: opacity .3s ease; }
-body:has(.ds-hero) .ds-header, body:has([data-cinematic]) .ds-header { position: fixed; }
-body:has(.ds-hero) .ds-header:not(.is-scrolled)::before, body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
+body:has([data-cinematic]) .ds-header { position: fixed; }
+body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
 .ds-navbar { position: static; display: grid; min-height: 88px; grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
 .ds-wordmark { display: flex; flex-direction: column; gap: 2px; color: #FFFFFF; font-size: 24px; font-weight: 500; letter-spacing: -.055em; line-height: 1.1; }
 .ds-wordmark > span { font-size: 9px; font-weight: 400; letter-spacing: .32em; text-transform: uppercase; }
@@ -433,7 +330,6 @@ body:has(.ds-hero) .ds-header:not(.is-scrolled)::before, body:has([data-cinemati
   html:not(.ds-js) .ds-nav-group { width: 100%; }
   html:not(.ds-js) .ds-nav-submenu { position: static; }
   html:not(.ds-js) .ds-nav-toggle, html:not(.ds-js) .ds-nav-close { display: none; }
-  html:not(.ds-js) body:has(.ds-hero) .ds-header { position: relative; background: #000000; }
 }
 @media (min-width: 1101px) { .ds-nav-close { display: none; } }
 @media (max-width: 600px) {
@@ -442,10 +338,6 @@ body:has(.ds-hero) .ds-header:not(.is-scrolled)::before, body:has([data-cinemati
   .ds-nav-actions { gap: 1rem; }
   .ds-wordmark { font-size: 22px; }
 }
-
-/* A paired hero action is secondary even on legacy pages awaiting their own phase. */
-.ds-hero-actions > .ds-button + .ds-button { border: 1px solid #737373; background: transparent; color: #FFFFFF; }
-.ds-hero-actions > .ds-button + .ds-button:hover { background: #FFFFFF; color: #000000; }
 
 /* Home: original scenery made from gradients and road markings; no external media is requested. */
 .ds-home { overflow: clip; }
@@ -770,7 +662,7 @@ html:not(.ds-js) .ds-catalog-filters { display: none; }
 .ds-dashboard-drawer[open] summary::after { content: '−'; }
 .ds-dashboard-drawer nav { padding: 0 0 1rem; border: 0; }
 /* Panels use thin rules and open space, so the data matters more than the container. */
-.ds-dashboard-shell .ds-card, .ds-dashboard-shell .ds-feature-card, .ds-dashboard-shell .ds-profile-card, .ds-dashboard-shell .ds-booking-panel { padding: 2rem 0; border: 0; border-top: 1px solid #262626; border-radius: 0; background: transparent; box-shadow: none; }
+.ds-dashboard-shell .ds-card, .ds-dashboard-shell .ds-feature-card, .ds-dashboard-shell .ds-booking-panel { padding: 2rem 0; border: 0; border-top: 1px solid #262626; border-radius: 0; background: transparent; box-shadow: none; }
 .ds-dashboard-shell .ds-card:hover, .ds-dashboard-shell .ds-feature-card:hover { transform: none; background: transparent; box-shadow: none; border-color: #262626; }
 .ds-dashboard-shell .ds-empty-state { padding: 3rem 1.5rem; border: 1px solid #262626; border-radius: 0; background: #0A0A0A; text-align: left; }
 .ds-dashboard-shell .ds-empty-state p { max-width: 42rem; color: #A3A3A3; }
@@ -824,8 +716,6 @@ html:not(.ds-js) .ds-catalog-filters { display: none; }
 .ds-dashboard-shell .ds-search-bar, .ds-dashboard-shell .ds-pagination { padding: 1.25rem 0; border: 0; border-block: 1px solid #262626; background: transparent; }
 .ds-dashboard-shell .ds-slot-chip span { border-color: #525252; background: #0A0A0A; color: #D4D4D4; }
 .ds-dashboard-shell .ds-slot-chip input:checked + span { border-color: #FFFFFF; background: #262626; color: #FFFFFF; }
-.ds-dashboard-shell .ds-wizard-steps li { border-color: #262626; background: transparent; color: #A3A3A3; font-weight: 400; }
-.ds-dashboard-shell .ds-wizard-steps li[aria-current='step'] { border-color: #A3A3A3; color: #FFFFFF; }
 /* Text names always identify status; amber is reserved for small pending or warning highlights. */
 .ds-dashboard-shell .status-badge, .ds-dashboard-shell .ds-status-badge { border: 1px solid #525252; background: #171717; color: #F5F5F5; font-size: 11px; font-weight: 400; line-height: 1.6; letter-spacing: .01em; }
 .ds-dashboard-shell .status-badge[data-status='PENDING'], .ds-dashboard-shell .ds-status-badge[data-status='WARNING'], .ds-dashboard-shell .status-badge[data-status='UNPAID'] { border-color: #F59E0B66; background: #F59E0B0D; color: #FDE68A; }

@@ -5,7 +5,6 @@ import com.drivingschool.auth.model.Role;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.common.exception.DuplicateRecordException;
-import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.common.exception.StorageException;
 import com.drivingschool.review.model.Review;
 import com.drivingschool.review.model.ReviewStatus;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
