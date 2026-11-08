@@ -1,0 +1,4 @@
+<%-- Module owner: IT26101136 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="badgeStatus" value="${status}" />
+<span class="ds-status-badge" data-status="<c:out value='${badgeStatus}' />"><c:out value="${badgeStatus}" /></span>

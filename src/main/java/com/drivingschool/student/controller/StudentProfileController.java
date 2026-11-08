@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.student.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
@@ -31,7 +32,8 @@ public class StudentProfileController {
 
     @InitBinder("profileForm")
     public void configureBinding(WebDataBinder binder) {
-        binder.setAllowedFields("name", "email", "phone");
+        binder.setAllowedFields("name", "email", "phone", "nic", "dateOfBirth",
+                "address", "licenseTypeWanted", "emergencyContact");
         binder.setAutoGrowNestedPaths(false);
     }
 
@@ -54,6 +56,11 @@ public class StudentProfileController {
         form.setName(profile.getName());
         form.setEmail(profile.getEmail());
         form.setPhone(profile.getPhone());
+        form.setNic(profile.getNic());
+        form.setDateOfBirth(profile.getDateOfBirth());
+        form.setAddress(profile.getAddress());
+        form.setLicenseTypeWanted(profile.getLicenseTypeWanted());
+        form.setEmergencyContact(profile.getEmergencyContact());
         model.addAttribute("profileForm", form);
         return editPage(request, model);
     }
@@ -74,7 +81,9 @@ public class StudentProfileController {
         }
         try {
             profileService.updateOwnProfile(request,
-                    form.getName(), form.getEmail(), form.getPhone());
+                    form.getName(), form.getEmail(), form.getPhone(),
+                    form.getNic(), form.getDateOfBirth(), form.getAddress(),
+                    form.getLicenseTypeWanted(), form.getEmergencyContact());
             redirectAttributes.addFlashAttribute("profileUpdated", true);
             return "redirect:/student/profile";
         } catch (ValidationException exception) {

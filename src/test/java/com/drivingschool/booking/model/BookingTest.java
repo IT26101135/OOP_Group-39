@@ -1,3 +1,4 @@
+// Module owner: IT26101134
 package com.drivingschool.booking.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -136,8 +137,8 @@ class BookingTest {
     }
 
     @Test
-    void shouldRejectPendingBookingWithAssignments() {
-        assertThrows(ValidationException.class, () ->
+    void pendingInstructorApprovalMayHoldAssignments() {
+        assertDoesNotThrow(() ->
                 new Booking("B001", "S001", "E001",
                         start, end, "I001", "V001",
                         BookingStatus.PENDING, created));

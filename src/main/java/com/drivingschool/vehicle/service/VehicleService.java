@@ -1,19 +1,28 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.service;
 
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.vehicle.model.Vehicle;
-import com.drivingschool.vehicle.repository.VehicleRepository;
+import com.drivingschool.vehicle.api.VehicleStore;
+import com.drivingschool.booking.repository.BookingRepository;
 
 import java.util.List;
 
 public class VehicleService {
 
-    private final VehicleRepository vehicleRepository;
+    private final VehicleStore vehicleRepository;
+    private final BookingRepository bookingRepository;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(VehicleStore vehicleRepository) {
+        this(vehicleRepository, null);
+    }
+
+    public VehicleService(VehicleStore vehicleRepository,
+                          BookingRepository bookingRepository) {
         this.vehicleRepository = vehicleRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public synchronized Vehicle createVehicle(
@@ -23,6 +32,17 @@ public class VehicleService {
             com.drivingschool.vehicle.model.TransmissionType transmissionType,
             com.drivingschool.vehicle.model.VehicleCategory vehicleCategory,
             com.drivingschool.vehicle.model.VehicleOperationalStatus operationalStatus) {
+        return createVehicle(registrationNumber, make, model, transmissionType,
+                vehicleCategory, operationalStatus, null, null, null);
+    }
+
+    public synchronized Vehicle createVehicle(
+            String registrationNumber, String make, String model,
+            com.drivingschool.vehicle.model.TransmissionType transmissionType,
+            com.drivingschool.vehicle.model.VehicleCategory vehicleCategory,
+            com.drivingschool.vehicle.model.VehicleOperationalStatus operationalStatus,
+            java.time.LocalDate insuranceExpiry, java.time.LocalDate lastServiceDate,
+            java.time.LocalDate nextServiceDate) {
 
         String id = vehicleRepository.nextId("V");
 
@@ -37,6 +57,9 @@ public class VehicleService {
                 vehicleCategory,
                 operationalStatus
         );
+        vehicle.setInsuranceExpiry(insuranceExpiry);
+        vehicle.setLastServiceDate(lastServiceDate);
+        vehicle.setNextServiceDate(nextServiceDate);
 
         vehicleRepository.save(vehicle);
 
@@ -82,6 +105,20 @@ public class VehicleService {
             String registrationNumber,
             String make,
             String model) {
+        Vehicle existing = vehicleRepository.findByIdStrict(id)
+                .orElseThrow(() -> new RecordNotFoundException("Vehicle not found: " + id));
+        return updateVehicle(id, registrationNumber, make, model, existing.getTransmissionType(),
+                existing.getVehicleCategory(), existing.getOperationalStatus(),
+                existing.getInsuranceExpiry(), existing.getLastServiceDate(), existing.getNextServiceDate());
+    }
+
+    public synchronized Vehicle updateVehicle(String id, String registrationNumber,
+            String make, String model,
+            com.drivingschool.vehicle.model.TransmissionType transmissionType,
+            com.drivingschool.vehicle.model.VehicleCategory vehicleCategory,
+            com.drivingschool.vehicle.model.VehicleOperationalStatus operationalStatus,
+            java.time.LocalDate insuranceExpiry, java.time.LocalDate lastServiceDate,
+            java.time.LocalDate nextServiceDate) {
 
         Vehicle existingVehicle = vehicleRepository.findByIdStrict(id)
                 .orElseThrow(() ->
@@ -99,14 +136,25 @@ public class VehicleService {
                 registrationNumber,
                 make,
                 model,
-                existingVehicle.getTransmissionType(),
-                existingVehicle.getVehicleCategory(),
-                existingVehicle.getOperationalStatus()
+                transmissionType, vehicleCategory, operationalStatus
         );
+        updatedVehicle.setInsuranceExpiry(insuranceExpiry);
+        updatedVehicle.setLastServiceDate(lastServiceDate);
+        updatedVehicle.setNextServiceDate(nextServiceDate);
 
         vehicleRepository.update(updatedVehicle);
 
         return updatedVehicle;
+    }
+
+    public synchronized void deleteVehicle(String id) {
+        getVehicleByIdStrict(id);
+        if (bookingRepository != null && bookingRepository.readAllStrict().stream()
+                .anyMatch(booking -> id.equals(booking.getVehicleId()))) {
+            throw new ValidationException(
+                    "Vehicle cannot be deleted because it is referenced by a lesson record.");
+        }
+        vehicleRepository.delete(id);
     }
 
 

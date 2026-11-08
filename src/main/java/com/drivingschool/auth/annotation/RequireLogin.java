@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.annotation;
 
 import java.lang.annotation.ElementType;

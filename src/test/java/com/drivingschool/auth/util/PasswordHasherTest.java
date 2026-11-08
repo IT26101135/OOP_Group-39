@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.util;
 
 import com.drivingschool.auth.model.Admin;
@@ -76,13 +77,13 @@ class PasswordHasherTest {
 
     @Test
     void acceptsExactlySeventyTwoAsciiBytes() {
-        String password = "a".repeat(72);
+        String password = "a".repeat(70) + "A1";
         String hash = hasher.hash(password);
 
         assertTrue(hasher.matches(password, hash));
 
         // An extra byte must not be silently ignored during verification.
-        assertFalse(hasher.matches(password + "b", hash));
+        assertFalse(hasher.matches(password + "b2", hash));
     }
 
     @Test
@@ -96,13 +97,13 @@ class PasswordHasherTest {
     @Test
     void measuresUnicodePasswordLimitInUtf8Bytes() {
         // é occupies two bytes in UTF-8: 36 characters = 72 bytes.
-        String valid = "\u00E9".repeat(36);
+        String valid = "\u00E9".repeat(35) + "A1";
         String hash = hasher.hash(valid);
 
         assertTrue(hasher.matches(valid, hash));
 
-        // 37 characters = 74 bytes.
-        String tooLong = "\u00E9".repeat(37);
+        // One extra Unicode character takes the password beyond 72 UTF-8 bytes.
+        String tooLong = "\u00E9".repeat(36) + "A1";
 
         assertThrows(
                 ValidationException.class,

@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.Locale;
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @JsonTypeInfo(
@@ -17,6 +19,7 @@ import java.util.regex.Pattern;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Student.class, name = "STUDENT"),
+        @JsonSubTypes.Type(value = InstructorAccount.class, name = "INSTRUCTOR"),
         @JsonSubTypes.Type(value = Admin.class, name = "ADMIN")
 })
 public abstract class User implements Identifiable {
@@ -30,6 +33,8 @@ public abstract class User implements Identifiable {
     private String name;
     private String email;
     private String passwordHash;
+    private AccountStatus status = AccountStatus.ACTIVE;
+    private String createdAt = LocalDateTime.now().toString();
 
     protected User(
             String id,
@@ -121,6 +126,33 @@ public abstract class User implements Identifiable {
         }
 
         this.passwordHash = passwordHash;
+    }
+
+    public final AccountStatus getStatus() {
+        return status;
+    }
+
+    public final void setStatus(AccountStatus status) {
+        if (status == null) {
+            throw new ValidationException("Account status is required.");
+        }
+        this.status = status;
+    }
+
+    public final String getCreatedAt() {
+        return createdAt;
+    }
+
+    public final void setCreatedAt(String createdAt) {
+        if (createdAt == null || createdAt.isBlank()) {
+            throw new ValidationException("Account creation time is required.");
+        }
+        try {
+            LocalDateTime.parse(createdAt);
+        } catch (java.time.format.DateTimeParseException exception) {
+            throw new ValidationException("Account creation time must be ISO date-time.");
+        }
+        this.createdAt = createdAt;
     }
 
     @JsonIgnore

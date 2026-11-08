@@ -1,25 +1,27 @@
+<%-- Module owner: IT26101132 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<c:url value="/css/app.css" var="appCssUrl" />
-<c:url value="/css/vehicle.css" var="vehicleCssUrl" />
+<c:url value="/css/tailwind.css" var="appCssUrl" />
 <c:url value="/admin/vehicles/create" var="createVehicleUrl" />
 <c:url value="/admin/vehicles" var="vehicleListUrl" />
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="description" content="Add vehicle | DriveSpark Academy at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Add vehicle | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
-    <link rel="stylesheet" href="<c:out value='${vehicleCssUrl}' />">
 </head>
 <body>
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="ds-container ds-section ds-vehicle">
+<main id="main-content" class="ds-container ds-section ds-vehicle"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
 
     <div class="ds-vehicle-form-heading">
         <p class="ds-vehicle-eyebrow">VEHICLE MANAGEMENT</p>
@@ -130,6 +132,10 @@
                 </select>
             </div>
 
+            <div class="ds-vehicle-field"><label for="insuranceExpiry">Insurance expiry</label><input id="insuranceExpiry" type="date" name="insuranceExpiry" value="<c:out value='${vehicleCreateForm.insuranceExpiry}' />"></div>
+            <div class="ds-vehicle-field"><label for="lastServiceDate">Last service date</label><input id="lastServiceDate" type="date" name="lastServiceDate" value="<c:out value='${vehicleCreateForm.lastServiceDate}' />"></div>
+            <div class="ds-vehicle-field"><label for="nextServiceDate">Next service date</label><input id="nextServiceDate" type="date" name="nextServiceDate" value="<c:out value='${vehicleCreateForm.nextServiceDate}' />"></div>
+
             <div class="ds-vehicle-form-actions">
                 <button class="ds-button" type="submit">
                     Create vehicle
@@ -142,7 +148,7 @@
 
         </form>
     </section>
-</main>
+</div></main>
 
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>
 

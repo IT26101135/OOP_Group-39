@@ -1,3 +1,4 @@
+// Module owner: IT26101136
 package com.drivingschool.learningpackage.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -17,6 +18,8 @@ public class LearningPackage implements Identifiable {
     private int lessonCount;
     private int validityDays;
     private boolean active;
+    private PackageType type = PackageType.MANUAL;
+    private int durationHours;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public LearningPackage(
@@ -44,6 +47,7 @@ public class LearningPackage implements Identifiable {
             throw new ValidationException("Lesson count is required.");
         }
         setLessonCount(lessonCount);
+        this.durationHours = lessonCount;
 
         if (validityDays == null) {
             throw new ValidationException("Validity days are required.");
@@ -170,5 +174,21 @@ public class LearningPackage implements Identifiable {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public PackageType getType() { return type; }
+
+    public void setType(PackageType type) {
+        if (type == null) throw new ValidationException("Package type is required.");
+        this.type = type;
+    }
+
+    public int getDurationHours() { return durationHours; }
+
+    public void setDurationHours(int durationHours) {
+        if (durationHours < 1 || durationHours > 1000) {
+            throw new ValidationException("Duration must be between 1 and 1000 hours.");
+        }
+        this.durationHours = durationHours;
     }
 }

@@ -1,3 +1,4 @@
+// Module owner: IT26101137
 package com.drivingschool.review.repository;
 
 import com.drivingschool.common.exception.DuplicateRecordException;

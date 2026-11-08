@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.student.service;
 
 import com.drivingschool.auth.model.Role;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.time.LocalDate;
 
 @Service
 public class StudentProfileService {
@@ -37,6 +39,17 @@ public class StudentProfileService {
 
     public StudentProfile updateOwnProfile(HttpServletRequest request,
                                            String name, String email, String phone) {
+        Student current = requireStudent(request);
+        return updateOwnProfile(request, name, email, phone, current.getNic(),
+                current.getDateOfBirth(), current.getAddress(),
+                current.getLicenseTypeWanted(), current.getEmergencyContact());
+    }
+
+    public StudentProfile updateOwnProfile(HttpServletRequest request,
+                                           String name, String email, String phone,
+                                           String nic, LocalDate dateOfBirth,
+                                           String address, String licenseTypeWanted,
+                                           String emergencyContact) {
         return AccountWriteCoordinator.execute(() -> {
             // Reload identity INSIDE the shared account-write operation.
             Student current = requireStudent(request);
@@ -45,6 +58,16 @@ public class StudentProfileService {
             // Reuse the model's trimming, email normalization and validation.
             Student replacement = new Student(current.getId(), name, email,
                     current.getPasswordHash(), phone);
+            replacement.setStatus(current.getStatus());
+            replacement.setCreatedAt(current.getCreatedAt());
+            replacement.setNic(nic);
+            replacement.setDateOfBirth(dateOfBirth);
+            replacement.setAddress(address);
+            replacement.setLicenseTypeWanted(licenseTypeWanted);
+            replacement.setEmergencyContact(emergencyContact);
+            replacement.setActivePackageId(current.getActivePackageId());
+            replacement.setLessonsRemaining(current.getLessonsRemaining());
+            replacement.setActiveEnrollmentId(current.getActiveEnrollmentId());
 
             List<User> users = userRepository.readAllStrict();
             ensureUniqueStoredEmails(users);
@@ -59,7 +82,12 @@ public class StudentProfileService {
             // A normalized no-op still performs the strict integrity check.
             if (current.getName().equals(replacement.getName())
                     && current.getEmail().equals(replacement.getEmail())
-                    && current.getPhone().equals(replacement.getPhone())) {
+                    && current.getPhone().equals(replacement.getPhone())
+                    && java.util.Objects.equals(current.getNic(), replacement.getNic())
+                    && java.util.Objects.equals(current.getDateOfBirth(), replacement.getDateOfBirth())
+                    && java.util.Objects.equals(current.getAddress(), replacement.getAddress())
+                    && java.util.Objects.equals(current.getLicenseTypeWanted(), replacement.getLicenseTypeWanted())
+                    && java.util.Objects.equals(current.getEmergencyContact(), replacement.getEmergencyContact())) {
                 return toProfile(current);
             }
 
@@ -89,6 +117,9 @@ public class StudentProfileService {
 
     private StudentProfile toProfile(Student student) {
         return new StudentProfile(student.getId(), student.getName(),
-                student.getEmail(), student.getPhone());
+                student.getEmail(), student.getPhone(), student.getNic(),
+                student.getDateOfBirth(), student.getAddress(),
+                student.getLicenseTypeWanted(), student.getEmergencyContact(),
+                student.getActivePackageId(), student.getLessonsRemaining());
     }
 }

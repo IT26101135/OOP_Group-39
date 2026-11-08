@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.student.dto;
 
 import com.drivingschool.common.exception.ValidationException;

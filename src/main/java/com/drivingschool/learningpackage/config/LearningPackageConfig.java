@@ -1,7 +1,10 @@
+// Module owner: IT26101136
 package com.drivingschool.learningpackage.config;
 
 import com.drivingschool.learningpackage.repository.LearningPackageRepository;
 import com.drivingschool.learningpackage.service.LearningPackageService;
+import com.drivingschool.booking.repository.BookingRepository;
+import com.drivingschool.learningpackage.repository.EnrollmentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,8 +28,11 @@ public class LearningPackageConfig {
 
     @Bean
     public LearningPackageService learningPackageService(
-            LearningPackageRepository learningPackageRepository) {
+            LearningPackageRepository learningPackageRepository,
+            org.springframework.beans.factory.ObjectProvider<BookingRepository> bookings,
+            org.springframework.beans.factory.ObjectProvider<EnrollmentRepository> enrollments) {
 
-        return new LearningPackageService(learningPackageRepository);
+        return new LearningPackageService(learningPackageRepository,
+                bookings.getIfAvailable(), enrollments.getIfAvailable());
     }
 }

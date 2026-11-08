@@ -1,6 +1,8 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.User;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.util.PasswordHasher;
 import com.drivingschool.auth.util.AccountWriteCoordinator;
@@ -64,6 +66,7 @@ public class AuthService {
                     passwordHash,
                     phone
             );
+            student.setStatus(AccountStatus.PENDING);
 
             userRepository.save(student);
             return student;

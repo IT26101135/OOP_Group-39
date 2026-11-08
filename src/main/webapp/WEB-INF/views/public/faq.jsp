@@ -1,0 +1,7 @@
+<%-- Module owner: IT26101136 --%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %><c:url value="/css/tailwind.css" var="appCssUrl" />
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="description" content="Frequently asked questions at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Frequently asked questions</title><link rel="stylesheet" href="<c:out value='${appCssUrl}' />"></head><body><%@ include file="/WEB-INF/views/common/navbar.jspf" %><main id="main-content" class="ds-container ds-section"><h1>Frequently asked questions</h1><details><summary>How do I start?</summary><p>Create a student account, wait for approval, then choose a learning package.</p></details><details><summary>How are lessons booked?</summary><p>Students with an active package can request a one-hour lesson. An administrator confirms an instructor and vehicle.</p></details><details><summary>Can I pay online?</summary><p>No online payment is integrated. Enrollment payment is simulated for this project.</p></details></main><%@ include file="/WEB-INF/views/common/footer.jspf" %></body></html>

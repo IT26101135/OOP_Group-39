@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;

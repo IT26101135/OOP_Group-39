@@ -1,0 +1,2 @@
+<%-- Module owner: IT26101137 --%>
+<span class="ds-star-display" role="img" aria-label="<c:out value='${ratingValue}' /> out of 5 stars"><span aria-hidden="true">★★★★★</span><span class="ds-star-fill" aria-hidden="true" style="width:<c:out value='${ratingValue * 20}' />%">★★★★★</span></span>

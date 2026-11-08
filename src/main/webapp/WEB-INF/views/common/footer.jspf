@@ -1,12 +1,20 @@
+<%-- Module owner: IT26101136 --%>
 <c:url value="/" var="homeUrl" />
+<c:url value="/packages" var="footerPackagesUrl" />
+<c:url value="/instructors" var="footerInstructorsUrl" />
+<c:url value="/contact" var="footerContactUrl" />
 
 <footer class="ds-footer">
-    <div class="ds-container ds-footer-inner">
-        <a class="ds-footer-brand" href="${homeUrl}">
-            DriveSpark Academy
-        </a>
-        <p class="ds-footer-text">
-            Learn with confidence. Drive with care.
-        </p>
+    <div class="ds-container ds-footer-grid">
+        <div class="ds-footer-about">
+            <a class="ds-footer-brand" href="<c:out value='${homeUrl}' />"><img src="<c:url value='/images/logo.svg' />" width="190" height="40" loading="lazy" alt="DriveSpark Academy"></a>
+            <p class="ds-footer-text">Learn with confidence. Drive with care. Build safe habits for every journey.</p>
+        </div>
+        <div><h2>Explore</h2><a href="<c:out value='${footerPackagesUrl}' />">Learning packages</a><a href="<c:out value='${footerInstructorsUrl}' />">Our instructors</a><a href="<c:out value='${footerContactUrl}' />">Contact</a></div>
+        <div><h2>Visit us</h2><p>Colombo, Sri Lanka</p><p>Mon-Sat | 8:00 AM-6:00 PM</p><p>Contact details can be updated by the academy.</p></div>
+        <div class="ds-footer-social"><h2>Stay connected</h2><div class="ds-social-icons" aria-label="Social profile placeholders"><a href="#" aria-label="Instagram placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r=".8"/></svg></a><a href="#" aria-label="Facebook placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h3l.5-3H14V8c0-.9.3-1.5 1.6-1.5H18V3.8c-.5-.1-1.5-.2-2.7-.2-2.7 0-4.5 1.6-4.5 4.6V10H8v3h2.8v8Z"/></svg></a><a href="#" aria-label="YouTube placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="m10 9 5 3-5 3Z"/></svg></a></div><span>Placeholder links: add official social URLs when available.</span></div>
     </div>
+    <div class="ds-container ds-footer-bottom"><span>Copyright 2026 DriveSpark Academy</span><span>Safe driving starts with good learning.</span></div>
 </footer>
+<%@ include file="/WEB-INF/views/common/components/toasts.jspf" %>
+<%@ include file="/WEB-INF/views/common/components/confirm-dialog.jspf" %>

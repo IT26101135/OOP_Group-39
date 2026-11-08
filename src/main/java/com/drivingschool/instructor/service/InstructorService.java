@@ -1,3 +1,4 @@
+// Module owner: IT26101133
 
 package com.drivingschool.instructor.service;
 
@@ -27,6 +28,15 @@ public class InstructorService {
             String phone,
             int yearsOfExperience) {
 
+        return createInstructor(name, email, phone, yearsOfExperience,
+                null, null, null, null, null);
+    }
+
+    public synchronized Instructor createInstructor(
+            String name, String email, String phone, int yearsOfExperience,
+            String bio, String licenseNumber, String qualifications,
+            String photoPath, List<String> vehicleTypes) {
+
         // Validate fields before allocating an ID.
         Instructor validated = new Instructor(
                 "I001",
@@ -49,6 +59,11 @@ public class InstructorService {
                 validated.getYearsOfExperience(),
                 true
         );
+        instructor.setBio(bio);
+        instructor.setLicenseNumber(licenseNumber);
+        instructor.setQualifications(qualifications);
+        instructor.setPhotoPath(photoPath);
+        instructor.setVehicleTypes(vehicleTypes);
 
         repository.save(instructor);
         return instructor;
@@ -56,6 +71,17 @@ public class InstructorService {
 
     public List<Instructor> getAllInstructors() {
         return repository.readAll();
+    }
+
+    public void deleteInstructor(String id) {
+        repository.delete(id);
+    }
+
+    public synchronized Instructor setInstructorActive(String id, boolean active) {
+        Instructor instructor = getInstructorById(id);
+        instructor.setActive(active);
+        repository.update(instructor);
+        return instructor;
     }
 
     public Instructor getInstructorById(String id) {
@@ -72,6 +98,18 @@ public class InstructorService {
             int yearsOfExperience) {
 
         Instructor existing = getInstructorById(id);
+        return updateInstructor(id, name, email, phone, yearsOfExperience,
+                existing.getBio(), existing.getLicenseNumber(),
+                existing.getQualifications(), existing.getPhotoPath(),
+                existing.getVehicleTypes());
+    }
+
+    public synchronized Instructor updateInstructor(
+            String id, String name, String email, String phone,
+            int yearsOfExperience, String bio, String licenseNumber,
+            String qualifications, String photoPath, List<String> vehicleTypes) {
+
+        Instructor existing = getInstructorById(id);
 
         // Create a validated replacement before updating storage.
         Instructor updated = new Instructor(
@@ -82,6 +120,12 @@ public class InstructorService {
                 yearsOfExperience,
                 existing.isActive()
         );
+        updated.setBio(bio);
+        updated.setLicenseNumber(licenseNumber);
+        updated.setQualifications(qualifications);
+        updated.setPhotoPath(photoPath);
+        updated.setVehicleTypes(vehicleTypes);
+        updated.setAverageRating(existing.getAverageRating());
 
         ensureEmailAvailable(
                 updated.getEmail(),
@@ -94,6 +138,10 @@ public class InstructorService {
 
     public List<Instructor> getInstructorsSortedByExperience() {
         return sorter.sortByExperience(repository.readAll());
+    }
+
+    public List<Instructor> sortInstructors(String sortBy, boolean ascending) {
+        return sorter.sort(repository.readAll(), sortBy, ascending);
     }
 
     private void ensureEmailAvailable(

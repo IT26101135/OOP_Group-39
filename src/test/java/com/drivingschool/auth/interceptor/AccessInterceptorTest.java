@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.interceptor;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -60,8 +61,8 @@ class AccessInterceptorTest {
                 ));
 
         mockMvc.perform(get("/test-access/account"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         assertEquals(0, protectedCalls.get());
     }
@@ -87,8 +88,8 @@ class AccessInterceptorTest {
                 ));
 
         mockMvc.perform(get("/test-access/admin"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         assertEquals(0, protectedCalls.get());
     }

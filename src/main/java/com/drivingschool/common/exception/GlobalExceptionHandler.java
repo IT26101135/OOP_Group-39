@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.common.exception;
 
 import org.slf4j.Logger;
@@ -68,11 +69,7 @@ public class GlobalExceptionHandler {
         int status = exception.getStatusCode().value();
 
         if (status == HttpStatus.UNAUTHORIZED.value()) {
-            return errorPage(
-                    HttpStatus.UNAUTHORIZED,
-                    "Login required",
-                    "Please log in to continue."
-            );
+            return new ModelAndView("redirect:/login?required");
         }
 
         if (status == HttpStatus.FORBIDDEN.value()) {

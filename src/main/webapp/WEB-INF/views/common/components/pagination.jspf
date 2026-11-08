@@ -1,0 +1,2 @@
+<%-- Module owner: IT26101136 --%>
+<nav class="ds-pagination" aria-label="Pagination"><button type="button" disabled aria-label="Previous page">← Previous</button><span>Page 1</span><button type="button" aria-label="Next page">Next →</button></nav>

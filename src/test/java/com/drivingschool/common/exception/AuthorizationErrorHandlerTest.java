@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,17 +26,12 @@ class AuthorizationErrorHandlerTest {
     }
 
     @Test
-    void unauthorizedUsesSharedErrorPageAndPreserves401()
+    void unauthorizedRedirectsToLogin()
             throws Exception {
 
         mockMvc.perform(get("/test-errors/unauthorized"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"))
-                .andExpect(model().attribute("statusCode", 401))
-                .andExpect(model().attribute(
-                        "title", "Login required"))
-                .andExpect(model().attribute(
-                        "message", "Please log in to continue."));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test

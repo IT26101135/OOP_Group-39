@@ -1,18 +1,19 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.service;
 
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.vehicle.api.VehicleBookingInfo;
 import com.drivingschool.vehicle.api.VehicleLookup;
 import com.drivingschool.vehicle.model.VehicleOperationalStatus;
-import com.drivingschool.vehicle.repository.VehicleRepository;
+import com.drivingschool.vehicle.api.VehicleStore;
 
 import java.util.Optional;
 
 public class VehicleLookupService implements VehicleLookup {
 
-    private final VehicleRepository vehicleRepository;
+    private final VehicleStore vehicleRepository;
 
-    public VehicleLookupService(VehicleRepository vehicleRepository) {
+    public VehicleLookupService(VehicleStore vehicleRepository) {
         this.vehicleRepository = vehicleRepository;
     }
 

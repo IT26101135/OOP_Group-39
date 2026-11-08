@@ -1,3 +1,4 @@
+// Module owner: IT26101136
 package com.drivingschool.learningpackage.model;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.util;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -51,6 +52,12 @@ public final class PasswordHasher {
             throw new ValidationException(
                     "Password must contain at least 8 characters."
             );
+        }
+
+        if (!rawPassword.matches("(?s).*\\p{L}.*")
+                || !rawPassword.matches("(?s).*\\d.*")) {
+            throw new ValidationException(
+                    "Password must contain at least one letter and one number.");
         }
 
         if (exceedsByteLimit(rawPassword)) {

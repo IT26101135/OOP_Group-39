@@ -1,0 +1,34 @@
+<%-- Module owner: IT26101136 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<aside class="ds-dashboard-sidebar" aria-label="Dashboard navigation">
+    <p class="ds-dashboard-label">Workspace</p>
+    <nav>
+        <c:choose>
+            <c:when test="${navRole eq 'STUDENT'}">
+                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
+            </c:when>
+            <c:when test="${navRole eq 'INSTRUCTOR'}">
+                <a href="<c:url value='/instructor/dashboard' />">Dashboard</a><a href="<c:url value='/instructor/dashboard#assigned-lessons' />">Assigned lessons</a><a href="<c:url value='/instructor/availability' />">Availability</a><a href="<c:url value='/reviews' />">My reviews</a>
+            </c:when>
+            <c:when test="${navRole eq 'ADMIN'}">
+                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Users</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
+            </c:when>
+        </c:choose>
+    </nav>
+</aside>
+<details class="ds-dashboard-drawer">
+    <summary>Dashboard menu</summary>
+    <nav>
+        <c:choose>
+            <c:when test="${navRole eq 'STUDENT'}">
+                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
+            </c:when>
+            <c:when test="${navRole eq 'INSTRUCTOR'}">
+                <a href="<c:url value='/instructor/dashboard' />">Dashboard</a><a href="<c:url value='/instructor/dashboard#assigned-lessons' />">Assigned lessons</a><a href="<c:url value='/instructor/availability' />">Availability</a><a href="<c:url value='/reviews' />">My reviews</a>
+            </c:when>
+            <c:when test="${navRole eq 'ADMIN'}">
+                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Users</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
+            </c:when>
+        </c:choose>
+    </nav>
+</details>

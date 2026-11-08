@@ -1,0 +1,2 @@
+<%-- Module owner: IT26101136 --%>
+<section class="ds-empty-state" role="status"><span class="ds-empty-icon" aria-hidden="true">✦</span><h2><c:out value="${emptyTitle}" default="Nothing here yet" /></h2><p><c:out value="${emptyMessage}" default="New items will appear here when they are available." /></p></section>

@@ -1,8 +1,10 @@
+// Module owner: IT26101135
 package com.drivingschool.auth;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
 import com.drivingschool.auth.annotation.RequireLogin;
 import com.drivingschool.auth.repository.UserRepository;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.service.AdminSeedService;
 import com.drivingschool.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -123,8 +125,8 @@ class AuthWebIntegrationTest {
         assertTrue(authenticatedSession.isInvalid());
 
         mockMvc.perform(get("/integration-probe/account"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         mockMvc.perform(get("/"))
                 .andExpect(model().attribute("navLoggedIn", false))
@@ -160,8 +162,8 @@ class AuthWebIntegrationTest {
             throws Exception {
 
         mockMvc.perform(get("/integration-probe/admin"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         String studentEmail = uniqueEmail();
         String password = "IntegrationPass123!";
@@ -215,6 +217,8 @@ class AuthWebIntegrationTest {
                 "0771234567",
                 password
         );
+        var retryUser = userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow();
+        retryUser.setStatus(AccountStatus.ACTIVE); userRepository.update(retryUser);
 
         MvcResult page = mockMvc.perform(get("/login")).andReturn();
         MockHttpSession oldSession = sessionOf(page);
@@ -244,7 +248,7 @@ class AuthWebIntegrationTest {
                         .param("email", email)
                         .param("password", password))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         assertTrue(retrySession.isInvalid());
@@ -256,6 +260,8 @@ class AuthWebIntegrationTest {
 
     private MockHttpSession login(String email, String password)
             throws Exception {
+        userRepository.readAllStrict().stream().filter(user -> user.getEmail().equalsIgnoreCase(email)).findFirst()
+                .ifPresent(user -> { if (user.getStatus() == AccountStatus.PENDING) { user.setStatus(AccountStatus.ACTIVE); userRepository.update(user); } });
 
         MvcResult page = mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
@@ -269,7 +275,7 @@ class AuthWebIntegrationTest {
                         .param("email", email)
                         .param("password", password))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         assertTrue(anonymousSession.isInvalid());

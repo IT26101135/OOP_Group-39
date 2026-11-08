@@ -1,0 +1,9 @@
+<%-- Module owner: IT26101135 --%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:url value="/css/tailwind.css" var="appCssUrl" />
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="description" content="My enrollments at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>My enrollments</title><link rel="stylesheet" href="<c:out value='${appCssUrl}' />"></head>
+<body><%@ include file="/WEB-INF/views/common/navbar.jspf" %><main id="main-content" class="ds-container ds-section ds-dashboard-shell"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content"><p class="ds-eyebrow">STUDENT WORKSPACE</p><h1>My enrollments</h1><c:if test="${enrolled}"><p role="status">Enrollment complete. Simulated payment was recorded as paid.</p></c:if><c:choose><c:when test="${empty enrollments}"><section class="ds-empty-state"><h2>No active enrollment</h2><p>Choose a learning package to begin tracking lessons.</p></section><a href="<c:url value='/packages' />">Browse packages</a></c:when><c:otherwise><c:forEach items="${enrollments}" var="enrollment"><article class="ds-feature-card"><h2>Package <c:out value="${enrollment.packageId}" /></h2><p>Enrolled: <c:out value="${enrollment.enrolledAt}" /> · Payment: <span class="status-badge" data-status="<c:out value='${enrollment.paymentStatus}' />"><c:out value="${enrollment.paymentStatus}" /></span> · Amount: LKR <c:out value="${enrollment.amount}" /></p></article></c:forEach></c:otherwise></c:choose></div></main><%@ include file="/WEB-INF/views/common/footer.jspf" %></body></html>

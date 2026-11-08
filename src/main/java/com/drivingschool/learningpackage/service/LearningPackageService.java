@@ -1,9 +1,13 @@
+// Module owner: IT26101136
 package com.drivingschool.learningpackage.service;
 
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.common.exception.ValidationException;
+import com.drivingschool.booking.repository.BookingRepository;
+import com.drivingschool.learningpackage.repository.EnrollmentRepository;
 import com.drivingschool.learningpackage.model.LearningPackage;
+import com.drivingschool.learningpackage.model.PackageType;
 import com.drivingschool.learningpackage.repository.LearningPackageRepository;
 
 import java.math.BigDecimal;
@@ -16,14 +20,29 @@ public class LearningPackageService {
     private static final Object PACKAGE_WRITE_LOCK = new Object();
 
     private final LearningPackageRepository repository;
+    private final BookingRepository bookings;
+    private final EnrollmentRepository enrollments;
 
     public LearningPackageService(LearningPackageRepository repository) {
+        this(repository, null, null);
+    }
+
+    public LearningPackageService(LearningPackageRepository repository,
+                                  BookingRepository bookings) {
+        this(repository, bookings, null);
+    }
+
+    public LearningPackageService(LearningPackageRepository repository,
+                                  BookingRepository bookings,
+                                  EnrollmentRepository enrollments) {
         if (repository == null) {
             throw new IllegalArgumentException(
                     "Learning package repository is required.");
         }
 
         this.repository = repository;
+        this.bookings = bookings;
+        this.enrollments = enrollments;
     }
 
     public LearningPackage createPackage(
@@ -33,6 +52,20 @@ public class LearningPackageService {
             int lessonCount,
             int validityDays,
             boolean active) {
+
+        return createPackage(name, description, price, lessonCount,
+                validityDays, active, PackageType.MANUAL, lessonCount);
+    }
+
+    public LearningPackage createPackage(
+            String name,
+            String description,
+            BigDecimal price,
+            int lessonCount,
+            int validityDays,
+            boolean active,
+            PackageType type,
+            int durationHours) {
 
         synchronized (PACKAGE_WRITE_LOCK) {
 
@@ -46,6 +79,8 @@ public class LearningPackageService {
                     validityDays,
                     active
             );
+            validatedPackage.setType(type);
+            validatedPackage.setDurationHours(durationHours);
 
             List<LearningPackage> packages =
                     repository.readAllStrict();
@@ -63,6 +98,8 @@ public class LearningPackageService {
                     validatedPackage.getValidityDays(),
                     validatedPackage.isActive()
             );
+            newPackage.setType(validatedPackage.getType());
+            newPackage.setDurationHours(validatedPackage.getDurationHours());
 
             repository.save(newPackage);
 
@@ -105,6 +142,8 @@ public class LearningPackageService {
                     currentPackage.getValidityDays(),
                     currentPackage.isActive()
             );
+            updatedPackage.setType(currentPackage.getType());
+            updatedPackage.setDurationHours(currentPackage.getDurationHours());
 
             List<LearningPackage> packages =
                     repository.readAllStrict();
@@ -118,6 +157,57 @@ public class LearningPackageService {
             repository.update(updatedPackage);
 
             return updatedPackage;
+        }
+    }
+
+    public LearningPackage updatePackage(String id, String name,
+                                         String description, BigDecimal price,
+                                         int lessonCount, int validityDays,
+                                         PackageType type, int durationHours) {
+        synchronized (PACKAGE_WRITE_LOCK) {
+            validatePackageId(id);
+            LearningPackage current = repository.findByIdStrict(id)
+                    .orElseThrow(() -> new RecordNotFoundException(
+                            "Learning package not found: " + id));
+            LearningPackage replacement = new LearningPackage(id, name,
+                    description, price, lessonCount, validityDays,
+                    current.isActive());
+            replacement.setType(type);
+            replacement.setDurationHours(durationHours);
+            ensureUniqueName(repository.readAllStrict(), replacement.getName(), id);
+            repository.update(replacement);
+            return replacement;
+        }
+    }
+
+    public LearningPackage setPackageActive(String id, boolean active) {
+        synchronized (PACKAGE_WRITE_LOCK) {
+            validatePackageId(id);
+            LearningPackage learningPackage = repository.findByIdStrict(id)
+                    .orElseThrow(() -> new RecordNotFoundException(
+                            "Learning package not found: " + id));
+            learningPackage.setActive(active);
+            repository.update(learningPackage);
+            return learningPackage;
+        }
+    }
+
+    public void deletePackage(String id) {
+        synchronized (PACKAGE_WRITE_LOCK) {
+            validatePackageId(id);
+            repository.findByIdStrict(id).orElseThrow(() ->
+                    new RecordNotFoundException("Learning package not found: " + id));
+            if (bookings != null && bookings.readAllStrict().stream()
+                    .anyMatch(booking -> id.equals(booking.getEnrollmentId()))) {
+                throw new ValidationException(
+                        "Package cannot be deleted because lesson history refers to it.");
+            }
+            if (enrollments != null && enrollments.readAllStrict().stream()
+                    .anyMatch(enrollment -> id.equals(enrollment.getPackageId()))) {
+                throw new ValidationException(
+                        "Package cannot be deleted because an enrollment refers to it.");
+            }
+            repository.delete(id);
         }
     }
 

@@ -1,24 +1,28 @@
+<%-- Module owner: IT26101132 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<c:url value="/css/app.css" var="appCssUrl" />
-<c:url value="/css/vehicle.css" var="vehicleCssUrl" />
+<c:url value="/css/tailwind.css" var="appCssUrl" />
 <c:url value="/admin/vehicles/create" var="createVehicleUrl" />
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="description" content="Manage vehicles | DriveSpark Academy at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Manage vehicles | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
-    <link rel="stylesheet" href="<c:out value='${vehicleCssUrl}' />">
 </head>
 <body>
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="ds-container ds-section ds-vehicle">
+<main id="main-content" class="ds-container ds-section ds-vehicle"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
+
+    <c:if test="${vehicleDeleted}"><p role="status">Vehicle deleted.</p></c:if>
 
     <div class="ds-vehicle-heading">
         <div>
@@ -70,7 +74,7 @@
 
             <c:otherwise>
                 <div class="ds-vehicle-table-wrapper">
-                    <table class="ds-vehicle-table">
+                    <div class="safe-scroll rounded-2xl border border-white/10 bg-surface"><table class="ds-vehicle-table">
                         <thead>
                         <tr>
                             <th scope="col">Registration number</th>
@@ -78,6 +82,7 @@
                             <th scope="col">Model</th>
                             <th scope="col">Category</th>
                             <th scope="col">Transmission</th>
+                            <th scope="col">Insurance/service</th>
                             <th scope="col">Operational status</th>
                             <th scope="col">Action</th>
                         </tr>
@@ -108,9 +113,22 @@
                                     <c:out value="${vehicle.transmissionType}" />
                                 </td>
 
+                                <td data-label="Insurance/service">
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <c:if test="${vehicle.insuranceWarning}">
+                                            <span class="ds-status-badge" data-status="WARNING">Insurance due: <c:out value="${vehicle.insuranceExpiry}" default="Check expiry" /></span>
+                                        </c:if>
+                                        <c:if test="${vehicle.serviceWarning}">
+                                            <span class="ds-status-badge" data-status="WARNING">Service due: <c:out value="${vehicle.nextServiceDate}" default="Check date" /></span>
+                                        </c:if>
+                                        <c:if test="${not vehicle.insuranceWarning and not vehicle.serviceWarning}">
+                                            <span class="ds-status-badge" data-status="COMPLETED">Up to date</span>
+                                        </c:if>
+                                    </div>
+                                </td>
                                 <td data-label="Operational status">
                                     <span class="ds-vehicle-status">
-                                        <c:out value="${vehicle.operationalStatus}" />
+                                        <span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${vehicle.operationalStatus}" /></span>
                                     </span>
                                 </td>
 
@@ -121,17 +139,24 @@
                                        href="<c:out value='${editVehicleUrl}' />">
                                         Edit
                                     </a>
+                                    <form method="post"
+                                          action="<c:url value='/admin/vehicles/${vehicle.id}/delete' />">
+                                        <input type="hidden"
+                                               name="<c:out value='${csrfParameterName}' />"
+                                               value="<c:out value='${csrfToken}' />">
+                                        <button type="submit">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                         </c:forEach>
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             </c:otherwise>
         </c:choose>
 
     </section>
-</main>
+</div></main>
 
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>
 

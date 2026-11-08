@@ -1,8 +1,10 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.form;
 
 import com.drivingschool.vehicle.model.TransmissionType;
 import com.drivingschool.vehicle.model.VehicleCategory;
 import com.drivingschool.vehicle.model.VehicleOperationalStatus;
+import java.time.LocalDate;
 
 public class VehicleCreateForm {
 
@@ -12,6 +14,15 @@ public class VehicleCreateForm {
     private TransmissionType transmissionType;
     private VehicleCategory vehicleCategory;
     private VehicleOperationalStatus operationalStatus;
+    private LocalDate insuranceExpiry;
+    private LocalDate lastServiceDate;
+    private LocalDate nextServiceDate;
+    public LocalDate getInsuranceExpiry() { return insuranceExpiry; }
+    public void setInsuranceExpiry(LocalDate date) { insuranceExpiry = date; }
+    public LocalDate getLastServiceDate() { return lastServiceDate; }
+    public void setLastServiceDate(LocalDate date) { lastServiceDate = date; }
+    public LocalDate getNextServiceDate() { return nextServiceDate; }
+    public void setNextServiceDate(LocalDate date) { nextServiceDate = date; }
 
     public String getRegistrationNumber() {
         return registrationNumber;

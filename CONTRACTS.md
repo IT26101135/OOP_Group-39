@@ -61,6 +61,33 @@ Runtime data:
 
 Run the application from the project root.
 
+## Added web workflows (local implementation)
+
+The current application also includes these MVC flows:
+
+- `GET /packages`: browse active learning packages.
+- `GET/POST /bookings`: student lesson requests, one hour each, associated
+  with a selected package ID; students may cancel their own pending or
+  confirmed requests.
+- `GET /admin/bookings`: admins assign an active instructor and an in-service
+  vehicle, then mark confirmed lessons complete.
+- `GET /instructor/dashboard`: an instructor sees bookings assigned to their
+  `I###` ID and may mark their own lessons complete.
+- `GET /reviews`: signed-in users can see approved reviews; students can
+  create, edit, and delete their own reviews.
+- `GET /admin/reviews`: admins approve or hide reviews.
+- `GET /admin/instructors` and `/admin/packages`: admins manage these records.
+
+Instructor login identities are `InstructorAccount` subtypes persisted in
+`users.txt`, with the same `I###` ID as their profile in `instructors.txt`.
+Create them through `InstructorAccountService` so the two records stay paired.
+Instructor IDs are now accepted by `AuthSessionService` alongside student
+and administrator IDs. Existing instructor profile records without matching
+user accounts cannot log in until an account is created for them.
+
+These lesson requests do not represent paid enrollments and do not decrement
+package lesson counts. Lesson length is currently fixed at 60 minutes.
+
 ## Implemented: Identifiable
 
 Package:

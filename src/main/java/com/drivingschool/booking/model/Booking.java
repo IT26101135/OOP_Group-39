@@ -1,3 +1,4 @@
+// Module owner: IT26101134
 
 package com.drivingschool.booking.model;
 
@@ -20,6 +21,9 @@ public class Booking implements Identifiable {
     private String instructorId;
     private String vehicleId;
     private BookingStatus status;
+    private String rejectionReason;
+    private String requestedInstructorId;
+    private String requestedVehicleId;
 
     @JsonCreator
     public Booking(
@@ -112,14 +116,15 @@ public class Booking implements Identifiable {
 
         switch (status) {
             case PENDING:
-                if (hasInstructor) {
+                if (hasInstructor != hasVehicle) {
                     throw new ValidationException(
-                            "PENDING bookings cannot have assignments");
+                            "Pending assignment must include both instructor and vehicle.");
                 }
                 break;
 
             case CONFIRMED:
             case COMPLETED:
+            case NO_SHOW:
                 if (!hasInstructor) {
                     throw new ValidationException(
                             status + " bookings require both assignments");
@@ -127,6 +132,7 @@ public class Booking implements Identifiable {
                 break;
 
             case CANCELLED:
+            case REJECTED:
                 // Both null or both assigned are allowed.
                 break;
 
@@ -184,6 +190,37 @@ public class Booking implements Identifiable {
         return createdAt;
     }
 
+    public String getRejectionReason() { return rejectionReason; }
+
+    public void setRejectionReason(String rejectionReason) {
+        if (rejectionReason != null && rejectionReason.length() > 300) {
+            throw new ValidationException("Rejection reason is too long.");
+        }
+        this.rejectionReason = rejectionReason;
+    }
+
+    public String getRequestedInstructorId() { return requestedInstructorId; }
+    public void setRequestedInstructorId(String id) {
+        validateOptionalId(id, "I", "requestedInstructorId");
+        this.requestedInstructorId = id;
+    }
+    public String getRequestedVehicleId() { return requestedVehicleId; }
+    public void setRequestedVehicleId(String id) {
+        validateOptionalId(id, "V", "requestedVehicleId");
+        this.requestedVehicleId = id;
+    }
+
+    public void reject(String reason) {
+        if (status != BookingStatus.PENDING) {
+            throw new ValidationException("Only pending requests can be rejected.");
+        }
+        if (reason == null || reason.isBlank() || reason.trim().length() > 300) {
+            throw new ValidationException("A rejection reason up to 300 characters is required.");
+        }
+        status = BookingStatus.REJECTED;
+        rejectionReason = reason.trim();
+    }
+
     public void confirm(String instructorId, String vehicleId) {
         if (status != BookingStatus.PENDING) {
             throw new ValidationException(
@@ -199,6 +236,17 @@ public class Booking implements Identifiable {
         this.status = BookingStatus.CONFIRMED;
     }
 
+    /** Stores an administrator's proposed assignment while instructor approval is pending. */
+    public void assignForInstructor(String instructorId, String vehicleId) {
+        if (status != BookingStatus.PENDING) {
+            throw new ValidationException("Only pending requests can be assigned.");
+        }
+        validateId(instructorId, "I");
+        validateId(vehicleId, "V");
+        this.instructorId = instructorId;
+        this.vehicleId = vehicleId;
+    }
+
     public void complete() {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException(
@@ -206,6 +254,13 @@ public class Booking implements Identifiable {
         }
 
         this.status = BookingStatus.COMPLETED;
+    }
+
+    public void markNoShow() {
+        if (status != BookingStatus.CONFIRMED) {
+            throw new ValidationException("Only confirmed lessons can be marked no-show.");
+        }
+        status = BookingStatus.NO_SHOW;
     }
 
     public void cancel() {
@@ -217,5 +272,22 @@ public class Booking implements Identifiable {
 
         // Preserve assignments when cancelling a confirmed booking.
         this.status = BookingStatus.CANCELLED;
+    }
+
+    public void reassign(String newInstructorId, String newVehicleId) {
+        if (status != BookingStatus.CONFIRMED) throw new ValidationException("Only confirmed lessons can be reassigned.");
+        validateId(newInstructorId, "I");
+        validateId(newVehicleId, "V");
+        instructorId = newInstructorId;
+        vehicleId = newVehicleId;
+    }
+
+    public void forceCancel(String reason) {
+        if (status == BookingStatus.COMPLETED || status == BookingStatus.CANCELLED)
+            throw new ValidationException("Completed or cancelled lessons cannot be force-cancelled.");
+        if (reason == null || reason.isBlank() || reason.trim().length() > 300)
+            throw new ValidationException("Enter a force-cancellation reason up to 300 characters.");
+        status = BookingStatus.CANCELLED;
+        rejectionReason = reason.trim();
     }
 }

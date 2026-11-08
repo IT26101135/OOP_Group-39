@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.student.api;
 
 import com.drivingschool.student.dto.StudentSummary;

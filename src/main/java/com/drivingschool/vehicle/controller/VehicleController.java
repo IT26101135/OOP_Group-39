@@ -1,3 +1,4 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.controller;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -43,7 +44,8 @@ public class VehicleController {
                 "model",
                 "transmissionType",
                 "vehicleCategory",
-                "operationalStatus"
+                "operationalStatus",
+                "insuranceExpiry", "lastServiceDate", "nextServiceDate"
         );
         binder.setAutoGrowNestedPaths(false);
     }
@@ -53,7 +55,8 @@ public class VehicleController {
         binder.setAllowedFields(
                 "registrationNumber",
                 "make",
-                "model"
+                "model", "transmissionType", "vehicleCategory", "operationalStatus",
+                "insuranceExpiry", "lastServiceDate", "nextServiceDate"
         );
         binder.setAutoGrowNestedPaths(false);
     }
@@ -61,6 +64,7 @@ public class VehicleController {
     // GET /admin/vehicles
     @GetMapping
     public String listVehicles(
+            HttpServletRequest request,
             HttpServletResponse response,
             Model model) {
 
@@ -70,6 +74,7 @@ public class VehicleController {
                 "vehicles",
                 vehicleService.getAllVehicles()
         );
+        addCsrfAttributes(request, model);
 
         return "vehicle/list";
     }
@@ -120,7 +125,8 @@ public class VehicleController {
                     form.getModel(),
                     form.getTransmissionType(),
                     form.getVehicleCategory(),
-                    form.getOperationalStatus()
+                    form.getOperationalStatus(), form.getInsuranceExpiry(),
+                    form.getLastServiceDate(), form.getNextServiceDate()
             );
 
             redirectAttributes.addFlashAttribute(
@@ -158,6 +164,12 @@ public class VehicleController {
         form.setRegistrationNumber(vehicle.getRegistrationNumber());
         form.setMake(vehicle.getMake());
         form.setModel(vehicle.getModel());
+        form.setTransmissionType(vehicle.getTransmissionType());
+        form.setVehicleCategory(vehicle.getVehicleCategory());
+        form.setOperationalStatus(vehicle.getOperationalStatus());
+        form.setInsuranceExpiry(vehicle.getInsuranceExpiry());
+        form.setLastServiceDate(vehicle.getLastServiceDate());
+        form.setNextServiceDate(vehicle.getNextServiceDate());
 
         model.addAttribute("vehicle", vehicle);
         model.addAttribute("vehicleEditForm", form);
@@ -198,7 +210,13 @@ public class VehicleController {
                     id,
                     form.getRegistrationNumber(),
                     form.getMake(),
-                    form.getModel()
+                    form.getModel(),
+                    form.getTransmissionType() == null ? existingVehicle.getTransmissionType() : form.getTransmissionType(),
+                    form.getVehicleCategory() == null ? existingVehicle.getVehicleCategory() : form.getVehicleCategory(),
+                    form.getOperationalStatus() == null ? existingVehicle.getOperationalStatus() : form.getOperationalStatus(),
+                    form.getInsuranceExpiry() == null ? existingVehicle.getInsuranceExpiry() : form.getInsuranceExpiry(),
+                    form.getLastServiceDate() == null ? existingVehicle.getLastServiceDate() : form.getLastServiceDate(),
+                    form.getNextServiceDate() == null ? existingVehicle.getNextServiceDate() : form.getNextServiceDate()
             );
 
             redirectAttributes.addFlashAttribute(
@@ -220,6 +238,14 @@ public class VehicleController {
             model.addAttribute("vehicle", existingVehicle);
             return editPage(request, model);
         }
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteVehicle(@PathVariable String id,
+                                RedirectAttributes redirectAttributes) {
+        vehicleService.deleteVehicle(id);
+        redirectAttributes.addFlashAttribute("vehicleDeleted", true);
+        return "redirect:/admin/vehicles";
     }
 
     private String createPage(
@@ -248,6 +274,9 @@ public class VehicleController {
             HttpServletRequest request,
             Model model) {
 
+        model.addAttribute("transmissionTypes", TransmissionType.values());
+        model.addAttribute("vehicleCategories", VehicleCategory.values());
+        model.addAttribute("operationalStatuses", VehicleOperationalStatus.values());
         addCsrfAttributes(request, model);
 
         return "vehicle/edit";

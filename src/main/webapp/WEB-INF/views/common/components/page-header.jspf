@@ -1,0 +1,2 @@
+<%-- Module owner: IT26101136 --%>
+<header class="ds-page-header"><c:if test="${not empty pageEyebrow}"><p class="ds-eyebrow"><c:out value="${pageEyebrow}" /></p></c:if><h1><c:out value="${pageTitle}" /></h1><c:if test="${not empty pageIntro}"><p><c:out value="${pageIntro}" /></p></c:if></header>

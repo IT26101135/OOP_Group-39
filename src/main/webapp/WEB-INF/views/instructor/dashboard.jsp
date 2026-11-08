@@ -1,0 +1,10 @@
+<%-- Module owner: IT26101133 --%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:url value="/css/tailwind.css" var="appCssUrl" />
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta name="description" content="Instructor schedule at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Instructor schedule</title><link rel="stylesheet" href="<c:out value='${appCssUrl}' />"></head>
+<body><%@ include file="/WEB-INF/views/common/navbar.jspf" %><main id="main-content" class="ds-container ds-section ds-dashboard-shell"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content"><h1 id="assigned-lessons">My lesson schedule</h1><c:if test="${not empty success}"><p role="status"><c:out value="${success}" /></p></c:if><c:choose><c:when test="${empty bookings}"><p>You have no assigned lessons.</p></c:when><c:otherwise><c:forEach items="${bookings}" var="booking"><article class="ds-feature-card"><h2><c:out value="${booking.startTime}" /></h2><p>Student: <c:out value="${booking.studentId}" /> · Vehicle: <c:out value="${booking.vehicleId}" /></p><p>Status: <span class="status-badge" data-status="<c:out value='${booking.status}' />"><c:out value="${booking.status}" /></span></p><c:if test="${booking.status eq 'CONFIRMED'}"><form method="post" action="<c:url value='/instructor/complete' />"><input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />"><input type="hidden" name="bookingId" value="<c:out value='${booking.id}' />"><button type="submit">Mark lesson complete</button></form></c:if></article></c:forEach></c:otherwise></c:choose></div></main><%@ include file="/WEB-INF/views/common/footer.jspf" %></body></html>

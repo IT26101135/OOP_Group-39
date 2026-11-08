@@ -1,14 +1,18 @@
+<%-- Module owner: IT26101135 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
          session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<c:url value="/css/app.css" var="appCssUrl" />
+<c:url value="/css/tailwind.css" var="appCssUrl" />
 <c:url value="/register" var="registerUrl" />
 <c:url value="/login" var="loginUrl" />
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="description" content="Register | DriveSpark Academy at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register | DriveSpark Academy</title>
@@ -17,8 +21,8 @@
 <body>
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="ds-container ds-section">
-    <h1>Create your student account</h1>
+<main id="main-content" class="ds-container ds-section ds-auth-page">
+    <a class="ds-auth-logo" href="<c:url value='/' />"><img src="<c:url value='/images/logo.svg' />" width="190" height="40" alt="DriveSpark Academy"></a><h1>Create your student account</h1>
     <p>Enter your details to register with DriveSpark Academy.</p>
 
     <c:if test="${not empty formError}">
@@ -59,20 +63,21 @@
 
         <p>
             <label for="password">Password</label><br>
-            <input id="password" name="password" type="password"
+            <span data-password-wrap><input id="password" name="password" type="password" data-password-strength="password-strength-hint"
                    autocomplete="new-password" required
-                   aria-describedby="password-help">
+                   aria-describedby="password-help password-strength-hint"><button class="ds-password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false">Show</button></span>
             <br>
             <small id="password-help">
                 Use at least 8 characters and no more than 72 UTF-8 bytes.
                 Some characters use more than one byte.
             </small>
+            <small id="password-strength-hint" class="block text-slate-300" aria-live="polite">Use at least 8 characters, including a letter and a number.</small>
         </p>
 
         <p>
             <label for="confirmPassword">Confirm password</label><br>
-            <input id="confirmPassword" name="confirmPassword"
-                   type="password" autocomplete="new-password" required>
+            <span data-password-wrap><input id="confirmPassword" name="confirmPassword"
+                   type="password" autocomplete="new-password" required><button class="ds-password-toggle" type="button" data-password-toggle="confirmPassword" aria-label="Show password confirmation" aria-pressed="false">Show</button></span>
         </p>
 
         <button class="ds-button" type="submit">Create account</button>

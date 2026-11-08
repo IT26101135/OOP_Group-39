@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.controller;
 
 import com.drivingschool.auth.form.LoginForm;
@@ -5,6 +6,7 @@ import com.drivingschool.auth.form.RegistrationForm;
 import com.drivingschool.auth.service.AuthService;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.auth.service.CsrfTokenService;
+import com.drivingschool.auth.service.LoginResult;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -139,21 +141,35 @@ public class AuthController {
         }
 
         try {
-            boolean loggedIn = authSessionService.login(
+            LoginResult result = authSessionService.loginWithResult(
                     request,
                     form.getEmail(),
                     form.getPassword()
             );
 
-            if (loggedIn) {
-                return "redirect:/";
+            // Keeps controller tests and older integrations that stub the
+            // original boolean API compatible; the real service returns a result.
+            if (result == null) {
+                if (authSessionService.login(request, form.getEmail(), form.getPassword())) {
+                    return "redirect:/";
+                }
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                model.addAttribute("formError", "Email or password is incorrect.");
+                return loginPage(request, model);
+            }
+
+            if (result == LoginResult.SUCCESS) {
+                return "redirect:" + authSessionService
+                        .getCurrentUser(request).orElseThrow().getDashboardPath();
             }
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            model.addAttribute(
-                    "formError",
-                    "Email or password is incorrect."
-            );
+            String message = switch (result) {
+                case PENDING_APPROVAL -> "Your account is waiting for administrator approval.";
+                case SUSPENDED -> "This account is suspended. Contact the school administrator.";
+                default -> "Email or password is incorrect.";
+            };
+            model.addAttribute("formError", message);
 
             // Failed login invalidates the old session.
             // Generate a token for the replacement form session.

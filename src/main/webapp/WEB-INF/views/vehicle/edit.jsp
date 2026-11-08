@@ -1,31 +1,33 @@
+<%-- Module owner: IT26101132 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<c:url value="/css/app.css" var="appCssUrl" />
-<c:url value="/css/vehicle.css" var="vehicleCssUrl" />
+<c:url value="/css/tailwind.css" var="appCssUrl" />
 <c:url value="/admin/vehicles/${vehicle.id}/edit" var="editVehicleUrl" />
 <c:url value="/admin/vehicles" var="vehicleListUrl" />
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="description" content="Edit vehicle | DriveSpark Academy at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="theme-color" content="#0B1120">
+    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Edit vehicle | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
-    <link rel="stylesheet" href="<c:out value='${vehicleCssUrl}' />">
 </head>
 <body>
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main class="ds-container ds-section ds-vehicle">
+<main id="main-content" class="ds-container ds-section ds-vehicle"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
 
     <div class="ds-vehicle-form-heading">
         <p class="ds-vehicle-eyebrow">VEHICLE MANAGEMENT</p>
         <h1>Edit vehicle</h1>
         <p class="ds-vehicle-description">
-            Update the registration number, make, and model.
+            Update the vehicle identity, type, status, insurance, and service dates.
         </p>
     </div>
 
@@ -52,13 +54,12 @@
 
                 <div>
                     <dt>Operational status</dt>
-                    <dd><c:out value="${vehicle.operationalStatus}" /></dd>
+                    <dd><span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${vehicle.operationalStatus}" /></span></dd>
                 </div>
             </dl>
 
             <p class="ds-vehicle-readonly-note">
-                Category, transmission, and operational status cannot
-                be changed from this form.
+                Changes are validated when this form is saved.
             </p>
         </div>
 
@@ -107,6 +108,12 @@
                        value="<c:out value='${vehicleEditForm.model}' />">
             </div>
 
+            <label>Transmission <select name="transmissionType"><c:forEach items="${transmissionTypes}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.transmissionType eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label>Category <select name="vehicleCategory"><c:forEach items="${vehicleCategories}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.vehicleCategory eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label>Status <select name="operationalStatus"><c:forEach items="${operationalStatuses}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.operationalStatus eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label>Insurance expiry <input type="date" name="insuranceExpiry" value="<c:out value='${vehicleEditForm.insuranceExpiry}' />"></label>
+            <label>Last service <input type="date" name="lastServiceDate" value="<c:out value='${vehicleEditForm.lastServiceDate}' />"></label>
+            <label>Next service <input type="date" name="nextServiceDate" value="<c:out value='${vehicleEditForm.nextServiceDate}' />"></label>
             <div class="ds-vehicle-form-actions">
                 <button class="ds-button" type="submit">
                     Save changes
@@ -119,7 +126,7 @@
 
         </form>
     </section>
-</main>
+</div></main>
 
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>
 

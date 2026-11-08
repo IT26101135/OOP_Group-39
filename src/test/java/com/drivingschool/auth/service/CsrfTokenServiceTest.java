@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.service;
 
 import org.junit.jupiter.api.Test;

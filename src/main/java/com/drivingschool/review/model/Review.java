@@ -1,3 +1,4 @@
+// Module owner: IT26101137
 package com.drivingschool.review.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -11,6 +12,8 @@ public class Review implements Identifiable {
 
     private final String id;
     private final String studentId;
+    private final String bookingId;
+    private final String instructorId;
 
     private int rating;
     private String comment;
@@ -19,18 +22,27 @@ public class Review implements Identifiable {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @JsonCreator
     public Review(
-            @JsonProperty("id") String id,
-            @JsonProperty("studentId") String studentId,
-            @JsonProperty("rating") int rating,
-            @JsonProperty("comment") String comment,
-            @JsonProperty("status") ReviewStatus status,
-            @JsonProperty("createdAt") LocalDateTime createdAt,
-            @JsonProperty("updatedAt") LocalDateTime updatedAt) {
+            String id, String studentId, int rating, String comment,
+            ReviewStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, studentId, null, null, rating, comment, status, createdAt, updatedAt);
+    }
+
+    @JsonCreator
+    public Review(@JsonProperty("id") String id,
+                  @JsonProperty("studentId") String studentId,
+                  @JsonProperty("bookingId") String bookingId,
+                  @JsonProperty("instructorId") String instructorId,
+                  @JsonProperty("rating") int rating,
+                  @JsonProperty("comment") String comment,
+                  @JsonProperty("status") ReviewStatus status,
+                  @JsonProperty("createdAt") LocalDateTime createdAt,
+                  @JsonProperty("updatedAt") LocalDateTime updatedAt) {
 
         this.id = validateId(id, "R");
         this.studentId = validateId(studentId, "S");
+        this.bookingId = optionalId(bookingId, "B");
+        this.instructorId = optionalId(instructorId, "I");
         validateRating(rating);
 
         this.rating = rating;
@@ -98,6 +110,13 @@ public class Review implements Identifiable {
 
     public String getStudentId() {
         return studentId;
+    }
+    public String getBookingId() { return bookingId; }
+    public String getInstructorId() { return instructorId; }
+
+    private String optionalId(String value, String prefix) {
+        if (value == null) return null;
+        return validateId(value, prefix);
     }
 
     public int getRating() {

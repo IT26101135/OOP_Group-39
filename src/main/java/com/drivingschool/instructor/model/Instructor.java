@@ -1,3 +1,4 @@
+// Module owner: IT26101133
 
 package com.drivingschool.instructor.model;
 
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.Email;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Instructor implements Identifiable {
 
@@ -27,6 +30,12 @@ public class Instructor implements Identifiable {
     private String phone;
     private int yearsOfExperience;
     private boolean active;
+    private String bio;
+    private String licenseNumber;
+    private String qualifications;
+    private String photoPath;
+    private List<String> vehicleTypes = new ArrayList<>();
+    private double averageRating;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public Instructor(
@@ -158,6 +167,46 @@ public class Instructor implements Identifiable {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = optionalText(bio, "Bio", 1000); }
+    public String getLicenseNumber() { return licenseNumber; }
+    public void setLicenseNumber(String licenseNumber) { this.licenseNumber = optionalText(licenseNumber, "License number", 40); }
+    public String getQualifications() { return qualifications; }
+    public void setQualifications(String qualifications) { this.qualifications = optionalText(qualifications, "Qualifications", 500); }
+    public String getPhotoPath() { return photoPath; }
+    public void setPhotoPath(String photoPath) { this.photoPath = optionalText(photoPath, "Photo path", 300); }
+    public List<String> getVehicleTypes() { return List.copyOf(vehicleTypes); }
+
+    public void setVehicleTypes(List<String> vehicleTypes) {
+        if (vehicleTypes == null) {
+            this.vehicleTypes = new ArrayList<>();
+            return;
+        }
+        List<String> validated = new ArrayList<>();
+        for (String type : vehicleTypes) {
+            String cleaned = optionalText(type, "Vehicle type", 40);
+            if (cleaned != null) validated.add(cleaned);
+        }
+        this.vehicleTypes = validated;
+    }
+
+    public double getAverageRating() { return averageRating; }
+    public void setAverageRating(double averageRating) {
+        if (!Double.isFinite(averageRating) || averageRating < 0 || averageRating > 5) {
+            throw new ValidationException("Average rating must be between 0 and 5.");
+        }
+        this.averageRating = averageRating;
+    }
+
+    private String optionalText(String value, String label, int limit) {
+        if (value == null || value.isBlank()) return null;
+        String cleaned = value.trim();
+        if (cleaned.length() > limit) {
+            throw new ValidationException(label + " must be at most " + limit + " characters.");
+        }
+        return cleaned;
     }
 
 }

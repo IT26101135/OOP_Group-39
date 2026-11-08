@@ -1,3 +1,4 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.config;
 
 import com.drivingschool.vehicle.api.VehicleBookingInfo;

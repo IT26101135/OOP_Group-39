@@ -1,0 +1,2 @@
+<%-- Module owner: IT26101136 --%>
+<form class="ds-search-bar" method="get"><label for="page-search">Search</label><input id="page-search" type="search" name="q" value="<c:out value='${param.q}' />" placeholder="Search records"><button type="submit">Search</button></form>

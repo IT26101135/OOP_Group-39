@@ -1,0 +1,27 @@
+<%-- Module owner: IT26101137 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%--
+  Star rating input — radio-based, accessible, keeps value on validation error.
+  DOM order is 5→1 (flex-row-reverse shows them visually as 1→5).
+  The CSS `input:checked ~ label` trick highlights lower-value stars via reverse
+  sibling selection, which only works with DOM in descending order.
+  Parameters:
+    ratingFieldName  — name attr for the radio inputs (e.g. "rating")
+    ratingLabel      — legend text (defaults to "Rating")
+    ratingValue      — currently selected value (re-checked after validation error)
+--%>
+<fieldset class="ds-star-input">
+  <legend><c:out value="${ratingLabel}" default="Rating"/></legend>
+  <div class="ds-star-options">
+    <c:forEach var="i" begin="1" end="5">
+      <c:set var="star" value="${6 - i}"/>
+      <input type="radio"
+             id="${ratingFieldName}-star-${star}"
+             name="${ratingFieldName}"
+             value="${star}"
+             <c:if test="${ratingValue eq star}">checked</c:if>
+             required>
+      <label for="${ratingFieldName}-star-${star}" aria-label="${star} out of 5 stars">★</label>
+    </c:forEach>
+  </div>
+</fieldset>

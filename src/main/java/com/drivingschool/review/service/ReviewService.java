@@ -1,3 +1,4 @@
+// Module owner: IT26101137
 package com.drivingschool.review.service;
 
 import com.drivingschool.auth.model.Role;
@@ -8,8 +9,14 @@ import com.drivingschool.common.exception.RecordNotFoundException;
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.review.model.Review;
 import com.drivingschool.review.model.ReviewStatus;
-import com.drivingschool.review.repository.ReviewRepository;
+import com.drivingschool.review.api.ReviewStore;
 import com.drivingschool.student.api.StudentLookup;
+import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
+import com.drivingschool.booking.repository.BookingRepository;
+import com.drivingschool.instructor.model.Instructor;
+import com.drivingschool.instructor.repository.InstructorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,13 +35,15 @@ public class ReviewService {
     private static final Object REVIEW_WRITE_LOCK = new Object();
     private static final ZoneId COLOMBO_ZONE = ZoneId.of("Asia/Colombo");
 
-    private final ReviewRepository reviewRepository;
+    private final ReviewStore reviewRepository;
     private final AuthSessionService authSessionService;
     private final StudentLookup studentLookup;
     private final Clock clock;
+    @Autowired(required = false) private BookingRepository bookings;
+    @Autowired(required = false) private InstructorRepository instructors;
 
     public ReviewService(
-            ReviewRepository reviewRepository,
+            ReviewStore reviewRepository,
             AuthSessionService authSessionService,
             StudentLookup studentLookup,
             Clock clock) {
@@ -49,6 +58,25 @@ public class ReviewService {
     }
 
     public Review createReview(HttpServletRequest request, int rating, String comment) {
+        if (bookings != null) throw new ValidationException("Select one of your completed lessons to review.");
+        return createReviewRecord(request, null, null, rating, comment);
+    }
+
+    public Review createReview(HttpServletRequest request, String bookingId,
+                               int rating, String comment) {
+        if (bookings == null) throw new ValidationException("Booking review checks are unavailable.");
+        User user = authSessionService.requireLogin(request);
+        Booking booking = bookings.findByIdStrict(bookingId)
+                .orElseThrow(() -> new RecordNotFoundException("Booking not found."));
+        if (!booking.getStudentId().equals(user.getId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "You can review only your own completed lessons.");
+        if (booking.getStatus() != BookingStatus.COMPLETED)
+            throw new ValidationException("A lesson must be completed before it can be reviewed.");
+        return createReviewRecord(request, bookingId, booking.getInstructorId(), rating, comment);
+    }
+
+    private Review createReviewRecord(HttpServletRequest request, String bookingId,
+                                      String instructorId, int rating, String comment) {
         synchronized (REVIEW_WRITE_LOCK) {
             User user = authSessionService.requireLogin(request);
             if (user.getRole() != Role.STUDENT) {
@@ -61,14 +89,15 @@ public class ReviewService {
             }
             String trimmedComment = comment == null ? null : comment.trim();
             List<Review> reviews = reviewRepository.readAllStrict();
-            boolean alreadyReviewed = reviews.stream()
-                    .anyMatch(review -> review.getStudentId().equals(studentId));
+            boolean alreadyReviewed = bookingId == null
+                    ? reviews.stream().anyMatch(review -> review.getStudentId().equals(studentId))
+                    : reviews.stream().anyMatch(review -> bookingId.equals(review.getBookingId()));
             if (alreadyReviewed) {
                 throw new DuplicateRecordException("You have already submitted a review.");
             }
             String reviewId = reviewRepository.nextId("R");
             LocalDateTime timestamp = now();
-            Review review = new Review(reviewId, studentId, rating, trimmedComment,
+            Review review = new Review(reviewId, studentId, bookingId, instructorId, rating, trimmedComment,
                     ReviewStatus.PENDING, timestamp, timestamp);
             reviewRepository.save(review);
             return review;
@@ -79,6 +108,8 @@ public class ReviewService {
         User user = authSessionService.requireLogin(request);
         List<Review> reviews = reviewRepository.readAllStrict();
         if (user.getRole() == Role.ADMIN) return reviews;
+        if (user.getRole() == Role.INSTRUCTOR) return reviews.stream()
+                .filter(review -> user.getId().equals(review.getInstructorId())).toList();
         return reviews.stream()
                 .filter(review -> review.getStatus() == ReviewStatus.APPROVED
                         || review.getStudentId().equals(user.getId()))
@@ -115,7 +146,10 @@ public class ReviewService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "You can only update your own review.");
             }
-            if (review.updateContent(rating, comment, now())) reviewRepository.update(review);
+            if (review.updateContent(rating, comment, now())) {
+                reviewRepository.update(review);
+                recalculateRating(review.getInstructorId());
+            }
             return review;
         }
     }
@@ -138,7 +172,9 @@ public class ReviewService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "You can only delete your own review.");
             }
+            String instructorId = review.getInstructorId();
             reviewRepository.delete(reviewId);
+            recalculateRating(instructorId);
         }
     }
 
@@ -149,6 +185,7 @@ public class ReviewService {
             Review review = reviewRepository.findByIdStrict(reviewId)
                     .orElseThrow(() -> new RecordNotFoundException("Review not found."));
             if (review.updateStatus(ReviewStatus.APPROVED, now())) reviewRepository.update(review);
+            recalculateRating(review.getInstructorId());
             return review;
         }
     }
@@ -160,8 +197,38 @@ public class ReviewService {
             Review review = reviewRepository.findByIdStrict(reviewId)
                     .orElseThrow(() -> new RecordNotFoundException("Review not found."));
             if (review.updateStatus(ReviewStatus.HIDDEN, now())) reviewRepository.update(review);
+            recalculateRating(review.getInstructorId());
             return review;
         }
+    }
+
+    public void deleteReview(HttpServletRequest request, String reviewId) {
+        synchronized (REVIEW_WRITE_LOCK) {
+            authSessionService.requireAdmin(request);
+            validateReviewId(reviewId);
+            Review review = reviewRepository.findByIdStrict(reviewId)
+                    .orElseThrow(() -> new RecordNotFoundException("Review not found."));
+            reviewRepository.delete(reviewId);
+            recalculateRating(review.getInstructorId());
+        }
+    }
+
+    public List<Review> reviewsForInstructor(String instructorId) {
+        return reviewRepository.readAllStrict().stream()
+                .filter(review -> instructorId.equals(review.getInstructorId()))
+                .toList();
+    }
+
+    private void recalculateRating(String instructorId) {
+        if (instructorId == null || instructors == null) return;
+        Instructor instructor = instructors.findByIdStrict(instructorId).orElse(null);
+        if (instructor == null) return;
+        List<Review> approved = reviewRepository.readAllStrict().stream()
+                .filter(review -> instructorId.equals(review.getInstructorId())
+                        && review.getStatus() == ReviewStatus.APPROVED).toList();
+        double average = approved.stream().mapToInt(Review::getRating).average().orElse(0.0);
+        instructor.setAverageRating(Math.round(average * 100.0) / 100.0);
+        instructors.update(instructor);
     }
 
     private void validateReviewId(String reviewId) {

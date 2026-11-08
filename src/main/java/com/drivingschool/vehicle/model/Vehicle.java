@@ -1,11 +1,14 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.model;
 
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.common.model.Identifiable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Locale;
+import java.time.LocalDate;
 
 public class Vehicle implements Identifiable {
 
@@ -17,6 +20,9 @@ public class Vehicle implements Identifiable {
     private TransmissionType transmissionType;
     private VehicleCategory vehicleCategory;
     private VehicleOperationalStatus operationalStatus;
+    private LocalDate insuranceExpiry;
+    private LocalDate lastServiceDate;
+    private LocalDate nextServiceDate;
 
     @JsonCreator
     public Vehicle(
@@ -67,6 +73,27 @@ public class Vehicle implements Identifiable {
 
     public VehicleOperationalStatus getOperationalStatus() {
         return operationalStatus;
+    }
+    public LocalDate getInsuranceExpiry() { return insuranceExpiry; }
+    public LocalDate getLastServiceDate() { return lastServiceDate; }
+    public LocalDate getNextServiceDate() { return nextServiceDate; }
+    public void setInsuranceExpiry(LocalDate date) { insuranceExpiry = date; }
+    public void setLastServiceDate(LocalDate date) {
+        if (date != null && date.isAfter(LocalDate.now()))
+            throw new ValidationException("Last service date cannot be in the future.");
+        if (date != null && nextServiceDate != null && !nextServiceDate.isAfter(date))
+            throw new ValidationException("Next service date must be after the last service date.");
+        lastServiceDate = date;
+    }
+    public void setNextServiceDate(LocalDate date) {
+        if (date != null && lastServiceDate != null && !date.isAfter(lastServiceDate))
+            throw new ValidationException("Next service date must be after the last service date.");
+        nextServiceDate = date;
+    }
+    @JsonIgnore public boolean isInsuranceWarning() { return withinThirtyDays(insuranceExpiry); }
+    @JsonIgnore public boolean isServiceWarning() { return withinThirtyDays(nextServiceDate); }
+    private boolean withinThirtyDays(LocalDate date) {
+        return date != null && !date.isAfter(LocalDate.now().plusDays(30));
     }
 
     public void setRegistrationNumber(String registrationNumber) {
