@@ -1,4 +1,14 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : InstructorConfig.java
+WHAT IT DOES (simple words): Connects the helpers used by instructor config.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 
 package com.drivingschool.instructor.config;
 
@@ -15,6 +25,7 @@ import java.nio.file.Path;
 public class InstructorConfig {
 
     @Bean
+    // Keeps the instructor repository step in one place for this module.
     public InstructorRepository instructorRepository(
             @Value("${app.data-directory:./data}") String dataDirectory,
             ObjectMapper objectMapper) {
@@ -26,6 +37,7 @@ public class InstructorConfig {
     }
 
     @Bean
+    // Keeps the instructor service step in one place for this module.
     public InstructorService instructorService(
             InstructorRepository instructorRepository) {
 

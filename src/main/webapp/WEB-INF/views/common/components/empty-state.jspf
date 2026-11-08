@@ -1,2 +1,13 @@
-<%-- Module owner: IT26101136 --%>
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : empty-state.jspf
+WHAT IT DOES (simple words): Shows the shared empty state block.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- This block shows empty state. The including page controller supplies this block through model attributes. --%>
 <section class="ds-empty-state" role="status"><span class="ds-empty-icon" aria-hidden="true">✦</span><h2><c:out value="${emptyTitle}" default="Nothing here yet" /></h2><p><c:out value="${emptyMessage}" default="New items will appear here when they are available." /></p></section>

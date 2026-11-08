@@ -1,12 +1,34 @@
-// Module owner: IT26101134
+/**
+============================================================
+MEMBER   : IT26101134 - [Name]
+MODULE   : Bookings, FIFO queue and scheduling
+FILE     : BookingController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for booking.
+REAL-LIFE EXAMPLE: A reception waiting line handles the oldest request first.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.booking.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
 import com.drivingschool.auth.service.CsrfTokenService;
-import com.drivingschool.booking.service.BookingService;
+import com.drivingschool.booking.service.StudentBookingOperations;
+import com.drivingschool.booking.service.SlotAvailabilityService;
+import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
+import com.drivingschool.instructor.model.Instructor;
+import com.drivingschool.instructor.repository.InstructorRepository;
+import com.drivingschool.auth.service.AuthSessionService;
+import com.drivingschool.student.model.Student;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.time.Clock;
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.learningpackage.model.LearningPackage;
-import com.drivingschool.learningpackage.service.LearningPackageService;
+import com.drivingschool.learningpackage.service.LearningPackageCatalog;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -24,68 +46,57 @@ import java.time.format.DateTimeParseException;
 @Controller
 @RequireLogin
 @RequestMapping("/bookings")
+// SOLID: S - This class is responsible for web requests and page data.
 public class BookingController {
 
-    private final BookingService bookingService;
-    private final LearningPackageService packageService;
+    // SOLID: D - Student pages receive only the booking operations they need.
+    private final StudentBookingOperations bookingService;
+    private final LearningPackageCatalog packageService;
     private final CsrfTokenService csrf;
-    private final com.drivingschool.booking.service.SlotAvailabilityService slotService;
-    private final com.drivingschool.instructor.repository.InstructorRepository instructors;
-    private final com.drivingschool.auth.service.AuthSessionService auth;
+    private final SlotAvailabilityService slotService;
+    private final InstructorRepository instructors;
+    private final AuthSessionService auth;
+    private final Clock clock;
 
-    public BookingController(BookingService bookingService,
-                             LearningPackageService packageService,
+    // Receives the helpers or validates the details needed to create this object.
+    public BookingController(StudentBookingOperations bookingService,
+                             LearningPackageCatalog packageService,
                              CsrfTokenService csrf,
-                             com.drivingschool.booking.service.SlotAvailabilityService slotService,
-                             com.drivingschool.instructor.repository.InstructorRepository instructors,
-                             com.drivingschool.auth.service.AuthSessionService auth) {
+                             SlotAvailabilityService slotService,
+                             InstructorRepository instructors,
+                             AuthSessionService auth, Clock clock) {
         this.bookingService = bookingService;
         this.packageService = packageService;
         this.csrf = csrf;
         this.slotService = slotService;
         this.instructors = instructors;
         this.auth = auth;
+        this.clock = clock;
     }
 
     @GetMapping
+    // Prepares the saved records and filter choices needed by this page.
+    // CRUD: READ   - finds or lists bookings
     public String list(HttpServletRequest request, HttpServletResponse response,
                        Model model) {
         response.setHeader("Cache-Control", "no-store");
-        java.util.List<com.drivingschool.booking.model.Booking> ownBookings =
-                bookingService.getOwnBookings(request);
+        List<Booking> ownBookings = bookingService.getOwnBookings(request);
+        Student student = (Student) auth.requireLogin(request);
         model.addAttribute("bookings", ownBookings);
-        java.util.Map<String, Integer> queuePositions = new java.util.HashMap<>();
-        for (com.drivingschool.booking.model.Booking booking
-                : ownBookings) {
-            if (booking.getStatus() == com.drivingschool.booking.model.BookingStatus.PENDING) {
-                queuePositions.put(booking.getId(),
-                        bookingService.getOwnQueuePosition(request, booking.getId()));
-            }
-        }
-        model.addAttribute("queuePositions", queuePositions);
-        model.addAttribute("packages", packageService.listPackages().stream()
-                .filter(LearningPackage::isActive).toList());
-        model.addAttribute("instructors", instructors.readAllStrict().stream()
-                .filter(com.drivingschool.instructor.model.Instructor::isActive).toList());
-        String instructorId = request.getParameter("instructorId");
-        String dateValue = request.getParameter("date");
-        if (instructorId != null && dateValue != null) {
-            try {
-                LocalDate date = LocalDate.parse(dateValue);
-                model.addAttribute("availableSlots", slotService.availableSlots(
-                        instructorId, date, null, auth.requireLogin(request).getId()));
-            } catch (DateTimeParseException ignored) {
-                model.addAttribute("availableSlots", java.util.List.of());
-                model.addAttribute("slotError", "Choose a valid date.");
-            }
-            model.addAttribute("selectedInstructorId", instructorId);
-            model.addAttribute("selectedDate", dateValue);
-        }
+        addRequestGroups(ownBookings, model);
+        model.addAttribute("canBook", student.getActiveEnrollmentId() != null && student.getLessonsRemaining() > 0);
+        model.addAttribute("packages", activeOwnPackage(student.getActivePackageId()));
+        model.addAttribute("instructors", activeInstructors());
+        model.addAttribute("today", LocalDate.now(clock));
+        addQueuePositions(ownBookings, request, model);
+        addSlotChoices(request, model);
         addCsrf(request, model);
         return "booking/list";
     }
 
     @PostMapping
+    // Accepts a lesson request and lets the service recheck the chosen slot.
+    // CRUD: CREATE - adds a new booking and saves it
     public String request(HttpServletRequest request,
                           @RequestParam String packageId,
                           @RequestParam String instructorId,
@@ -97,6 +108,8 @@ public class BookingController {
     }
 
     @PostMapping("/cancel")
+    // Sends the owned request through the cancellation and notice-period checks.
+    // CRUD: UPDATE - changes an existing booking
     public String cancel(HttpServletRequest request,
                          @RequestParam String bookingId,
                          RedirectAttributes flash) {
@@ -106,6 +119,8 @@ public class BookingController {
     }
 
     @PostMapping("/reschedule")
+    // Sends a replacement time through the scheduling checks before changing the old request.
+    // CRUD: UPDATE - changes an existing booking
     public String reschedule(HttpServletRequest request, @RequestParam String bookingId,
                              @RequestParam String startTime, RedirectAttributes flash) {
         bookingService.rescheduleOwnBooking(request, bookingId, parseStartTime(startTime));
@@ -114,6 +129,8 @@ public class BookingController {
     }
 
     @PostMapping("/delete")
+    // Removes a record only after the service has checked its rules.
+    // CRUD: DELETE - removes a booking
     public String delete(HttpServletRequest request,
                          @RequestParam String bookingId,
                          RedirectAttributes flash) {
@@ -122,11 +139,71 @@ public class BookingController {
         return "redirect:/bookings";
     }
 
+    // Keeps the add request groups step in one place for this module.
+    private void addRequestGroups(List<Booking> bookings, Model model) {
+        List<Booking> open = new ArrayList<>();
+        List<Booking> history = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (booking.getStatus() == BookingStatus.PENDING || booking.getStatus() == BookingStatus.CONFIRMED) open.add(booking);
+            else history.add(booking);
+        }
+        model.addAttribute("openBookings", open);
+        model.addAttribute("historyBookings", history);
+    }
+
+    // Keeps the active own package step in one place for this module.
+    private List<LearningPackage> activeOwnPackage(String packageId) {
+        List<LearningPackage> result = new ArrayList<>();
+        for (LearningPackage course : packageService.listPackages()) {
+            if (course.isActive() && course.getId().equals(packageId)) result.add(course);
+        }
+        return result;
+    }
+
+    // Keeps the active instructors step in one place for this module.
+    private List<Instructor> activeInstructors() {
+        List<Instructor> result = new ArrayList<>();
+        for (Instructor instructor : instructors.readAllStrict()) {
+            if (instructor.isActive()) result.add(instructor);
+        }
+        return result;
+    }
+
+    // Keeps the add queue positions step in one place for this module.
+    private void addQueuePositions(List<Booking> own, HttpServletRequest request, Model model) {
+        Map<String, Integer> positions = new LinkedHashMap<>();
+        for (Booking booking : own) {
+            if (booking.getStatus() == BookingStatus.PENDING && booking.getInstructorId() == null) {
+                positions.put(booking.getId(), bookingService.getOwnQueuePosition(request, booking.getId()));
+            }
+        }
+        model.addAttribute("queuePositions", positions);
+    }
+
+    // Keeps the add slot choices step in one place for this module.
+    private void addSlotChoices(HttpServletRequest request, Model model) {
+        String instructorId = request.getParameter("instructorId");
+        String dateValue = request.getParameter("date");
+        if (instructorId == null || dateValue == null) return;
+        model.addAttribute("selectedInstructorId", instructorId);
+        model.addAttribute("selectedDate", dateValue);
+        try {
+            LocalDate date = LocalDate.parse(dateValue);
+            model.addAttribute("availableSlots", slotService.availableSlots(instructorId,
+                    date, null, auth.requireLogin(request).getId()));
+        } catch (DateTimeParseException exception) {
+            model.addAttribute("availableSlots", List.of());
+            model.addAttribute("slotError", "Choose a valid date.");
+        }
+    }
+
+    // Adds the form token that proves a write request came from this browser session.
     private void addCsrf(HttpServletRequest request, Model model) {
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrf.getOrCreateToken(request));
     }
 
+    // Converts the form time and gives a friendly message for malformed input.
     private LocalDateTime parseStartTime(String value) {
         try {
             return LocalDateTime.parse(value);

@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : PasswordManagementService.java
+WHAT IT DOES (simple words): Applies the rules for password management.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.User;
@@ -20,8 +30,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class PasswordManagementService {
 
+    // A tiny private envelope keeps a reset code together with its expiry time.
+    // Java's record supplies a constructor and read-only value()/expiresAt() getters.
+    // Handles reset token for this class without changing another class's job.
     private record ResetToken(String value, Instant expiresAt) { }
 
     private final UserRepository users;
@@ -31,6 +45,7 @@ public class PasswordManagementService {
     private final SecureRandom secureRandom = new SecureRandom();
     private final Map<String, ResetToken> resetTokens = new ConcurrentHashMap<>();
 
+    // Receives the helpers this class needs so each job stays separate.
     public PasswordManagementService(UserRepository users,
                                      PasswordHasher hasher,
                                      AuthSessionService auth,
@@ -41,6 +56,8 @@ public class PasswordManagementService {
         this.clock = clock;
     }
 
+    // Handles change own password for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing student account
     public void changeOwnPassword(HttpServletRequest request, String currentPassword,
                                   String newPassword) {
         User user = auth.requireLogin(request);
@@ -55,6 +72,7 @@ public class PasswordManagementService {
     }
 
     /** Local demo flow: returns a one-time code instead of sending email. */
+    // Handles create reset token for this class without changing another class's job.
     public String createResetToken(String email) {
         if (email == null || email.isBlank()) return null;
         String normalized = email.trim().toLowerCase(Locale.ROOT);
@@ -69,6 +87,8 @@ public class PasswordManagementService {
         return token;
     }
 
+    // Handles reset password for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing student account
     public void resetPassword(String email, String token, String newPassword) {
         if (email == null || token == null) {
             throw new ValidationException("A valid reset code is required.");

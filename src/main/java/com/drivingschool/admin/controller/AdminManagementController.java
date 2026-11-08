@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : AdminManagementController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for admin management.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.admin.controller;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -24,6 +34,7 @@ import java.util.List;
 @Controller
 @RequireAdmin
 @RequestMapping("/admin")
+// SOLID: S - This class is responsible for web requests and pages.
 public class AdminManagementController {
 
     private final InstructorService instructorService;
@@ -32,6 +43,7 @@ public class AdminManagementController {
     private final CsrfTokenService csrfTokenService;
     private final StudentAdministrationService studentAdministrationService;
 
+    // Receives the helpers this class needs so each job stays separate.
     public AdminManagementController(
             InstructorService instructorService,
             InstructorAccountService instructorAccountService,
@@ -46,6 +58,8 @@ public class AdminManagementController {
     }
 
     @GetMapping("/students")
+    // Handles students for this class without changing another class's job.
+    // CRUD: READ   - finds or lists student accounts
     public String students(HttpServletRequest request, HttpServletResponse response,
                            @RequestParam(defaultValue = "") String q, Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -57,6 +71,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/students/status")
+    // Handles student status for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing student account
     public String studentStatus(HttpServletRequest request,
                                 @RequestParam String id,
                                 @RequestParam AccountStatus status,
@@ -67,6 +83,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/students/update")
+    // Handles update student for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing student account
     public String updateStudent(HttpServletRequest request,
                                 @RequestParam String id,
                                 @RequestParam String name,
@@ -79,6 +97,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/students/delete")
+    // Handles delete student for this class without changing another class's job.
+    // CRUD: DELETE - removes a student account
     public String deleteStudent(HttpServletRequest request,
                                 @RequestParam String id,
                                 RedirectAttributes flash) {
@@ -88,6 +108,8 @@ public class AdminManagementController {
     }
 
     @GetMapping("/instructors")
+    // Handles instructors for this class without changing another class's job.
+    // CRUD: READ   - finds or lists instructor profiles
     public String instructors(HttpServletRequest request,
                               HttpServletResponse response, Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -97,6 +119,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/instructors")
+    // Handles create instructor for this class without changing another class's job.
+    // CRUD: CREATE - adds a new instructor profile and saves it
     public String createInstructor(
             @RequestParam String name,
             @RequestParam String email,
@@ -116,6 +140,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/instructors/update")
+    // Handles update instructor for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing instructor profile
     public String updateInstructor(@RequestParam String id,
                                   @RequestParam String name,
                                   @RequestParam String email,
@@ -134,6 +160,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/instructors/profile")
+    // Handles update instructor profile for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing instructor profile
     public String updateInstructorProfile(@RequestParam String id,
                                           @RequestParam(required = false) String bio,
                                           @RequestParam(required = false) String licenseNumber,
@@ -150,6 +178,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/instructors/status")
+    // Stores the instructor status after the checks required by this record.
+    // CRUD: UPDATE - changes an existing instructor profile
     public String setInstructorStatus(@RequestParam String id,
                                       @RequestParam boolean active,
                                       RedirectAttributes redirectAttributes) {
@@ -159,6 +189,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/instructors/delete")
+    // Handles delete instructor for this class without changing another class's job.
+    // CRUD: DELETE - removes a instructor profile
     public String deleteInstructor(@RequestParam String id,
                                    RedirectAttributes redirectAttributes) {
         instructorAccountService.delete(id);
@@ -167,6 +199,8 @@ public class AdminManagementController {
     }
 
     @GetMapping("/packages")
+    // Handles packages for this class without changing another class's job.
+    // CRUD: READ   - finds or lists packages
     public String packages(HttpServletRequest request,
                            HttpServletResponse response, Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -177,6 +211,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/packages")
+    // Handles create package for this class without changing another class's job.
+    // CRUD: CREATE - adds a new package and saves it
     public String createPackage(
             @RequestParam String name,
             @RequestParam String description,
@@ -194,6 +230,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/packages/update")
+    // Handles update package for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing package
     public String updatePackage(@RequestParam String id,
                                 @RequestParam String name,
                                 @RequestParam String description,
@@ -210,6 +248,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/packages/status")
+    // Stores the package status after the checks required by this record.
+    // CRUD: UPDATE - changes an existing package
     public String setPackageStatus(@RequestParam String id,
                                    @RequestParam boolean active,
                                    RedirectAttributes redirectAttributes) {
@@ -219,6 +259,8 @@ public class AdminManagementController {
     }
 
     @PostMapping("/packages/delete")
+    // Handles delete package for this class without changing another class's job.
+    // CRUD: DELETE - removes a package
     public String deletePackage(@RequestParam String id,
                                 RedirectAttributes redirectAttributes) {
         packageService.deletePackage(id);
@@ -226,6 +268,7 @@ public class AdminManagementController {
         return "redirect:/admin/packages";
     }
 
+    // Handles add csrf for this class without changing another class's job.
     private void addCsrf(HttpServletRequest request, Model model) {
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrfTokenService.getOrCreateToken(request));

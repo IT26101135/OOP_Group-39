@@ -1,28 +1,28 @@
-// Module owner: IT26101136
+// ============================================================
+// MEMBER   : IT26101136 - [Name]
+// MODULE   : Shared UI
+// FILE     : site.js
+// WHAT IT DOES (simple words): Adds optional interactions while keeping normal links and forms working.
+// REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+// OOP USED : Not applicable (shared presentation)
+// CRUD     : Displays existing data; does not save records
+// ============================================================
+// Sets up the existing navigation and forms once the page is ready.
 document.addEventListener('DOMContentLoaded', () => {
-  const toggle = document.querySelector('.ds-nav-toggle');
-  const nav = document.querySelector('#primary-navigation');
+  // Opens the browser's normal print dialog; report CSS prepares a white paper layout.
+  document.querySelectorAll('[data-print]').forEach((button) => {
+    button.addEventListener('click', printReport);
+  });
 
-  if (toggle && nav) {
-    toggle.addEventListener('click', () => {
-      const expanded = toggle.getAttribute('aria-expanded') === 'true';
-      toggle.setAttribute('aria-expanded', String(!expanded));
-      toggle.setAttribute('aria-label', expanded ? 'Open navigation menu' : 'Close navigation menu');
-      nav.classList.toggle('is-open', !expanded);
-    });
-    nav.addEventListener('click', (event) => {
-      if (event.target.closest('a, button[type="submit"]') && window.matchMedia('(max-width: 1023px)').matches) {
-        nav.classList.remove('is-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Open navigation menu');
-      }
-    });
-  }
+  const nav = document.querySelector('#primary-navigation');
+  prepareNavigation(nav);
+  prepareCinematicScroll();
+  prepareSkipLink();
 
   if (nav) {
-    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    const path = window.location.pathname.replace(/;jsessionid=[^/]+/g, '').replace(/\/$/, '') || '/';
     document.querySelectorAll('#primary-navigation a[href], .ds-dashboard-sidebar a[href], .ds-dashboard-drawer a[href]').forEach((link) => {
-      const target = new URL(link.href, window.location.origin).pathname.replace(/\/$/, '') || '/';
+      const target = new URL(link.href, window.location.origin).pathname.replace(/;jsessionid=[^/]+/g, '').replace(/\/$/, '') || '/';
       const matches = path === target || (target !== '/' && path.startsWith(`${target}/`));
       if (matches) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
@@ -50,16 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
   }
 
+  // Wait until submission is accepted and named button values have been collected.
   document.querySelectorAll('form').forEach((form) => {
-    form.addEventListener('submit', () => {
-      if (form.dataset.allowRepeat === 'true') return;
-      if (form.dataset.confirm && form.dataset.confirmed !== 'true') return;
-      const submit = form.querySelector('button[type="submit"], input[type="submit"]');
-      if (!submit || submit.disabled) return;
-      submit.dataset.originalText = submit.textContent || submit.value || '';
-      submit.disabled = true;
-      submit.setAttribute('aria-busy', 'true');
-      if (submit.tagName === 'BUTTON') submit.textContent = 'Please wait\u2026';
+    form.addEventListener('submit', (event) => {
+      window.setTimeout(() => showSubmitLoading(form, event), 0);
     });
   });
 
@@ -128,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const reveal = field.type === 'password';
       field.type = reveal ? 'text' : 'password';
       button.setAttribute('aria-pressed', String(reveal));
+      // Tell screen-reader users whether this button will show or hide their password.
+      const passwordLabel = button.getAttribute('aria-label') || 'Show password';
+      button.setAttribute('aria-label', passwordLabel.replace(/^(Show|Hide)/, reveal ? 'Hide' : 'Show'));
       button.textContent = reveal ? 'Hide' : 'Show';
     });
   });
@@ -144,8 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Success messages leave quietly; errors wait for the user to dismiss them.
   document.querySelectorAll('.ds-toast:not(.ds-toast-error)').forEach((toast) => {
-    window.setTimeout(() => toast.remove(), 6500);
+    window.setTimeout(() => dismissToast(toast), 6500);
   });
   document.querySelectorAll('main > p[role="status"]').forEach((statusAlert) => {
     window.setTimeout(() => {
@@ -156,6 +154,328 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 6500);
   });
   document.querySelectorAll('.ds-toast-dismiss').forEach((button) => {
-    button.addEventListener('click', () => button.closest('.ds-toast')?.remove());
+    button.addEventListener('click', () => dismissToast(button.closest('.ds-toast')));
   });
+});
+
+// Fades a message away before removing it; reduced motion removes it immediately.
+function dismissToast(toast) {
+  if (!toast) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    toast.remove();
+    return;
+  }
+  toast.classList.add('ds-toast-leaving');
+  window.setTimeout(() => toast.remove(), 220);
+}
+
+// Restores buttons when Back returns to a page cached during form submission.
+function restoreSubmitButtons() {
+  document.querySelectorAll('form[data-submitting="true"]').forEach((form) => {
+    delete form.dataset.submitting;
+    const button = form.querySelector('[data-original-text]');
+    if (!button) return;
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    if (button.tagName === 'BUTTON') button.textContent = button.dataset.originalText;
+  });
+}
+window.addEventListener('pageshow', restoreSubmitButtons);
+
+// Shows the chosen panel; all panels remain readable when JavaScript is off.
+function selectTab(group, selected, updateLocation = false) {
+  const tabs = group.querySelectorAll('[data-tab-target]');
+  tabs.forEach((tab) => {
+    const active = tab === selected;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    const panel = document.getElementById(tab.dataset.tabTarget);
+    if (panel) panel.hidden = !active;
+  });
+  // Keep anchor links and the visible panel in agreement without reloading the page.
+  if (updateLocation) window.history.replaceState(window.history.state, '', '#' + selected.dataset.tabTarget);
+}
+
+// Adds keyboard tabs while retaining the same native anchor links as the fallback.
+function prepareTabs(group) {
+  const tabs = [...group.querySelectorAll('[data-tab-target]')];
+  if (!tabs.length) return;
+  group.setAttribute('role', 'tablist');
+  tabs.forEach((tab, index) => prepareTab(group, tabs, tab, index));
+  selectTab(group, tabs[0]);
+  selectTabFromLocation(group, tabs);
+  window.addEventListener('hashchange', () => selectTabFromLocation(group, tabs));
+}
+
+// Connects one tab to its panel and makes the panel reachable with the Tab key.
+function prepareTab(group, tabs, tab, index) {
+  const panel = document.getElementById(tab.dataset.tabTarget);
+  if (!panel) return;
+  tab.setAttribute('role', 'tab');
+  tab.id = tab.id || panel.id + '-tab';
+  tab.setAttribute('aria-controls', panel.id);
+  panel.setAttribute('role', 'tabpanel');
+  panel.setAttribute('aria-labelledby', tab.id);
+  panel.tabIndex = 0;
+  tab.addEventListener('click', (event) => {
+    event.preventDefault();
+    selectTab(group, tab, true);
+  });
+  tab.addEventListener('keydown', (event) => moveTab(event, group, tabs, index));
+}
+
+// Opens a panel named in the address or sidebar instead of leaving its anchor hidden.
+function selectTabFromLocation(group, tabs) {
+  for (const tab of tabs) {
+    if ('#' + tab.dataset.tabTarget !== window.location.hash) continue;
+    selectTab(group, tab);
+    document.getElementById(tab.dataset.tabTarget).scrollIntoView({ block: 'start' });
+    return;
+  }
+}
+
+// The skip link moves keyboard focus as well as scrolling to the page's main content.
+function prepareSkipLink() {
+  const main = document.querySelector('#main-content');
+  const skipLink = document.querySelector('.skip-link');
+  if (!main || !skipLink) return;
+  main.tabIndex = -1;
+  skipLink.addEventListener('click', () => main.focus({ preventScroll: true }));
+}
+
+// Arrow keys move between tabs, while Home and End jump to either end.
+function moveTab(event, group, tabs, index) {
+  let next = index;
+  if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+  else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+  else if (event.key === 'Home') next = 0;
+  else if (event.key === 'End') next = tabs.length - 1;
+  else return;
+  event.preventDefault();
+  selectTab(group, tabs[next], true);
+  tabs[next].focus();
+}
+
+// Counts toward a real displayed number; it never invents dashboard statistics.
+function animateCounter(element) {
+  const target = Number(element.dataset.counter);
+  if (!Number.isFinite(target)) return;
+  const started = performance.now();
+  // Each frame moves a little closer to the number already supplied by the server.
+  function draw(now) {
+    const progress = Math.min((now - started) / 900, 1);
+    element.textContent = Math.round(target * progress).toLocaleString();
+    if (progress < 1) window.requestAnimationFrame(draw);
+  }
+  window.requestAnimationFrame(draw);
+}
+
+// Reveals each card once; unsupported browsers simply keep everything visible.
+function prepareMotion() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('ds-visible');
+      if (entry.target.hasAttribute('data-counter')) animateCounter(entry.target);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.ds-feature-card, [data-reveal], [data-counter], [data-progress], [data-chart]').forEach((element, index) => {
+    element.style.setProperty('--ds-stagger', (index % 4) * 70 + 'ms');
+    element.classList.add('ds-motion-ready');
+    observer.observe(element);
+  });
+}
+
+// Starts optional shared components after their fallback HTML is ready.
+document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.classList.add('ds-js');
+  document.querySelectorAll('[data-tabs]').forEach(prepareTabs);
+  prepareMotion();
+});
+
+// Locks the button after normal form submission, leaving cancelled dialogs alone.
+function showSubmitLoading(form, event) {
+  if (event.defaultPrevented || form.dataset.allowRepeat === 'true') return;
+  const button = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+  if (!button || button.disabled) return;
+  button.dataset.originalText = button.textContent || button.value || '';
+  form.dataset.submitting = 'true';
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  if (button.tagName === 'BUTTON') button.textContent = 'Please wait\u2026';
+}
+
+// Uses the browser printer so the same report can be saved as a PDF or printed.
+function printReport() {
+  window.print();
+}
+
+// Keeps the mobile overlay optional; native links and details remain the fallback.
+function prepareNavigation(nav) {
+  if (!nav) return;
+  const toggle = document.querySelector('.ds-nav-toggle');
+  toggle.addEventListener('click', () => setNavigationOpen(nav, true));
+  nav.querySelector('.ds-nav-close').addEventListener('click', () => setNavigationOpen(nav, false));
+  nav.addEventListener('keydown', (event) => handleNavigationKey(event, nav));
+  nav.addEventListener('click', (event) => {
+    if (event.target.closest('a[href]') && nav.classList.contains('is-open')) setNavigationOpen(nav, false);
+  });
+  window.matchMedia('(max-width: 1100px)').addEventListener('change', () => setNavigationOpen(nav, false));
+  document.addEventListener('click', (event) => {
+    nav.querySelectorAll('.ds-nav-group[open]').forEach((group) => {
+      if (!group.contains(event.target)) group.open = false;
+    });
+  });
+}
+
+// Blocks background focus while the mobile menu is open, then restores the menu button.
+function setNavigationOpen(nav, open) {
+  const wasOpen = nav.classList.contains('is-open');
+  const toggle = document.querySelector('.ds-nav-toggle');
+  nav.classList.toggle('is-open', open);
+  document.documentElement.classList.toggle('ds-menu-open', open);
+  toggle.setAttribute('aria-expanded', String(open));
+  document.querySelectorAll('main, .ds-footer').forEach((section) => { section.inert = open; });
+  if (open) {
+    nav.setAttribute('role', 'dialog');
+    nav.setAttribute('aria-modal', 'true');
+    nav.querySelector('.ds-nav-close').focus();
+  } else {
+    nav.removeAttribute('role');
+    nav.removeAttribute('aria-modal');
+    if (wasOpen) toggle.focus();
+  }
+}
+
+// Escape closes the overlay; Tab stays among its currently visible links and controls.
+function handleNavigationKey(event, nav) {
+  if (!nav.classList.contains('is-open')) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    setNavigationOpen(nav, false);
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const controls = visibleNavigationControls(nav);
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+// One scheduled frame updates the header and at most two feature backgrounds during scrolling.
+function prepareCinematicScroll() {
+  const header = document.querySelector('.ds-header');
+  const features = [...document.querySelectorAll('[data-parallax]')].slice(0, 2);
+  let scheduled = false;
+  const refresh = () => {
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(() => {
+      updateCinematicScroll(header, features);
+      scheduled = false;
+    });
+  };
+  window.addEventListener('scroll', refresh, { passive: true });
+  window.addEventListener('resize', refresh);
+  window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', refresh);
+  refresh();
+}
+
+// A forty-pixel scroll makes navigation solid; reduced motion keeps feature art still.
+function updateCinematicScroll(header, features) {
+  if (header) header.classList.toggle('is-scrolled', window.scrollY > 40);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  features.forEach((section) => {
+    const bounds = section.getBoundingClientRect();
+    let offset = 0;
+    if (!reduced) offset = Math.max(-36, Math.min(36, (window.innerHeight / 2 - bounds.top - bounds.height / 2) * .06));
+    section.style.setProperty('--ds-parallax', offset + 'px');
+  });
+  if (reduced) document.querySelectorAll('.ds-motion-ready').forEach((item) => item.classList.add('ds-visible'));
+}
+
+// Closed native details may still report rectangles, so exclude their hidden links explicitly.
+function visibleNavigationControls(nav) {
+  return [...nav.querySelectorAll('a[href], button, summary')].filter((item) => {
+    const closedGroup = item.closest('details:not([open])');
+    return item.getClientRects().length && (!closedGroup || item.tagName === 'SUMMARY');
+  });
+}
+
+// Reads the existing public page so the home page never exposes moderation or private review data.
+async function prepareHomeReviews() {
+  const section = document.querySelector('[data-home-reviews]');
+  if (!section) return;
+  try {
+    const response = await fetch(section.dataset.reviewsUrl, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error('Public reviews are unavailable.');
+    const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+    const cards = page.querySelectorAll('.ds-review-card');
+    showHomeReviews(section, cards);
+  } catch (error) {
+    // The normal public link remains usable if the request cannot finish.
+    section.querySelector('[data-review-fallback]').textContent = 'Visit our reviews page to read approved learner feedback.';
+  }
+}
+
+// Copies text only, so saved review comments cannot introduce HTML into this page.
+function makeHomeReview(card) {
+  const slide = document.createElement('article');
+  const quote = document.createElement('blockquote');
+  quote.textContent = card.querySelector('blockquote')?.textContent.trim() || '';
+  const attribution = document.createElement('p');
+  attribution.className = 'ds-review-attribution';
+  const rating = card.querySelector('.ds-star-display')?.getAttribute('aria-label') || '';
+  attribution.textContent = (card.querySelector('p')?.textContent.trim() || 'DriveSpark learner') + ' · ' + rating;
+  slide.append(quote, attribution);
+  return slide;
+}
+
+// Shows one approved review at a time; reader-controlled buttons avoid automatic motion.
+function showHomeReviews(section, cards) {
+  if (!cards.length) {
+    section.querySelector('[data-review-fallback]').textContent = 'Approved learner feedback will appear here when available.';
+    return;
+  }
+  const container = section.querySelector('[data-review-slides]');
+  for (const card of cards) container.append(makeHomeReview(card));
+  section.querySelector('[data-review-fallback]').hidden = true;
+  section.querySelector('.ds-review-controls').hidden = cards.length < 2;
+  section.querySelector('[data-review-previous]').addEventListener('click', () => moveHomeReview(section, -1));
+  section.querySelector('[data-review-next]').addEventListener('click', () => moveHomeReview(section, 1));
+  moveHomeReview(section, 0);
+}
+
+// Wraps at either end and announces the selected review without moving keyboard focus.
+function moveHomeReview(section, direction) {
+  const slides = section.querySelector('[data-review-slides]').children;
+  const previous = Number(section.dataset.reviewIndex || 0);
+  const index = (previous + direction + slides.length) % slides.length;
+  section.dataset.reviewIndex = String(index);
+  for (let position = 0; position < slides.length; position += 1) slides[position].hidden = position !== index;
+  section.querySelector('[data-review-position]').textContent = (index + 1) + ' / ' + slides.length;
+}
+
+// Opens the chosen lesson type with the catalog's existing filters; no server route changes.
+function prepareLessonChoice() {
+  const selectedType = new URLSearchParams(window.location.search).get('type');
+  if (!selectedType) return;
+  for (const button of document.querySelectorAll('[data-package-filter]')) {
+    if (button.dataset.packageFilter === selectedType.toUpperCase()) button.click();
+  }
+}
+
+// Starts the home-only review enhancement and honours lesson links after existing filters are ready.
+document.addEventListener('DOMContentLoaded', () => {
+  prepareHomeReviews();
+  prepareLessonChoice();
 });

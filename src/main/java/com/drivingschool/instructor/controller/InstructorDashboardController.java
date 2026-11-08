@@ -1,4 +1,14 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : InstructorDashboardController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for instructor dashboard.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.instructor.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
@@ -8,7 +18,14 @@ import com.drivingschool.auth.service.CsrfTokenService;
 import com.drivingschool.booking.service.BookingService;
 import com.drivingschool.instructor.service.InstructorLessonService;
 import com.drivingschool.review.service.ReviewService;
-import com.drivingschool.instructor.repository.InstructorRepository;
+import com.drivingschool.instructor.service.InstructorCatalog;
+import com.drivingschool.booking.model.Booking;
+import com.drivingschool.instructor.model.Instructor;
+import com.drivingschool.review.model.Review;
+import com.drivingschool.review.model.ReviewStatus;
+import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.Set;
 import com.drivingschool.student.api.StudentLookup;
 import com.drivingschool.student.dto.StudentSummary;
 import java.time.Clock;
@@ -30,22 +47,25 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequireLogin
 @RequestMapping("/instructor")
+// SOLID: S - This class is responsible for web requests and page data.
 public class InstructorDashboardController {
 
     private final AuthSessionService auth;
     private final BookingService bookings;
     private final CsrfTokenService csrf;
     private final InstructorLessonService lessonService;
-    private final InstructorRepository instructors;
+    // SOLID: D - Instructor details are read through the catalog contract.
+    private final InstructorCatalog instructors;
     private final StudentLookup students;
     private final Clock clock;
     private final ReviewService reviews;
 
+    // Receives the helpers or validates the details needed to create this object.
     public InstructorDashboardController(AuthSessionService auth,
                                           BookingService bookings,
                                           CsrfTokenService csrf,
                                           InstructorLessonService lessonService,
-                                          InstructorRepository instructors,
+                                          InstructorCatalog instructors,
                                           StudentLookup students,
                                           Clock clock,
                                           ReviewService reviews) {
@@ -60,35 +80,30 @@ public class InstructorDashboardController {
     }
 
     @GetMapping("/dashboard")
+    // Prepares the signed-in instructor's schedule, profile and feedback for the page.
     public String dashboard(HttpServletRequest request,
                             HttpServletResponse response, Model model) {
         requireInstructor(request);
         response.setHeader("Cache-Control", "no-store");
-        List<com.drivingschool.booking.model.Booking> assigned =
-                bookings.getInstructorBookings(request);
+        List<Booking> assigned = bookings.getInstructorBookings(request);
+        String instructorId = auth.requireLogin(request).getId();
+        Instructor profile = instructors.getInstructorById(instructorId);
+        List<Review> ownReviews = reviews.reviewsForInstructor(instructorId);
         model.addAttribute("bookings", assigned);
-        LocalDate today = LocalDate.now(clock);
-        model.addAttribute("todayCount", assigned.stream()
-                .filter(booking -> booking.getStartTime().toLocalDate().equals(today)).count());
-        model.addAttribute("upcomingCount", assigned.stream()
-                .filter(booking -> booking.getStartTime().toLocalDate().isAfter(today)).count());
-        model.addAttribute("studentCount", assigned.stream()
-                .map(com.drivingschool.booking.model.Booking::getStudentId).distinct().count());
-        model.addAttribute("averageRating", instructors.findByIdStrict(
-                auth.requireLogin(request).getId()).orElseThrow().getAverageRating());
-        model.addAttribute("ownReviews", reviews.reviewsForInstructor(auth.requireLogin(request).getId()));
-        model.addAttribute("studentDetails", assigned.stream().collect(
-                java.util.stream.Collectors.toMap(
-                        com.drivingschool.booking.model.Booking::getId,
-                        booking -> students.findById(booking.getStudentId())
-                                .orElseGet(() -> new StudentSummary(
-                                        booking.getStudentId(), "Unavailable")))));
+        model.addAttribute("instructor", profile);
+        model.addAttribute("averageRating", profile.getAverageRating());
+        model.addAttribute("ownReviews", ownReviews);
+        model.addAttribute("lessonRecords", lessonService.ownRecords(request));
+        addLessonCounts(assigned, model);
+        addRatingCounts(ownReviews, model);
+        model.addAttribute("studentDetails", studentDetails(assigned));
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrf.getOrCreateToken(request));
         return "instructor/lesson-dashboard";
     }
 
     @PostMapping("/complete")
+    // Marks a confirmed lesson complete through the booking rules.
     public String complete(HttpServletRequest request,
                            @RequestParam String bookingId,
                            RedirectAttributes flash) {
@@ -99,6 +114,7 @@ public class InstructorDashboardController {
     }
 
     @PostMapping("/accept")
+    // Checks an assigned lesson again before confirming it.
     public String accept(HttpServletRequest request, @RequestParam String bookingId,
                          RedirectAttributes flash) {
         bookings.acceptAssignedLesson(request, bookingId);
@@ -107,6 +123,7 @@ public class InstructorDashboardController {
     }
 
     @PostMapping("/decline")
+    // Records the instructor's reason so the student knows why the lesson was refused.
     public String decline(HttpServletRequest request, @RequestParam String bookingId,
                           @RequestParam String reason, RedirectAttributes flash) {
         bookings.declineAssignedLesson(request, bookingId, reason);
@@ -115,6 +132,7 @@ public class InstructorDashboardController {
     }
 
     @PostMapping("/no-show")
+    // Records attendance when the student did not attend the assigned lesson.
     public String noShow(HttpServletRequest request,
                          @RequestParam String bookingId,
                          RedirectAttributes flash) {
@@ -125,6 +143,7 @@ public class InstructorDashboardController {
     }
 
     @PostMapping("/lesson-notes")
+    // Creates or updates feedback only for a completed lesson assigned to this instructor.
     public String saveNotes(HttpServletRequest request,
                             @RequestParam String bookingId,
                             @RequestParam String notes,
@@ -142,6 +161,48 @@ public class InstructorDashboardController {
         return "redirect:/instructor/dashboard";
     }
 
+    // Counts assigned lesson dates and distinct student IDs without changing bookings.
+    private void addLessonCounts(List<Booking> assigned, Model model) {
+        LocalDate today = LocalDate.now(clock);
+        int todayCount = 0;
+        int upcomingCount = 0;
+        Set<String> studentIds = new HashSet<>();
+        for (Booking booking : assigned) {
+            LocalDate lessonDate = booking.getStartTime().toLocalDate();
+            if (lessonDate.equals(today)) todayCount++;
+            if (lessonDate.isAfter(today)) upcomingCount++;
+            studentIds.add(booking.getStudentId());
+        }
+        model.addAttribute("todayCount", todayCount);
+        model.addAttribute("upcomingCount", upcomingCount);
+        model.addAttribute("studentCount", studentIds.size());
+    }
+
+    private Map<String, StudentSummary> studentDetails(List<Booking> assigned) {
+        Map<String, StudentSummary> details = new LinkedHashMap<>();
+        for (Booking booking : assigned) {
+            StudentSummary student = students.findById(booking.getStudentId())
+                    .orElse(new StudentSummary(booking.getStudentId(), "Unavailable"));
+            details.put(booking.getId(), student);
+        }
+        return details;
+    }
+
+    // Counts approved reviews into one bar per star rating.
+    private void addRatingCounts(List<Review> ownReviews, Model model) {
+        int[] ratingCounts = new int[6];
+        int approvedCount = 0;
+        for (Review review : ownReviews) {
+            if (review.getStatus() == ReviewStatus.APPROVED) {
+                ratingCounts[review.getRating()]++;
+                approvedCount++;
+            }
+        }
+        model.addAttribute("ratingCounts", ratingCounts);
+        model.addAttribute("approvedReviewCount", approvedCount);
+    }
+
+    // Refuses instructor-only work unless the signed-in account has that role.
     private void requireInstructor(HttpServletRequest request) {
         if (auth.requireLogin(request).getRole() != Role.INSTRUCTOR) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,

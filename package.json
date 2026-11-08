@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "build:css": "tailwindcss -i ./src/main/resources/static/css/app.css -o ./src/main/resources/static/css/tailwind.css --minify"
+    "build:css": "tailwindcss -i ./src/main/resources/static/css/app.css -o ./src/main/resources/static/css/tailwind.css --minify",
+    "postbuild:css": "node -e \"const fs=require('fs');const output='src/main/resources/static/css/tailwind.css';const header=fs.readFileSync('src/main/resources/static/css/app.css','utf8').split('@tailwind')[0].replace('FILE     : app.css','FILE     : tailwind.css');fs.writeFileSync(output,header+fs.readFileSync(output,'utf8'));\""
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"

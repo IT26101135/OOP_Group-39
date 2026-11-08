@@ -1,137 +1,90 @@
-<%-- Module owner: IT26101136 --%>
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : navbar.jspf
+WHAT IT DOES (simple words): Shows the shared navbar block.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- NavigationInterceptor supplies the current role, account label and CSRF token.
+     Native details keep every secondary destination usable without JavaScript. --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-
-<c:url value="/" var="homeUrl" />
-<c:url value="/login" var="loginUrl" />
-<c:url value="/register" var="registerUrl" />
-<c:url value="/logout" var="logoutUrl" />
-<c:url value="/student/profile" var="navStudentProfileUrl" />
-<c:url value="/admin/dashboard" var="navAdminDashboardUrl" />
-<c:url value="/packages" var="packagesUrl" />
-<c:url value="/reviews" var="reviewsUrl" />
-<c:url value="/bookings" var="bookingsUrl" />
-<c:url value="/admin/bookings" var="adminBookingsUrl" />
-<c:url value="/admin/students" var="adminStudentsUrl" />
-<c:url value="/admin/reviews" var="adminReviewsUrl" />
-<c:url value="/admin/reports" var="adminReportsUrl" />
-<c:url value="/admin/vehicles" var="adminVehiclesUrl" />
-<c:url value="/admin/instructors" var="adminInstructorsUrl" />
-<c:url value="/admin/packages" var="adminPackagesUrl" />
-<c:url value="/instructor/dashboard" var="instructorDashboardUrl" />
-<c:url value="/instructor/availability" var="instructorAvailabilityUrl" />
-<c:url value="/enrollments" var="enrollmentsUrl" />
-<c:url value="/student/progress" var="progressUrl" />
-<c:url value="/about" var="aboutUrl" />
-<c:url value="/instructors" var="instructorsUrl" />
-<c:url value="/faq" var="faqUrl" />
-<c:url value="/contact" var="contactUrl" />
-<c:url value="/public/reviews" var="publicReviewsUrl" />
-
+<c:set var="brandDashboard" value="/student/profile" />
+<c:if test="${navRole eq 'ADMIN'}"><c:set var="brandDashboard" value="/admin/dashboard" /></c:if>
+<c:if test="${navRole eq 'INSTRUCTOR'}"><c:set var="brandDashboard" value="/instructor/dashboard" /></c:if>
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="ds-header">
     <div class="ds-container ds-navbar">
-        <a class="ds-brand" href="<c:out value='${homeUrl}' />" aria-label="DriveSpark Academy home">
-            <img src="<c:url value='/images/logo.svg' />" width="190" height="40" alt="DriveSpark Academy">
+        <a class="ds-brand" href="<c:url value='/' />" aria-label="DriveSpark Academy home">
+            <span class="ds-wordmark">DriveSpark<span>Academy</span></span>
         </a>
-
-        <button class="ds-nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </button>
-
+        <%-- These are the same role destinations, grouped to keep the main bar short. --%>
         <nav class="ds-nav" id="primary-navigation" aria-label="Main navigation">
+            <button class="ds-nav-close" type="button" aria-label="Close navigation menu">Close <span aria-hidden="true">&#215;</span></button>
+            <a class="ds-nav-link" href="<c:url value='/' />">Home</a>
             <c:choose>
-                <c:when test="${navHomeActive}">
-                    <a class="ds-nav-link"
-                       href="<c:out value='${homeUrl}' />"
-                       aria-current="page">Home</a>
+                <c:when test="${not navLoggedIn}">
+                    <a class="ds-nav-link" href="<c:url value='/packages' />">Packages</a>
+                    <a class="ds-nav-link" href="<c:url value='/instructors' />">Instructors</a>
+                    <a class="ds-nav-link" href="<c:url value='/about' />">About</a>
+                    <details class="ds-nav-group"><summary>Explore</summary><div class="ds-nav-submenu">
+                        <a class="ds-nav-link" href="<c:url value='/faq' />">FAQ</a>
+                        <a class="ds-nav-link" href="<c:url value='/contact' />">Contact</a>
+                        <a class="ds-nav-link" href="<c:url value='/public/reviews' />">Reviews</a>
+                        <a class="ds-nav-link" href="<c:url value='/login' />">Login</a>
+                    </div></details>
                 </c:when>
-                <c:otherwise>
-                    <a class="ds-nav-link"
-                       href="<c:out value='${homeUrl}' />">Home</a>
-                </c:otherwise>
+                <c:when test="${navRole eq 'STUDENT'}">
+                    <a class="ds-nav-link" href="<c:url value='/bookings' />">Book / My bookings</a>
+                    <a class="ds-nav-link" href="<c:url value='/enrollments' />">My enrollments</a>
+                    <a class="ds-nav-link" href="<c:url value='/student/progress' />">Progress</a>
+                </c:when>
+                <c:when test="${navRole eq 'INSTRUCTOR'}">
+                    <a class="ds-nav-link" href="<c:url value='/instructor/dashboard' />">My schedule</a>
+                    <a class="ds-nav-link" href="<c:url value='/instructor/availability' />">Availability</a>
+                </c:when>
+                <c:when test="${navRole eq 'ADMIN'}">
+                    <a class="ds-nav-link" href="<c:url value='/admin/bookings' />">Bookings</a>
+                    <a class="ds-nav-link" href="<c:url value='/admin/students' />">Students</a>
+                    <details class="ds-nav-group"><summary>Teaching</summary><div class="ds-nav-submenu">
+                        <a class="ds-nav-link" href="<c:url value='/admin/instructors' />">Instructors</a>
+                        <a class="ds-nav-link" href="<c:url value='/admin/packages' />">Packages</a>
+                        <a class="ds-nav-link" href="<c:url value='/admin/vehicles' />">Vehicles</a>
+                    </div></details>
+                </c:when>
             </c:choose>
-
-            <c:if test="${not navLoggedIn}"><a class="ds-nav-link" href="<c:out value='${packagesUrl}' />">Learning packages</a></c:if>
-            <c:if test="${not navLoggedIn}">
-                <a class="ds-nav-link" href="<c:out value='${aboutUrl}' />">About</a>
-                <a class="ds-nav-link" href="<c:out value='${instructorsUrl}' />">Instructors</a>
-                <a class="ds-nav-link" href="<c:out value='${faqUrl}' />">FAQ</a>
-                <a class="ds-nav-link" href="<c:out value='${contactUrl}' />">Contact</a>
-                <a class="ds-nav-link" href="<c:out value='${publicReviewsUrl}' />">Reviews</a>
+            <%-- Account actions retain the original POST logout route and session token. --%>
+            <c:if test="${navLoggedIn}">
+                <details class="ds-nav-group ds-nav-account"><summary><c:choose><c:when test="${navRole eq 'ADMIN'}">Manage</c:when><c:otherwise>Account</c:otherwise></c:choose></summary>
+                    <div class="ds-nav-submenu">
+                        <c:if test="${navRole eq 'STUDENT'}">
+                            <a class="ds-nav-link" href="<c:url value='/student/profile' />">Dashboard / Profile</a>
+                            <a class="ds-nav-link" href="<c:url value='/reviews' />">Reviews</a>
+                        </c:if>
+                        <c:if test="${navRole eq 'ADMIN'}">
+                            <a class="ds-nav-link" href="<c:url value='/admin/dashboard' />">Dashboard</a>
+                            <a class="ds-nav-link" href="<c:url value='/admin/reviews' />">Reviews</a>
+                            <a class="ds-nav-link" href="<c:url value='/admin/reports' />">Reports</a>
+                        </c:if>
+                        <div class="ds-nav-identity"><span><c:out value="${navRole}" /></span><c:out value="${navDisplayName}" /></div>
+                        <form class="ds-nav-logout" method="post" action="<c:url value='/logout' />">
+                            <input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />">
+                            <button class="ds-nav-link" type="submit">Log out</button>
+                        </form>
+                    </div>
+                </details>
             </c:if>
-            <c:if test="${navRole eq 'STUDENT'}"><a class="ds-nav-link" href="<c:out value='${reviewsUrl}' />">Reviews</a></c:if>
-
-            <c:choose>
-                <c:when test="${navLoggedIn}">
-                    <c:if test="${navRole eq 'STUDENT'}">
-                        <c:choose>
-                            <c:when test="${navProfileActive}">
-                                <a class="ds-nav-link" href="<c:out value='${navStudentProfileUrl}' />"
-                                   aria-current="page">Dashboard / Profile</a>
-                            </c:when>
-                            <c:otherwise>
-                                <a class="ds-nav-link" href="<c:out value='${navStudentProfileUrl}' />">Dashboard / Profile</a>
-                            </c:otherwise>
-                        </c:choose>
-                        <a class="ds-nav-link" href="<c:out value='${bookingsUrl}' />">Book / My bookings</a>
-                        <a class="ds-nav-link" href="<c:out value='${enrollmentsUrl}' />">My enrollments</a>
-                        <a class="ds-nav-link" href="<c:out value='${progressUrl}' />">Progress</a>
-                    </c:if>
-                    <c:if test="${navRole eq 'ADMIN'}">
-                        <c:choose>
-                            <c:when test="${navAdminDashboardActive}">
-                            <a class="ds-nav-link"
-                            href="<c:out value='${navAdminDashboardUrl}' />"
-                            aria-current="page">Dashboard</a>
-                            </c:when>
-                            <c:otherwise>
-                                <a class="ds-nav-link"
-                                    href="<c:out value='${navAdminDashboardUrl}' />">Dashboard</a>
-                            </c:otherwise>
-                        </c:choose>
-                        <a class="ds-nav-link" href="<c:out value='${adminBookingsUrl}' />">Bookings</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminStudentsUrl}' />">Students</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminInstructorsUrl}' />">Instructors</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminPackagesUrl}' />">Packages</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminVehiclesUrl}' />">Vehicles</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminReviewsUrl}' />">Reviews</a>
-                        <a class="ds-nav-link" href="<c:out value='${adminReportsUrl}' />">Reports</a>
-                    </c:if>
-                    <c:if test="${navRole eq 'INSTRUCTOR'}">
-                        <a class="ds-nav-link" href="<c:out value='${instructorDashboardUrl}' />">My schedule</a>
-                        <a class="ds-nav-link" href="<c:out value='${instructorAvailabilityUrl}' />">Availability</a>
-                    </c:if>
-
-                    <span class="ds-nav-user">
-                        <span class="ds-role-badge"><c:out value="${navRole}" /></span>
-                        <c:out value="${navDisplayName}" />
-                    </span>
-
-                    <form class="ds-nav-logout"
-                          method="post"
-                          action="<c:out value='${logoutUrl}' />">
-                        <input type="hidden"
-                               name="<c:out value='${csrfParameterName}' />"
-                               value="<c:out value='${csrfToken}' />">
-
-                        <button class="ds-button" type="submit">
-                            Log out
-                        </button>
-                    </form>
-                </c:when>
-
-                <c:otherwise>
-                    <a class="ds-nav-link"
-                       href="<c:out value='${loginUrl}' />">
-                        Login
-                    </a>
-                    <a class="ds-nav-link"
-                       href="<c:out value='${registerUrl}' />">
-                        Register
-                    </a>
-                </c:otherwise>
-            </c:choose>
         </nav>
+        <div class="ds-nav-actions">
+            <c:choose><c:when test="${navLoggedIn}"><a class="ds-header-cta" href="<c:url value='${brandDashboard}' />">Dashboard</a></c:when>
+            <c:otherwise><a class="ds-header-cta" href="<c:url value='/register' />">Sign up</a></c:otherwise></c:choose>
+            <button class="ds-nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation">
+                <span>Menu</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h18M3 16h18" /></svg>
+            </button>
+        </div>
     </div>
 </header>
 <script src="<c:url value='/js/site.js' />" defer></script>

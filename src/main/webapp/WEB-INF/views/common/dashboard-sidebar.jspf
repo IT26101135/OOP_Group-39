@@ -1,8 +1,19 @@
-<%-- Module owner: IT26101136 --%>
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : dashboard-sidebar.jspf
+WHAT IT DOES (simple words): Keeps each role's workspace links together on large and small screens.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- This block shows dashboard sidebar. NavigationInterceptor supplies the current role and menu details. --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <aside class="ds-dashboard-sidebar" aria-label="Dashboard navigation">
     <p class="ds-dashboard-label">Workspace</p>
-    <nav>
+    <nav aria-label="Workspace pages">
         <c:choose>
             <c:when test="${navRole eq 'STUDENT'}">
                 <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
@@ -17,8 +28,9 @@
     </nav>
 </aside>
 <details class="ds-dashboard-drawer">
+    <%-- NavigationInterceptor supplies the same role links here for the native mobile menu. --%>
     <summary>Dashboard menu</summary>
-    <nav>
+    <nav aria-label="Workspace pages">
         <c:choose>
             <c:when test="${navRole eq 'STUDENT'}">
                 <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>

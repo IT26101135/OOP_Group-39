@@ -1,4 +1,14 @@
-<%-- Module owner: IT26101132 --%>
+<%--
+============================================================
+MEMBER   : IT26101132 - [Name]
+MODULE   : Vehicles and Sample Data
+FILE     : edit.jsp
+WHAT IT DOES (simple words): Keeps vehicles and sample data details clear and safe for the school.
+REAL-LIFE EXAMPLE: Like a fleet logbook showing which teaching cars need attention.
+OOP USED : See labelled classes and methods below; presentation files display their results
+CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
+============================================================
+--%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
@@ -9,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="description" content="Edit vehicle | DriveSpark Academy at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="description" content="Edit vehicle | DriveSpark Academy Manage teaching vehicle details, insurance and service dates.">
     <meta name="theme-color" content="#0B1120">
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
@@ -21,22 +31,23 @@
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main id="main-content" class="ds-container ds-section ds-vehicle"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
+<main id="main-content" class="ds-container ds-section ds-dashboard-shell"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
 
-    <div class="ds-vehicle-form-heading">
-        <p class="ds-vehicle-eyebrow">VEHICLE MANAGEMENT</p>
+    <div class="ds-vehicle-form-heading mb-8">
+        <p class="ds-eyebrow">VEHICLE MANAGEMENT</p>
         <h1>Edit vehicle</h1>
-        <p class="ds-vehicle-description">
+        <p class="text-slate-400">
             Update the vehicle identity, type, status, insurance, and service dates.
         </p>
     </div>
 
-    <section class="ds-vehicle-form-panel">
+    <%-- VehicleController supplies this form and the enum choices; validation errors keep typed values. --%>
+    <section class="ds-card">
 
-        <div class="ds-vehicle-readonly">
+        <div class="ds-vehicle-readonly mb-8 border-b border-white/10 pb-6">
             <h2>Vehicle information</h2>
 
-            <dl class="ds-vehicle-details">
+            <dl class="ds-vehicle-details my-4 grid gap-4 sm:grid-cols-2">
                 <div>
                     <dt>Vehicle ID</dt>
                     <dd><c:out value="${vehicle.id}" /></dd>
@@ -64,12 +75,12 @@
         </div>
 
         <c:if test="${not empty formError}">
-            <p class="ds-vehicle-error" role="alert">
+            <p class="ds-vehicle-error mb-5 rounded-xl border border-rose-300/30 bg-rose-400/10 p-4 text-rose-100" role="alert">
                 <c:out value="${formError}" />
             </p>
         </c:if>
 
-        <form class="ds-vehicle-form"
+        <form class="ds-vehicle-form grid gap-5 sm:grid-cols-2"
               method="post"
               action="<c:out value='${editVehicleUrl}' />">
 
@@ -77,9 +88,9 @@
                    name="<c:out value='${csrfParameterName}' />"
                    value="<c:out value='${csrfToken}' />">
 
-            <div class="ds-vehicle-field">
+            <div class="ds-vehicle-field min-w-0 flex flex-col gap-2">
                 <label for="vehicle-registration">Registration number</label>
-                <input id="vehicle-registration"
+                <input class="w-full" id="vehicle-registration"
                        name="registrationNumber"
                        type="text"
                        required
@@ -88,9 +99,9 @@
                        value="<c:out value='${vehicleEditForm.registrationNumber}' />">
             </div>
 
-            <div class="ds-vehicle-field">
+            <div class="ds-vehicle-field min-w-0 flex flex-col gap-2">
                 <label for="vehicle-make">Make</label>
-                <input id="vehicle-make"
+                <input class="w-full" id="vehicle-make"
                        name="make"
                        type="text"
                        required
@@ -98,9 +109,9 @@
                        value="<c:out value='${vehicleEditForm.make}' />">
             </div>
 
-            <div class="ds-vehicle-field">
+            <div class="ds-vehicle-field min-w-0 flex flex-col gap-2">
                 <label for="vehicle-model">Model</label>
-                <input id="vehicle-model"
+                <input class="w-full" id="vehicle-model"
                        name="model"
                        type="text"
                        required
@@ -114,7 +125,7 @@
             <label>Insurance expiry <input type="date" name="insuranceExpiry" value="<c:out value='${vehicleEditForm.insuranceExpiry}' />"></label>
             <label>Last service <input type="date" name="lastServiceDate" value="<c:out value='${vehicleEditForm.lastServiceDate}' />"></label>
             <label>Next service <input type="date" name="nextServiceDate" value="<c:out value='${vehicleEditForm.nextServiceDate}' />"></label>
-            <div class="ds-vehicle-form-actions">
+            <div class="ds-vehicle-form-actions flex flex-wrap items-center gap-4 sm:col-span-2">
                 <button class="ds-button" type="submit">
                     Save changes
                 </button>

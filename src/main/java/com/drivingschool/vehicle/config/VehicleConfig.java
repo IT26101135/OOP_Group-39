@@ -1,4 +1,14 @@
-// Module owner: IT26101132
+/**
+============================================================
+MEMBER   : IT26101132 - [Name]
+MODULE   : Vehicles and Sample Data
+FILE     : VehicleConfig.java
+WHAT IT DOES (simple words): Keeps vehicles and sample data details clear and safe for the school.
+REAL-LIFE EXAMPLE: Like a fleet logbook showing which teaching cars need attention.
+OOP USED : See labelled classes and methods below; presentation files display their results
+CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
+============================================================
+*/
 package com.drivingschool.vehicle.config;
 
 import com.drivingschool.vehicle.repository.VehicleRepository;
@@ -17,6 +27,7 @@ import java.nio.file.Path;
 @Configuration
 public class VehicleConfig {
 
+    // Connects the scheduling interface to its vehicle implementation.
     @Bean
     public VehicleLookup vehicleLookup(
             VehicleRepository vehicleRepository) {
@@ -24,6 +35,7 @@ public class VehicleConfig {
         return new VehicleLookupService(vehicleRepository);
     }
 
+    // Chooses the vehicle file inside the configured data directory.
     @Bean
     public VehicleRepository vehicleRepository(
             @Value("${app.data-directory:./data}") String dataDirectory,
@@ -35,6 +47,7 @@ public class VehicleConfig {
         );
     }
 
+    // Connects fleet rules to storage and the optional lesson-history check.
     @Bean
     public VehicleService vehicleService(
             VehicleStore vehicleRepository,

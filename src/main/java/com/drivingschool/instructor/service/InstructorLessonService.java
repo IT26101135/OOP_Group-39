@@ -1,4 +1,14 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : InstructorLessonService.java
+WHAT IT DOES (simple words): Applies the instructor lesson rules.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.instructor.service;
 
 import com.drivingschool.auth.model.Role;
@@ -20,15 +30,19 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class InstructorLessonService {
     private final BookingRepository bookings;
     private final LessonRecordRepository records;
     private final AuthSessionService auth;
     private final Clock clock;
 
+    // Receives the helpers or validates the details needed to create this object.
     public InstructorLessonService(BookingRepository bookings,
                                    LessonRecordRepository records,
                                    AuthSessionService auth, Clock clock) {
@@ -38,6 +52,8 @@ public class InstructorLessonService {
         this.clock = clock;
     }
 
+    // Creates or updates feedback only for a completed lesson assigned to this instructor.
+    // CRUD: UPDATE - changes an existing lesson feedback
     public LessonRecord saveNotes(HttpServletRequest request, String bookingId,
                                   String notes, Map<String, Integer> skills,
                                   boolean readyForTest) {
@@ -56,9 +72,7 @@ public class InstructorLessonService {
             throw new ValidationException("Mark the lesson complete before adding its record.");
         }
         LocalDateTime updatedAt = LocalDateTime.now(clock);
-        LessonRecord existing = records.readAllStrict().stream()
-                .filter(record -> record.getBookingId().equals(bookingId))
-                .findFirst().orElse(null);
+        LessonRecord existing = findLessonRecord(bookingId);
         if (existing == null) {
             LessonRecord created = new LessonRecord(records.nextId("N"), bookingId,
                     notes, skills, readyForTest, updatedAt);
@@ -71,22 +85,49 @@ public class InstructorLessonService {
         return replacement;
     }
 
+    // Totals completed driving time and returns only this student's feedback.
+    // CRUD: READ   - finds or lists student progress
     public StudentProgress studentProgress(HttpServletRequest request) {
         User student = auth.requireLogin(request);
         if (student.getRole() != Role.STUDENT) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Student access is required.");
         }
-        List<Booking> completed = bookings.readAllStrict().stream()
-                .filter(booking -> booking.getStudentId().equals(student.getId())
-                        && booking.getStatus() == BookingStatus.COMPLETED)
-                .toList();
-        List<String> bookingIds = completed.stream().map(Booking::getId).toList();
-        List<LessonRecord> lessonRecords = records.readAllStrict().stream()
-                .filter(record -> bookingIds.contains(record.getBookingId())).toList();
-        double hours = completed.stream().mapToLong(booking ->
-                Duration.between(booking.getStartTime(), booking.getEndTime()).toMinutes())
-                .sum() / 60.0;
-        return new StudentProgress(completed.size(), hours, lessonRecords);
+        List<String> completedIds = new ArrayList<>();
+        long minutesDriven = 0;
+        for (Booking booking : bookings.readAllStrict()) {
+            if (booking.getStudentId().equals(student.getId()) && booking.getStatus() == BookingStatus.COMPLETED) {
+                completedIds.add(booking.getId());
+                minutesDriven += Duration.between(booking.getStartTime(), booking.getEndTime()).toMinutes();
+            }
+        }
+        List<LessonRecord> lessonRecords = new ArrayList<>();
+        for (LessonRecord record : records.readAllStrict()) {
+            if (completedIds.contains(record.getBookingId())) lessonRecords.add(record);
+        }
+        return new StudentProgress(completedIds.size(), minutesDriven / 60.0, lessonRecords);
+    }
+    public Map<String, LessonRecord> ownRecords(HttpServletRequest request) {
+        User instructor = auth.requireLogin(request);
+        if (instructor.getRole() != Role.INSTRUCTOR) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Instructor access is required.");
+        }
+        List<String> ownBookingIds = new ArrayList<>();
+        for (Booking booking : bookings.readAllStrict()) {
+            if (instructor.getId().equals(booking.getInstructorId())) ownBookingIds.add(booking.getId());
+        }
+        Map<String, LessonRecord> result = new LinkedHashMap<>();
+        for (LessonRecord record : records.readAllStrict()) {
+            if (ownBookingIds.contains(record.getBookingId())) result.putIfAbsent(record.getBookingId(), record);
+        }
+        return result;
+    }
+
+    // Looks for the saved feedback attached to this lesson.
+    private LessonRecord findLessonRecord(String bookingId) {
+        for (LessonRecord record : records.readAllStrict()) {
+            if (record.getBookingId().equals(bookingId)) return record;
+        }
+        return null;
     }
 }

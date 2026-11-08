@@ -1,4 +1,14 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : InstructorService.java
+WHAT IT DOES (simple words): Applies the instructor rules.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 
 package com.drivingschool.instructor.service;
 
@@ -11,17 +21,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class InstructorService {
+// SOLID: S - This class is responsible for application rules.
+public class InstructorService implements InstructorCatalog {
 
     private final InstructorRepository repository;
     private final InstructorSorter sorter;
 
+    // Receives the helpers or validates the details needed to create this object.
     public InstructorService(InstructorRepository repository) {
         this.repository = Objects.requireNonNull(
                 repository, "repository");
         this.sorter = new InstructorSorter();
     }
 
+    // Checks the teaching profile before saving the new instructor.
+    // CRUD: CREATE - adds a new instructor profile and saves it
     public synchronized Instructor createInstructor(
             String name,
             String email,
@@ -32,6 +46,8 @@ public class InstructorService {
                 null, null, null, null, null);
     }
 
+    // Checks the teaching profile before saving the new instructor.
+    // CRUD: CREATE - adds a new instructor profile and saves it
     public synchronized Instructor createInstructor(
             String name, String email, String phone, int yearsOfExperience,
             String bio, String licenseNumber, String qualifications,
@@ -69,14 +85,20 @@ public class InstructorService {
         return instructor;
     }
 
+    // Lists instructor profiles for the management page.
+    // CRUD: READ   - finds or lists instructor profiles
     public List<Instructor> getAllInstructors() {
         return repository.readAll();
     }
 
+    // Removes the profile after the account service has checked attached history.
+    // CRUD: DELETE - removes a instructor profile
     public void deleteInstructor(String id) {
         repository.delete(id);
     }
 
+    // Changes whether this instructor can receive lessons.
+    // CRUD: UPDATE - changes an existing instructor profile
     public synchronized Instructor setInstructorActive(String id, boolean active) {
         Instructor instructor = getInstructorById(id);
         instructor.setActive(active);
@@ -84,12 +106,16 @@ public class InstructorService {
         return instructor;
     }
 
+    // Finds one profile or gives a friendly missing-record error.
+    // CRUD: READ   - finds or lists instructor profiles
     public Instructor getInstructorById(String id) {
         return repository.findByIdStrict(id)
                 .orElseThrow(() -> new RecordNotFoundException(
                         "Instructor not found: " + id));
     }
 
+    // Builds a validated replacement so a bad edit cannot damage the saved profile.
+    // CRUD: UPDATE - changes an existing instructor profile
     public synchronized Instructor updateInstructor(
             String id,
             String name,
@@ -104,6 +130,8 @@ public class InstructorService {
                 existing.getVehicleTypes());
     }
 
+    // Builds a validated replacement so a bad edit cannot damage the saved profile.
+    // CRUD: UPDATE - changes an existing instructor profile
     public synchronized Instructor updateInstructor(
             String id, String name, String email, String phone,
             int yearsOfExperience, String bio, String licenseNumber,
@@ -136,14 +164,17 @@ public class InstructorService {
         return updated;
     }
 
+    // Lets callers read the instructors sorted by experience without exposing the private field.
     public List<Instructor> getInstructorsSortedByExperience() {
         return sorter.sortByExperience(repository.readAll());
     }
 
+    // Passes the chosen ordering rule to the hand-written bubble sort.
     public List<Instructor> sortInstructors(String sortBy, boolean ascending) {
         return sorter.sort(repository.readAll(), sortBy, ascending);
     }
 
+    // Prevents two instructor profiles from sharing the same email address.
     private void ensureEmailAvailable(
             String email,
             String excludedInstructorId) {

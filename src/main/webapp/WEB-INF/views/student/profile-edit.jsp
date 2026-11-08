@@ -1,4 +1,14 @@
-<%-- Module owner: IT26101135 --%>
+<%--
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : profile-edit.jsp
+WHAT IT DOES (simple words): Shows profile edit information and controls.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+--%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:url value="/css/tailwind.css" var="appCssUrl" />
@@ -24,40 +34,41 @@
     <c:if test="${not empty formError}">
         <p class="ds-profile-error" role="alert"><c:out value="${formError}" /></p>
     </c:if>
-    <form class="ds-profile-form" method="post"
+    <%-- This block shows a form with its existing field names. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
+<form class="ds-profile-form ds-card mt-6 grid gap-4 sm:grid-cols-2" method="post"
           action="<c:out value='${studentProfileEditUrl}' />">
         <input type="hidden" name="<c:out value='${csrfParameterName}' />"
                value="<c:out value='${csrfToken}' />">
         <p>
-            <label for="profile-name">Full name</label>
-            <input id="profile-name" name="name" type="text" autocomplete="name"
+            <label class="block" for="profile-name">Full name</label>
+            <input class="block w-full" id="profile-name" name="name" type="text" autocomplete="name"
                    required minlength="2" maxlength="100"
                    value="<c:out value='${profileForm.name}' />">
         </p>
         <p>
-            <label for="profile-email">Email</label>
-            <input id="profile-email" name="email" type="email" autocomplete="email"
+            <label class="block" for="profile-email">Email</label>
+            <input class="block w-full" id="profile-email" name="email" type="email" autocomplete="email"
                    required maxlength="254"
                    value="<c:out value='${profileForm.email}' />">
         </p>
         <p>
-            <label for="profile-phone">Phone number</label>
-            <input id="profile-phone" name="phone" type="tel" autocomplete="tel"
+            <label class="block" for="profile-phone">Phone number</label>
+            <input class="block w-full" id="profile-phone" name="phone" type="tel" autocomplete="tel"
                    required maxlength="16" aria-describedby="profile-phone-help"
                    value="<c:out value='${profileForm.phone}' />">
             <small id="profile-phone-help">Use 7-15 digits, optionally starting with +.</small>
         </p>
-        <p><label for="profile-nic">NIC</label>
-            <input id="profile-nic" name="nic" maxlength="12" value="<c:out value='${profileForm.nic}' />"></p>
-        <p><label for="profile-dob">Date of birth</label>
-            <input id="profile-dob" name="dateOfBirth" type="date" value="<c:out value='${profileForm.dateOfBirth}' />"></p>
-        <p><label for="profile-address">Address</label>
-            <textarea id="profile-address" name="address" maxlength="500"><c:out value="${profileForm.address}" /></textarea></p>
-        <p><label for="profile-license">License type wanted</label>
-            <input id="profile-license" name="licenseTypeWanted" maxlength="80" value="<c:out value='${profileForm.licenseTypeWanted}' />"></p>
-        <p><label for="profile-emergency">Emergency contact</label>
-            <input id="profile-emergency" name="emergencyContact" maxlength="120" value="<c:out value='${profileForm.emergencyContact}' />"></p>
-        <div class="ds-profile-actions">
+        <p><label class="block" for="profile-nic">NIC</label>
+            <input class="block w-full" id="profile-nic" name="nic" maxlength="12" value="<c:out value='${profileForm.nic}' />"></p>
+        <p><label class="block" for="profile-dob">Date of birth</label>
+            <input class="block w-full" id="profile-dob" name="dateOfBirth" type="date" value="<c:out value='${profileForm.dateOfBirth}' />"></p>
+        <p><label class="block" for="profile-address">Address</label>
+            <textarea class="block w-full" id="profile-address" name="address" maxlength="500"><c:out value="${profileForm.address}" /></textarea></p>
+        <p><label class="block" for="profile-license">License type wanted</label>
+            <input class="block w-full" id="profile-license" name="licenseTypeWanted" maxlength="80" value="<c:out value='${profileForm.licenseTypeWanted}' />"></p>
+        <p><label class="block" for="profile-emergency">Emergency contact</label>
+            <input class="block w-full" id="profile-emergency" name="emergencyContact" maxlength="120" value="<c:out value='${profileForm.emergencyContact}' />"></p>
+        <div class="ds-profile-actions flex flex-wrap items-center gap-4 sm:col-span-2">
             <button class="ds-button" type="submit">Save changes</button>
             <a href="<c:out value='${studentProfileUrl}' />">Cancel</a>
         </div>

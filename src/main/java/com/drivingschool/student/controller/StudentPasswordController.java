@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : StudentPasswordController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for student password.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.student.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
@@ -21,12 +31,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequireLogin
 @RequestMapping("/student/password")
+// SOLID: S - This class is responsible for web requests and pages.
 public class StudentPasswordController {
 
     private final AuthSessionService auth;
     private final PasswordManagementService passwords;
     private final CsrfTokenService csrf;
 
+    // Receives the helpers this class needs so each job stays separate.
     public StudentPasswordController(AuthSessionService auth,
                                      PasswordManagementService passwords,
                                      CsrfTokenService csrf) {
@@ -36,6 +48,7 @@ public class StudentPasswordController {
     }
 
     @GetMapping
+    // Handles form for this class without changing another class's job.
     public String form(HttpServletRequest request, HttpServletResponse response,
                        Model model) {
         requireStudent(request);
@@ -46,6 +59,8 @@ public class StudentPasswordController {
     }
 
     @PostMapping
+    // Handles change for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing student account
     public String change(HttpServletRequest request,
                          @RequestParam String currentPassword,
                          @RequestParam String password,
@@ -61,6 +76,7 @@ public class StudentPasswordController {
         return "redirect:/student/profile";
     }
 
+    // Refuses access unless the current account meets the require student rule.
     private void requireStudent(HttpServletRequest request) {
         if (auth.requireLogin(request).getRole() != Role.STUDENT) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,

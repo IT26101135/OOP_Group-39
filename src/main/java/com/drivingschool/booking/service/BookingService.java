@@ -1,4 +1,14 @@
-// Module owner: IT26101134
+/**
+============================================================
+MEMBER   : IT26101134 - [Name]
+MODULE   : Bookings, FIFO queue and scheduling
+FILE     : BookingService.java
+WHAT IT DOES (simple words): Applies the booking rules.
+REAL-LIFE EXAMPLE: A reception waiting line handles the oldest request first.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.booking.service;
 
 import com.drivingschool.auth.model.Role;
@@ -31,9 +41,16 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import com.drivingschool.booking.util.BookingOrder;
+import com.drivingschool.booking.util.LessonTimeOrder;
+import com.drivingschool.booking.util.PendingRequestOrder;
 
 @Service
-public class BookingService {
+// SOLID: S - This class is responsible for application rules.
+public class BookingService implements StudentBookingOperations, AdminBookingOperations {
 
     private static final Object BOOKING_LOCK = new Object();
     private static final long LESSON_MINUTES = 60;
@@ -45,6 +62,8 @@ public class BookingService {
     private final AuthSessionService auth;
     private final UserRepository users;
     private final Clock clock;
+    private final BookingOrder byLessonTime = new LessonTimeOrder();
+    private final BookingOrder byRequestTime = new PendingRequestOrder();
     @Value("${app.booking.change-cutoff-hours:24}")
     private long changeCutoffHours = 24;
     @Autowired(required = false)
@@ -52,6 +71,7 @@ public class BookingService {
     @Autowired(required = false)
     private BookingConflictChecker conflictChecker;
 
+    // Receives the helpers or validates the details needed to create this object.
     public BookingService(BookingRepository bookings,
                           LearningPackageRepository packages,
                           InstructorRepository instructors,
@@ -68,8 +88,11 @@ public class BookingService {
         this.clock = clock;
     }
 
+    // Checks the student, time and enrollment before saving a pending lesson request.
+    // CRUD: CREATE - adds a new booking and saves it
     public Booking requestLesson(HttpServletRequest request, String packageId,
                                  LocalDateTime startTime) {
+        // Step 1: Check the signed-in student before reading or changing their requests.
         User student = requireStudent(request);
         if (!(student instanceof Student profile) || !packageId.equals(profile.getActivePackageId())
                 || profile.getLessonsRemaining() < 1 || profile.getActiveEnrollmentId() == null) {
@@ -84,6 +107,7 @@ public class BookingService {
             throw new ValidationException("Choose a lesson time in the future.");
         }
 
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             LocalDateTime endTime = startTime.plusMinutes(LESSON_MINUTES);
             for (Booking existing : bookings.readAllStrict()) {
@@ -98,13 +122,17 @@ public class BookingService {
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     profile.getActiveEnrollmentId(), startTime, endTime, null, null,
                     BookingStatus.PENDING, now);
+            // Step 3: Save only after the relevant time and resource checks pass.
             bookings.save(booking);
             return booking;
         }
     }
 
+    // Checks the student, time and enrollment before saving a pending lesson request.
+    // CRUD: CREATE - adds a new booking and saves it
     public Booking requestLesson(HttpServletRequest request, String packageId,
                                  String instructorId, LocalDateTime startTime) {
+        // Step 1: Check the signed-in student before reading or changing their requests.
         User student = requireStudent(request);
         if (slotAvailability == null || startTime == null
                 || !slotAvailability.availableSlots(instructorId, startTime.toLocalDate(),
@@ -116,6 +144,7 @@ public class BookingService {
         if (!packageId.equals(((Student) student).getActivePackageId())) {
             throw new ValidationException("Select your currently active package for a lesson.");
         }
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     ((Student) student).getActiveEnrollmentId(), startTime,
@@ -125,21 +154,28 @@ public class BookingService {
             String reason = conflictChecker == null ? null
                     : conflictChecker.conflictReason(booking, instructorId, null);
             if (reason != null) throw new ValidationException(reason);
+            // Step 3: Save only after the relevant time and resource checks pass.
             bookings.save(booking);
             return booking;
         }
     }
 
+    // Lists only this student's requests in lesson-time order.
+    // CRUD: READ   - finds or lists bookings
     public List<Booking> getOwnBookings(HttpServletRequest request) {
         String studentId = requireStudent(request).getId();
-        return bookings.readAllStrict().stream()
-                .filter(booking -> booking.getStudentId().equals(studentId))
-                .sorted((left, right) -> left.getStartTime().compareTo(right.getStartTime()))
-                .toList();
+        List<Booking> own = new ArrayList<>();
+        for (Booking booking : bookings.readAllStrict()) {
+            if (booking.getStudentId().equals(studentId)) own.add(booking);
+        }
+        return byLessonTime.order(own);
     }
 
+    // Cancels an owned request only when the configured notice period permits it.
+    // CRUD: UPDATE - changes an existing booking
     public void cancelOwnBooking(HttpServletRequest request, String bookingId) {
         String studentId = requireStudent(request).getId();
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking booking = findBooking(bookingId);
             if (!booking.getStudentId().equals(studentId)) {
@@ -156,9 +192,12 @@ public class BookingService {
         }
     }
 
+    // Validates a replacement request before cancelling the old one; it joins the queue tail.
+    // CRUD: UPDATE - changes an existing booking
     public Booking rescheduleOwnBooking(HttpServletRequest request, String bookingId,
                                          LocalDateTime newStartTime) {
         String studentId = requireStudent(request).getId();
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking old = findBooking(bookingId);
             if (!old.getStudentId().equals(studentId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -188,6 +227,7 @@ public class BookingService {
             String reason = conflictChecker == null ? null
                     : conflictChecker.conflictReason(replacement, requestedInstructor, null, old.getId());
             if (reason != null) throw new ValidationException(reason);
+            // Step 4: Save the new pending request before cancelling the old request.
             bookings.save(replacement);
             old.cancel();
             bookings.update(old);
@@ -196,6 +236,8 @@ public class BookingService {
     }
 
     /** Processes only the current FIFO head, either assigning it or rejecting it with a reason. */
+    // Takes only the FIFO head for assignment and checks it again before saving.
+    // CRUD: UPDATE - changes an existing booking
     public Booking processNext(HttpServletRequest request, String instructorId, String vehicleId) {
         auth.requireAdmin(request);
         BookingRequestQueue queue = new BookingRequestQueue(bookings.readAllStrict());
@@ -204,8 +246,11 @@ public class BookingService {
         return assign(request, next.getId(), instructorId, vehicleId);
     }
 
+    // Removes only this student's already-cancelled request.
+    // CRUD: DELETE - removes a booking
     public void deleteCancelledBooking(HttpServletRequest request, String bookingId) {
         String studentId = requireStudent(request).getId();
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking booking = findBooking(bookingId);
             if (!booking.getStudentId().equals(studentId)) {
@@ -220,38 +265,69 @@ public class BookingService {
         }
     }
 
+    // Lists the unassigned FIFO queue first, followed by other bookings in time order.
+    // CRUD: READ   - finds or lists bookings
     public List<Booking> getAllBookings(HttpServletRequest request) {
         auth.requireAdmin(request);
-        List<Booking> allBookings = bookings.readAllStrict();
-        BookingRequestQueue queue = new BookingRequestQueue(allBookings);
-        List<Booking> ordered = new java.util.ArrayList<>();
-        ordered.addAll(queue.toList());
-        allBookings.stream()
-                .filter(booking -> booking.getStatus() == BookingStatus.PENDING
-                        && booking.getInstructorId() != null)
-                .sorted((left, right) -> left.getStartTime().compareTo(right.getStartTime()))
-                .forEach(ordered::add);
-        allBookings.stream()
-                .filter(booking -> booking.getStatus() != BookingStatus.PENDING)
-                .sorted((left, right) -> left.getStartTime().compareTo(right.getStartTime()))
-                .forEach(ordered::add);
+        List<Booking> all = bookings.readAllStrict();
+        List<Booking> assignedPending = new ArrayList<>();
+        List<Booking> history = new ArrayList<>();
+        for (Booking booking : all) {
+            if (booking.getStatus() != BookingStatus.PENDING) history.add(booking);
+            else if (booking.getInstructorId() != null) assignedPending.add(booking);
+        }
+        // OOP: POLYMORPHISM - Submission order protects fairness; lesson order helps read a diary.
+        List<Booking> ordered = new ArrayList<>(byRequestTime.order(all));
+        ordered.addAll(byLessonTime.order(assignedPending));
+        ordered.addAll(byLessonTime.order(history));
         return List.copyOf(ordered);
     }
 
+    // Selects the bookings matching the administrator's schedule filters.
+    // CRUD: READ   - finds or lists bookings
     public List<Booking> filterBookings(HttpServletRequest request, String from, String to,
                                         String instructorId, String vehicleId, String status) {
-        List<Booking> result = new java.util.ArrayList<>(getAllBookings(request));
-        if (from != null && !from.isBlank()) result.removeIf(b -> b.getStartTime().toLocalDate().isBefore(java.time.LocalDate.parse(from)));
-        if (to != null && !to.isBlank()) result.removeIf(b -> b.getStartTime().toLocalDate().isAfter(java.time.LocalDate.parse(to)));
-        if (instructorId != null && !instructorId.isBlank()) result.removeIf(b -> !instructorId.equals(b.getInstructorId()) && !instructorId.equals(b.getRequestedInstructorId()));
-        if (vehicleId != null && !vehicleId.isBlank()) result.removeIf(b -> !vehicleId.equals(b.getVehicleId()) && !vehicleId.equals(b.getRequestedVehicleId()));
-        if (status != null && !status.isBlank()) result.removeIf(b -> !b.getStatus().name().equalsIgnoreCase(status));
+        List<Booking> all = getAllBookings(request);
+        LocalDate firstDate = parseFilterDate(from);
+        LocalDate lastDate = parseFilterDate(to);
+        List<Booking> result = new ArrayList<>();
+        for (Booking booking : all) {
+            if (matchesFilters(booking, firstDate, lastDate, instructorId, vehicleId, status)) result.add(booking);
+        }
         return List.copyOf(result);
     }
 
+    // Turns a filter date into a date value or a friendly validation error.
+    // OOP: EXCEPTION HANDLING - A malformed filter becomes a friendly ValidationException page.
+    private LocalDate parseFilterDate(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException exception) {
+            throw new ValidationException("Choose a valid schedule filter date.");
+        }
+    }
+
+    // Checks one booking against the administrator's chosen filters.
+    private boolean matchesFilters(Booking booking, LocalDate from, LocalDate to,
+                                    String instructorId, String vehicleId, String status) {
+        LocalDate date = booking.getStartTime().toLocalDate();
+        if (from != null && date.isBefore(from)) return false;
+        if (to != null && date.isAfter(to)) return false;
+        if (instructorId != null && !instructorId.isBlank()
+                && !instructorId.equals(booking.getInstructorId())
+                && !instructorId.equals(booking.getRequestedInstructorId())) return false;
+        if (vehicleId != null && !vehicleId.isBlank() && !vehicleId.equals(booking.getVehicleId())
+                && !vehicleId.equals(booking.getRequestedVehicleId())) return false;
+        return status == null || status.isBlank() || booking.getStatus().name().equalsIgnoreCase(status);
+    }
+
+    // Checks conflicts before changing an existing confirmed lesson's resources.
+    // CRUD: UPDATE - changes an existing booking
     public Booking reassign(HttpServletRequest request, String bookingId,
                             String instructorId, String vehicleId) {
         auth.requireAdmin(request);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             String reason = conflictChecker.conflictReason(target, instructorId, vehicleId);
@@ -262,8 +338,11 @@ public class BookingService {
         }
     }
 
+    // Stores the administrator's reason when a lesson must be cancelled.
+    // CRUD: UPDATE - changes an existing booking
     public Booking forceCancel(HttpServletRequest request, String bookingId, String reason) {
         auth.requireAdmin(request);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             target.forceCancel(reason);
@@ -272,18 +351,22 @@ public class BookingService {
         }
     }
 
+    // Tells the administrator where an unassigned request sits in the FIFO line.
     public int getQueuePosition(HttpServletRequest request, String bookingId) {
         auth.requireAdmin(request);
         BookingRequestQueue queue = new BookingRequestQueue(bookings.readAllStrict());
         return queue.positionOf(bookingId);
     }
 
+    // Returns the current unassigned FIFO waiting line for the administrator.
     public List<Booking> getPendingQueue(HttpServletRequest request) {
         auth.requireAdmin(request);
         return new BookingRequestQueue(bookings.readAllStrict()).toList();
     }
 
+    // Shows a queue position only after checking the request belongs to this student.
     public int getOwnQueuePosition(HttpServletRequest request, String bookingId) {
+        // Step 1: Check the signed-in student before reading or changing their requests.
         User student = requireStudent(request);
         Booking booking = findBooking(bookingId);
         if (!booking.getStudentId().equals(student.getId())) {
@@ -293,9 +376,12 @@ public class BookingService {
         return new BookingRequestQueue(bookings.readAllStrict()).positionOf(bookingId);
     }
 
+    // Allows assignment only for the FIFO head and records any conflict reason.
+    // CRUD: UPDATE - changes an existing booking
     public Booking assign(HttpServletRequest request, String bookingId,
                           String instructorId, String vehicleId) {
         auth.requireAdmin(request);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             BookingRequestQueue queue = new BookingRequestQueue(bookings.readAllStrict());
@@ -326,8 +412,11 @@ public class BookingService {
         }
     }
 
+    // Marks a confirmed lesson complete through the booking rules.
+    // CRUD: UPDATE - changes an existing booking
     public Booking complete(HttpServletRequest request, String bookingId) {
         auth.requireAdmin(request);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             target.complete();
@@ -337,9 +426,12 @@ public class BookingService {
         }
     }
 
+    // Rechecks ownership and conflicts before the instructor confirms a lesson.
+    // CRUD: UPDATE - changes an existing booking
     public Booking acceptAssignedLesson(HttpServletRequest request, String bookingId) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.INSTRUCTOR) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             if (!user.getId().equals(target.getInstructorId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -352,9 +444,12 @@ public class BookingService {
         }
     }
 
+    // Rejects only a lesson assigned to this instructor and saves the reason.
+    // CRUD: UPDATE - changes an existing booking
     public Booking declineAssignedLesson(HttpServletRequest request, String bookingId, String reason) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.INSTRUCTOR) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             if (!user.getId().equals(target.getInstructorId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -364,6 +459,8 @@ public class BookingService {
         }
     }
 
+    // Lists lessons assigned to an active instructor in lesson-time order.
+    // CRUD: READ   - finds or lists bookings
     public List<Booking> getInstructorBookings(HttpServletRequest request) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.INSTRUCTOR) {
@@ -376,12 +473,15 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "This instructor account is inactive.");
         }
-        return bookings.readAllStrict().stream()
-                .filter(booking -> user.getId().equals(booking.getInstructorId()))
-                .sorted((left, right) -> left.getStartTime().compareTo(right.getStartTime()))
-                .toList();
+        List<Booking> assigned = new ArrayList<>();
+        for (Booking booking : bookings.readAllStrict()) {
+            if (user.getId().equals(booking.getInstructorId())) assigned.add(booking);
+        }
+        return byLessonTime.order(assigned);
     }
 
+    // Checks the instructor owns this lesson before recording completion.
+    // CRUD: UPDATE - changes an existing booking
     public Booking completeAssignedLesson(HttpServletRequest request, String bookingId) {
         User user = auth.requireLogin(request);
         if (!(user instanceof InstructorAccount)) {
@@ -394,6 +494,7 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "This instructor account is inactive.");
         }
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             if (!user.getId().equals(target.getInstructorId())) {
@@ -407,12 +508,15 @@ public class BookingService {
         }
     }
 
+    // Checks the instructor owns this lesson before recording a missed attendance.
+    // CRUD: UPDATE - changes an existing booking
     public Booking markNoShowAssignedLesson(HttpServletRequest request, String bookingId) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.INSTRUCTOR) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Instructor access is required.");
         }
+        // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             if (!user.getId().equals(target.getInstructorId())) {
@@ -425,6 +529,7 @@ public class BookingService {
         }
     }
 
+    // Refuses overlapping instructor or vehicle assignments.
     private void ensureResourceAvailable(Booking target, String instructorId,
                                          String vehicleId) {
         for (Booking existing : bookings.readAllStrict()) {
@@ -443,11 +548,13 @@ public class BookingService {
         }
     }
 
+    // Looks up one booking and reports a friendly error if it is missing.
     private Booking findBooking(String id) {
         return bookings.findByIdStrict(id)
                 .orElseThrow(() -> new RecordNotFoundException("Booking not found."));
     }
 
+    // Refuses student-only work unless the signed-in account has that role.
     private User requireStudent(HttpServletRequest request) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.STUDENT) {
@@ -457,6 +564,7 @@ public class BookingService {
         return user;
     }
 
+    // Uses one lesson only when the booking belongs to the student's active enrollment.
     private void decrementPackageLessons(Booking booking) {
         User stored = users.findByIdStrict(booking.getStudentId())
                 .orElseThrow(() -> new RecordNotFoundException("Student account not found."));

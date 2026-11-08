@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : AuthController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for auth.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.controller;
 
 import com.drivingschool.auth.form.LoginForm;
@@ -20,12 +30,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
+// SOLID: S - This class is responsible for web requests and pages.
 public class AuthController {
 
     private final AuthService authService;
     private final AuthSessionService authSessionService;
     private final CsrfTokenService csrfTokenService;
 
+    // Receives the helpers this class needs so each job stays separate.
     public AuthController(
             AuthService authService,
             AuthSessionService authSessionService,
@@ -37,6 +49,7 @@ public class AuthController {
     }
 
     @InitBinder("registrationForm")
+    // Accepts only registration fields, protecting internal account settings.
     public void configureRegistrationBinding(WebDataBinder binder) {
         binder.setAllowedFields(
                 "name", "email", "phone",
@@ -45,11 +58,13 @@ public class AuthController {
     }
 
     @InitBinder("loginForm")
+    // Accepts only login fields from the browser.
     public void configureLoginBinding(WebDataBinder binder) {
         binder.setAllowedFields("email", "password");
     }
 
     @GetMapping("/register")
+    // Prepares the registration page and its existing form details.
     public String showRegistration(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -66,6 +81,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    // Accepts the registration form and explains any information that needs correcting.
+    // CRUD: CREATE - adds a new student account and saves it
     public String register(
             @ModelAttribute("registrationForm") RegistrationForm form,
             HttpServletRequest request,
@@ -111,6 +128,8 @@ public class AuthController {
     }
 
     @GetMapping("/login")
+    // Prepares the login page and its existing form details.
+    // CRUD: READ   - finds or lists student accounts
     public String showLogin(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -127,6 +146,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    // Checks credentials before opening an account session.
     public String login(
             @ModelAttribute("loginForm") LoginForm form,
             HttpServletRequest request,
@@ -164,11 +184,12 @@ public class AuthController {
             }
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            String message = switch (result) {
-                case PENDING_APPROVAL -> "Your account is waiting for administrator approval.";
-                case SUSPENDED -> "This account is suspended. Contact the school administrator.";
-                default -> "Email or password is incorrect.";
-            };
+            String message = "Email or password is incorrect.";
+            if (result == LoginResult.PENDING_APPROVAL) {
+                message = "Your account is waiting for administrator approval.";
+            } else if (result == LoginResult.SUSPENDED) {
+                message = "This account is suspended. Contact the school administrator.";
+            }
             model.addAttribute("formError", message);
 
             // Failed login invalidates the old session.
@@ -180,6 +201,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    // Closes the session so this browser no longer acts as the signed-in user.
     public String logout(
             HttpServletRequest request,
             HttpServletResponse response) {
@@ -189,6 +211,7 @@ public class AuthController {
         return "redirect:/login?loggedOut";
     }
 
+    // Handles registration page for this class without changing another class's job.
     private String registrationPage(
             HttpServletRequest request,
             Model model) {
@@ -197,6 +220,7 @@ public class AuthController {
         return "auth/register";
     }
 
+    // Handles login page for this class without changing another class's job.
     private String loginPage(
             HttpServletRequest request,
             Model model) {
@@ -205,6 +229,7 @@ public class AuthController {
         return "auth/login";
     }
 
+    // Handles add csrf attributes for this class without changing another class's job.
     private void addCsrfAttributes(
             HttpServletRequest request,
             Model model) {

@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : AuthSessionService.java
+WHAT IT DOES (simple words): Applies the rules for auth session.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.Role;
@@ -14,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class AuthSessionService {
 
     private static final String USER_ID_ATTRIBUTE =
@@ -24,6 +35,7 @@ public class AuthSessionService {
     private final AuthService authService;
     private final UserRepository userRepository;
 
+    // Receives the helpers this class needs so each job stays separate.
     public AuthSessionService(
             AuthService authService,
             UserRepository userRepository) {
@@ -32,6 +44,7 @@ public class AuthSessionService {
         this.userRepository = userRepository;
     }
 
+    // Checks credentials before opening an account session.
     public boolean login(
             HttpServletRequest request,
             String email,
@@ -41,6 +54,7 @@ public class AuthSessionService {
                 == LoginResult.SUCCESS;
     }
 
+    // Checks the password and account status before creating a fresh session.
     public LoginResult loginWithResult(
             HttpServletRequest request,
             String email,
@@ -73,6 +87,7 @@ public class AuthSessionService {
         return LoginResult.SUCCESS;
     }
 
+    // Reloads the account so deleted or suspended users lose access promptly.
     public Optional<User> getCurrentUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -113,16 +128,18 @@ public class AuthSessionService {
         return currentUser;
     }
 
+    // Handles is logged in for this class without changing another class's job.
     public boolean isLoggedIn(HttpServletRequest request) {
         return getCurrentUser(request).isPresent();
     }
 
+    // Handles is admin for this class without changing another class's job.
     public boolean isAdmin(HttpServletRequest request) {
-        return getCurrentUser(request)
-                .map(user -> user.getRole() == Role.ADMIN)
-                .orElse(false);
+        Optional<User> user = getCurrentUser(request);
+        return user.isPresent() && user.get().getRole() == Role.ADMIN;
     }
 
+    // Refuses access unless the current account meets the require login rule.
     public User requireLogin(HttpServletRequest request) {
         return getCurrentUser(request)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -131,6 +148,7 @@ public class AuthSessionService {
                 ));
     }
 
+    // Refuses access unless the current account meets the require admin rule.
     public User requireAdmin(HttpServletRequest request) {
         User user = requireLogin(request);
 
@@ -144,6 +162,7 @@ public class AuthSessionService {
         return user;
     }
 
+    // Closes the session so this browser no longer acts as the signed-in user.
     public void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 

@@ -1,4 +1,14 @@
-// Module owner: IT26101134
+/**
+============================================================
+MEMBER   : IT26101134 - [Name]
+MODULE   : Bookings, FIFO queue and scheduling
+FILE     : BookingConflictChecker.java
+WHAT IT DOES (simple words): Applies the booking conflict checker rules.
+REAL-LIFE EXAMPLE: A reception waiting line handles the oldest request first.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.booking.service;
 
 import com.drivingschool.auth.repository.UserRepository;
@@ -25,10 +35,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import com.drivingschool.auth.model.User;
+import com.drivingschool.instructor.model.InstructorLeave;
 import java.util.Locale;
 
 /** Central server-side rules for deciding whether a lesson can be confirmed. */
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class BookingConflictChecker {
     private final BookingRepository bookings;
     private final AvailabilityRepository availability;
@@ -39,6 +52,7 @@ public class BookingConflictChecker {
     private final UserRepository users;
     private final Clock clock;
 
+    // Receives the helpers or validates the details needed to create this object.
     public BookingConflictChecker(BookingRepository bookings,
                                   AvailabilityRepository availability,
                                   InstructorLeaveRepository leaves,
@@ -57,17 +71,20 @@ public class BookingConflictChecker {
     }
 
     /** Returns null when every applicable check passes; otherwise returns the first reason. */
+    // Returns a clear reason if a student, instructor or vehicle cannot use this lesson slot.
     public String conflictReason(Booking target, String instructorId, String vehicleId) {
         return conflictReason(target, instructorId, vehicleId, null);
     }
 
+    // Returns a clear reason if a student, instructor or vehicle cannot use this lesson slot.
     public String conflictReason(Booking target, String instructorId, String vehicleId,
                                  String ignoredBookingId) {
         LocalDateTime start = target.getStartTime();
         LocalDateTime end = target.getEndTime();
         if (!start.isAfter(LocalDateTime.now(clock))) return "The lesson time must be in the future.";
 
-        var student = users.findByIdStrict(target.getStudentId())
+        // Step 1: Check the student still has the enrollment needed for this request.
+        User student = users.findByIdStrict(target.getStudentId())
                 .orElseThrow(() -> new RecordNotFoundException("Student account not found."));
         if (!(student instanceof Student profile) || profile.getLessonsRemaining() <= 0
                 || profile.getActiveEnrollmentId() == null
@@ -79,28 +96,16 @@ public class BookingConflictChecker {
                 .orElseThrow(() -> new RecordNotFoundException("Active package not found."));
         if (!learningPackage.isActive()) return "The student's learning package is inactive.";
 
+        // Step 2: Check the instructor is active, working, present and qualified.
         Instructor instructor = instructors.findByIdStrict(instructorId)
                 .orElseThrow(() -> new RecordNotFoundException("Instructor not found."));
         if (!instructor.isActive()) return "The selected instructor is inactive.";
-        boolean working = availability.readAllStrict().stream().anyMatch(block ->
-                block.getInstructorId().equals(instructorId)
-                        && block.getDayOfWeek() == start.getDayOfWeek()
-                        && !start.toLocalTime().isBefore(block.getStartTime())
-                        && !end.toLocalTime().isAfter(block.getEndTime()));
-        if (!working) return "The instructor is not working at the selected time.";
-        if (leaves.readAllStrict().stream().anyMatch(leave ->
-                leave.getInstructorId().equals(instructorId)
-                        && leave.getDate().equals(start.toLocalDate()))) {
-            return "The instructor is on leave on that date.";
-        }
-
+        if (!isWorking(instructorId, start, end)) return "The instructor is not working at the selected time.";
+        if (isOnLeave(instructorId, start)) return "The instructor is on leave on that date.";
         PackageType type = learningPackage.getType();
-        if (!instructor.getVehicleTypes().isEmpty()
-                && instructor.getVehicleTypes().stream().map(s -> s.toUpperCase(Locale.ROOT))
-                .noneMatch(s -> s.contains(type.name()))) {
-            return "The instructor is not qualified for this package vehicle type.";
-        }
+        if (!isQualified(instructor, type)) return "The instructor is not qualified for this package vehicle type.";
 
+        // Step 3: If a vehicle is being assigned, check its status and course type.
         Vehicle vehicle = null;
         if (vehicleId != null) {
             vehicle = vehicles.findByIdStrict(vehicleId)
@@ -111,6 +116,7 @@ public class BookingConflictChecker {
             if (!matches(type, vehicle)) return "The vehicle type does not match the learning package.";
         }
 
+        // Step 4: Keep the student, instructor and vehicle free of overlapping promises.
         for (Booking other : bookings.readAllStrict()) {
             if (other.getId().equals(target.getId()) || other.getId().equals(ignoredBookingId)
                     || !active(other.getStatus())
@@ -124,18 +130,45 @@ public class BookingConflictChecker {
         return null;
     }
 
+    // Checks whether a booking still reserves time in the schedule.
     private boolean active(BookingStatus status) {
         return status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED;
     }
 
+    // Keeps the is working step in one place for this module.
+    private boolean isWorking(String instructorId, LocalDateTime start, LocalDateTime end) {
+        if (!start.toLocalDate().equals(end.toLocalDate())) return false;
+        for (Availability block : availability.readAllStrict()) {
+            if (block.getInstructorId().equals(instructorId) && block.getDayOfWeek() == start.getDayOfWeek()
+                    && !start.toLocalTime().isBefore(block.getStartTime())
+                    && !end.toLocalTime().isAfter(block.getEndTime())) return true;
+        }
+        return false;
+    }
+
+    // Checks the saved day-off list before offering times.
+    private boolean isOnLeave(String instructorId, LocalDateTime start) {
+        for (InstructorLeave leave : leaves.readAllStrict()) {
+            if (leave.getInstructorId().equals(instructorId) && leave.getDate().equals(start.toLocalDate())) return true;
+        }
+        return false;
+    }
+
+    // Keeps the is qualified step in one place for this module.
+    private boolean isQualified(Instructor instructor, PackageType type) {
+        if (instructor.getVehicleTypes().isEmpty()) return true;
+        for (String taughtType : instructor.getVehicleTypes()) {
+            if (taughtType.toUpperCase(Locale.ROOT).contains(type.name())) return true;
+        }
+        return false;
+    }
+
+    // Checks whether the vehicle category and transmission fit the chosen course.
     private boolean matches(PackageType type, Vehicle vehicle) {
-        return switch (type) {
-            case MOTORCYCLE -> vehicle.getVehicleCategory() == VehicleCategory.MOTORCYCLE;
-            case MANUAL -> vehicle.getVehicleCategory() == VehicleCategory.CAR
-                    && vehicle.getTransmissionType() == TransmissionType.MANUAL;
-            case AUTOMATIC -> vehicle.getVehicleCategory() == VehicleCategory.CAR
-                    && vehicle.getTransmissionType() == TransmissionType.AUTOMATIC;
-            case REFRESHER -> vehicle.getVehicleCategory() == VehicleCategory.CAR;
-        };
+        if (type == PackageType.MOTORCYCLE) return vehicle.getVehicleCategory() == VehicleCategory.MOTORCYCLE;
+        if (vehicle.getVehicleCategory() != VehicleCategory.CAR) return false;
+        if (type == PackageType.MANUAL) return vehicle.getTransmissionType() == TransmissionType.MANUAL;
+        if (type == PackageType.AUTOMATIC) return vehicle.getTransmissionType() == TransmissionType.AUTOMATIC;
+        return type == PackageType.REFRESHER;
     }
 }

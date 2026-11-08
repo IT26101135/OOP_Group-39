@@ -1,6 +1,16 @@
-<%-- Module owner: IT26101137 --%>
+<%--
+============================================================
+MEMBER   : IT26101137 - [Name]
+MODULE   : Reviews and Reports
+FILE     : review-tabs.jspf
+WHAT IT DOES (simple words): Keeps reviews and reports details clear and safe for the school.
+REAL-LIFE EXAMPLE: Like a feedback book and a school manager counting its records.
+OOP USED : See labelled classes and methods below; presentation files display their results
+CRUD     : CREATE, READ, UPDATE, DELETE for reviews; reports READ saved data
+============================================================
+--%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="st" value="${param.status}"/>
+<c:set var="st" value="${filterStatus}"/>
 <nav class="ds-filter-pills" aria-label="Review status filter">
   <a class="ds-filter-pill${empty st ? ' is-active' : ''}" href="<c:url value='/admin/reviews'/>"${empty st ? ' aria-current="page"' : ''}>All</a>
   <a class="ds-filter-pill${st eq 'PENDING' ? ' is-active' : ''}" href="<c:url value='/admin/reviews?status=PENDING'/>"${st eq 'PENDING' ? ' aria-current="page"' : ''}>Pending</a>

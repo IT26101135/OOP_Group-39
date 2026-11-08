@@ -1,9 +1,19 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : InstructorAvailabilityController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for instructor availability.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.instructor.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
 import com.drivingschool.auth.service.CsrfTokenService;
-import com.drivingschool.instructor.service.InstructorScheduleService;
+import com.drivingschool.instructor.service.InstructorScheduleOperations;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -20,17 +30,22 @@ import java.time.LocalTime;
 @Controller
 @RequireLogin
 @RequestMapping("/instructor/availability")
+// SOLID: S - This class is responsible for web requests and page data.
 public class InstructorAvailabilityController {
-    private final InstructorScheduleService scheduleService;
+    // SOLID: D - Receive schedule operations through their small interface.
+    private final InstructorScheduleOperations scheduleService;
     private final CsrfTokenService csrf;
 
-    public InstructorAvailabilityController(InstructorScheduleService scheduleService,
+    // Receives the helpers or validates the details needed to create this object.
+    public InstructorAvailabilityController(InstructorScheduleOperations scheduleService,
                                             CsrfTokenService csrf) {
         this.scheduleService = scheduleService;
         this.csrf = csrf;
     }
 
     @GetMapping
+    // Loads saved working hours and leave for the signed-in instructor.
+    // CRUD: READ   - finds or lists availability blocks
     public String page(HttpServletRequest request, HttpServletResponse response,
                        Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -43,6 +58,8 @@ public class InstructorAvailabilityController {
     }
 
     @PostMapping
+    // Accepts a new weekly working-hours form.
+    // CRUD: CREATE - adds a new availability block and saves it
     public String addBlock(HttpServletRequest request,
                            @RequestParam DayOfWeek dayOfWeek,
                            @RequestParam LocalTime startTime,
@@ -54,6 +71,8 @@ public class InstructorAvailabilityController {
     }
 
     @PostMapping("/leave")
+    // Records a future day off after checking for duplicate leave and confirmed lessons.
+    // CRUD: CREATE - adds a new leave record and saves it
     public String addLeave(HttpServletRequest request,
                            @RequestParam LocalDate date,
                            @RequestParam String reason,
@@ -63,7 +82,30 @@ public class InstructorAvailabilityController {
         return "redirect:/instructor/availability";
     }
 
+    @PostMapping("/update")
+    // Accepts edits to one weekly block and lets the service enforce ownership.
+    // CRUD: UPDATE - changes an existing availability block
+    public String updateBlock(HttpServletRequest request, @RequestParam String id,
+            @RequestParam DayOfWeek dayOfWeek, @RequestParam LocalTime startTime,
+            @RequestParam LocalTime endTime, RedirectAttributes flash) {
+        scheduleService.updateAvailability(request, id, dayOfWeek, startTime, endTime);
+        flash.addFlashAttribute("success", "Working hours updated.");
+        return "redirect:/instructor/availability";
+    }
+
+    @PostMapping("/leave/update")
+    // Changes an owned leave record after checking its new date is safe.
+    // CRUD: UPDATE - changes an existing leave record
+    public String updateLeave(HttpServletRequest request, @RequestParam String id,
+            @RequestParam LocalDate date, @RequestParam String reason, RedirectAttributes flash) {
+        scheduleService.updateLeave(request, id, date, reason);
+        flash.addFlashAttribute("success", "Leave day updated.");
+        return "redirect:/instructor/availability";
+    }
+
     @PostMapping("/delete")
+    // Keeps the delete block step in one place for this module.
+    // CRUD: DELETE - removes a availability block
     public String deleteBlock(HttpServletRequest request,
                               @RequestParam String id,
                               RedirectAttributes flash) {
@@ -73,6 +115,8 @@ public class InstructorAvailabilityController {
     }
 
     @PostMapping("/leave/delete")
+    // Removes only a leave record belonging to this instructor.
+    // CRUD: DELETE - removes a leave record
     public String deleteLeave(HttpServletRequest request,
                               @RequestParam String id,
                               RedirectAttributes flash) {

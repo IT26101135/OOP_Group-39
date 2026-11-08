@@ -1,4 +1,15 @@
-<%-- Module owner: IT26101136 --%>
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : status-badge.jspf
+WHAT IT DOES (simple words): Shows the shared status badge block.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- This block shows status badge. The including page controller supplies this block through model attributes. --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="badgeStatus" value="${status}" />
 <span class="ds-status-badge" data-status="<c:out value='${badgeStatus}' />"><c:out value="${badgeStatus}" /></span>

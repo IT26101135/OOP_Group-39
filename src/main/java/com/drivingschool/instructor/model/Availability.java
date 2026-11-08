@@ -1,4 +1,14 @@
-// Module owner: IT26101133
+/**
+============================================================
+MEMBER   : IT26101133 - [Name]
+MODULE   : Instructors and bubble sort
+FILE     : Availability.java
+WHAT IT DOES (simple words): Keeps the details and validation rules of availability.
+REAL-LIFE EXAMPLE: A teacher diary keeps teaching hours, lesson notes and profile details organised.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.instructor.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -9,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
+// OOP: ENCAPSULATION - Private fields protect details; constructors and methods validate changes.
 public class Availability implements Identifiable {
     private final String id;
     private final String instructorId;
@@ -17,6 +28,7 @@ public class Availability implements Identifiable {
     private final LocalTime endTime;
 
     @JsonCreator
+    // Receives the helpers or validates the details needed to create this object.
     public Availability(@JsonProperty("id") String id,
                         @JsonProperty("instructorId") String instructorId,
                         @JsonProperty("dayOfWeek") DayOfWeek dayOfWeek,
@@ -34,9 +46,14 @@ public class Availability implements Identifiable {
         this.endTime = endTime;
     }
 
+    // Lets callers read the id without exposing the private field.
     @Override public String getId() { return id; }
+    // Lets callers read the instructor id without exposing the private field.
     public String getInstructorId() { return instructorId; }
+    // Lets callers read the day of week without exposing the private field.
     public DayOfWeek getDayOfWeek() { return dayOfWeek; }
+    // Lets callers read the start time without exposing the private field.
     public LocalTime getStartTime() { return startTime; }
+    // Lets callers read the end time without exposing the private field.
     public LocalTime getEndTime() { return endTime; }
 }

@@ -1,0 +1,20 @@
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : tabs.jspf
+WHAT IT DOES (simple words): Lets readers choose between two sections.
+REAL-LIFE EXAMPLE: Two labelled dividers in a school information folder.
+OOP USED : Not applicable (shared presentation)
+CRUD     : READ (organises information from the page controller)
+============================================================
+--%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- The including page controller supplies the panel content.
+     Before including, set tabsLabel, firstTabTitle, secondTabTitle,
+     firstPanelId and secondPanelId to unique panel IDs on that page.
+     Keep both panel sections visible in HTML for readers without JavaScript. --%>
+<nav data-tabs aria-label="<c:out value='${tabsLabel}' />" class="ds-filter-pills">
+    <a class="ds-filter-pill" data-tab-target="<c:out value='${firstPanelId}' />" href="#<c:out value='${firstPanelId}' />"><c:out value="${firstTabTitle}" /></a>
+    <a class="ds-filter-pill" data-tab-target="<c:out value='${secondPanelId}' />" href="#<c:out value='${secondPanelId}' />"><c:out value="${secondTabTitle}" /></a>
+</nav>

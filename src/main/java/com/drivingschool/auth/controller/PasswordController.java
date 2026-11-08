@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : PasswordController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for password.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.controller;
 
 import com.drivingschool.auth.service.CsrfTokenService;
@@ -13,11 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
+// SOLID: S - This class is responsible for web requests and pages.
 public class PasswordController {
 
     private final PasswordManagementService passwords;
     private final CsrfTokenService csrf;
 
+    // Receives the helpers this class needs so each job stays separate.
     public PasswordController(PasswordManagementService passwords,
                               CsrfTokenService csrf) {
         this.passwords = passwords;
@@ -25,12 +37,14 @@ public class PasswordController {
     }
 
     @GetMapping("/forgot-password")
+    // Handles forgot page for this class without changing another class's job.
     public String forgotPage(HttpServletRequest request, Model model) {
         addCsrf(request, model);
         return "auth/forgot-password";
     }
 
     @PostMapping("/forgot-password")
+    // Handles request reset for this class without changing another class's job.
     public String requestReset(HttpServletRequest request,
                                @RequestParam String email, Model model) {
         String token = passwords.createResetToken(email);
@@ -43,6 +57,7 @@ public class PasswordController {
     }
 
     @PostMapping("/reset-password")
+    // Handles reset password for this class without changing another class's job.
     public String resetPassword(HttpServletRequest request,
                                 @RequestParam String email,
                                 @RequestParam String token,
@@ -62,6 +77,7 @@ public class PasswordController {
         }
     }
 
+    // Handles add csrf for this class without changing another class's job.
     private void addCsrf(HttpServletRequest request, Model model) {
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrf.getOrCreateToken(request));

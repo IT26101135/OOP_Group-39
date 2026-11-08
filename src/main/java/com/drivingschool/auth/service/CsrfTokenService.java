@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : CsrfTokenService.java
+WHAT IT DOES (simple words): Applies the rules for csrf token.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.service;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +21,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class CsrfTokenService {
 
     public static final String PARAMETER_NAME = "_csrf";
@@ -26,6 +37,7 @@ public class CsrfTokenService {
      * Gets the session's token, creating an anonymous session and token
      * when a form needs them.
      */
+    // Shares the or create token through a public method while the field stays private.
     public String getOrCreateToken(HttpServletRequest request) {
         HttpSession session = request.getSession(true);
 
@@ -52,6 +64,7 @@ public class CsrfTokenService {
      * Validates a submitted form token without creating a session.
      * Missing, malformed or duplicate token parameters are rejected.
      */
+    // Handles is valid for this class without changing another class's job.
     public boolean isValid(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -87,6 +100,7 @@ public class CsrfTokenService {
         }
     }
 
+    // Handles has valid format for this class without changing another class's job.
     private boolean hasValidFormat(String token) {
         return token != null
                 && token.matches("[A-Za-z0-9_-]{43}");

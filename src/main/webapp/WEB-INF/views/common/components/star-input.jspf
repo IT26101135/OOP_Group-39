@@ -1,4 +1,14 @@
-<%-- Module owner: IT26101137 --%>
+<%--
+============================================================
+MEMBER   : IT26101137 - [Name]
+MODULE   : Reviews and Reports
+FILE     : star-input.jspf
+WHAT IT DOES (simple words): Keeps reviews and reports details clear and safe for the school.
+REAL-LIFE EXAMPLE: Like a feedback book and a school manager counting its records.
+OOP USED : See labelled classes and methods below; presentation files display their results
+CRUD     : CREATE, READ, UPDATE, DELETE for reviews; reports READ saved data
+============================================================
+--%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
   Star rating input — radio-based, accessible, keeps value on validation error.
@@ -16,12 +26,12 @@
     <c:forEach var="i" begin="1" end="5">
       <c:set var="star" value="${6 - i}"/>
       <input type="radio"
-             id="${ratingFieldName}-star-${star}"
+             id="${empty ratingFieldId ? ratingFieldName : ratingFieldId}-star-${star}"
              name="${ratingFieldName}"
              value="${star}"
              <c:if test="${ratingValue eq star}">checked</c:if>
              required>
-      <label for="${ratingFieldName}-star-${star}" aria-label="${star} out of 5 stars">★</label>
+      <label for="${empty ratingFieldId ? ratingFieldName : ratingFieldId}-star-${star}" aria-label="${star} out of 5 stars">&#9733;</label>
     </c:forEach>
   </div>
 </fieldset>

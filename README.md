@@ -1,5 +1,7 @@
 # DriveSpark Academy
 
+Documentation owner: **IT26101135 - [Name]**. Member names remain placeholders until supplied by the team.
+
 
 Driving school registration and scheduling system for SE1020 Object Oriented Programming.
 
@@ -49,11 +51,11 @@ Spring annotations connect some classes automatically. `@SpringBootApplication` 
 - Authentication uses BCrypt hashes, server-side account statuses, sessions, role guards, CSRF checks, and simulated password reset tokens. New student accounts wait for admin approval.
 - Students can edit profiles, enroll in one active package, view lesson balance/progress, request an available one-hour instructor slot, see FIFO position, cancel/reschedule under the 24-hour rule, and review a completed lesson once.
 - Instructors can manage weekly availability and leave, accept/decline assigned requests, record attendance, lesson notes and skill scores, and view their reviews.
-- Admins can manage students, instructors, packages and vehicles; process the FIFO request queue; reassign and force-cancel bookings; moderate reviews; and view report tables/CSV.
+- Admins can manage students, instructors, packages and vehicles; process the FIFO request queue; reassign and force-cancel bookings; moderate reviews; and view report tables, animated SVG charts, CSV exports and a white print layout.
 - Booking creation and processing share `BookingConflictChecker`; it checks enrollment, future time, instructor schedule/leave and conflicts, student overlap, vehicle status/type and vehicle overlap.
 - Records are persisted as JSON Lines files through `FileRepository<T>` under `app.data-directory` (default `./data`).
 
-Known limits: there is no payment gateway, email reset delivery, relational database, durable transaction layer, pagination, activity log, or report chart. The demo loader expects a clean data directory on its first run. The protected URL matrix has automated coverage for representative routes, but a complete manual browser audit across every listed URL and role remains to be recorded. See `REPORT.md` and `docs/TEST_CHECKLIST.md`.
+Known limits: there is no payment gateway, email reset delivery, relational database, durable transaction layer, pagination, or activity log. The demo loader expects a clean data directory on its first run. The protected URL matrix has automated coverage for representative routes, but a complete manual browser audit across every listed URL and role remains to be recorded. See `REPORT.md` and `docs/TEST_CHECKLIST.md`.
 
 ### Demo seed and sample logins
 
@@ -62,7 +64,7 @@ The repeat-safe fixture runner starts only when `DRIVESPARK_DEMO_SEED_ENABLED=tr
 ```powershell
 $env:DRIVESPARK_DEMO_SEED_ENABLED = "true"
 $env:DRIVESPARK_ADMIN_SEED_ENABLED = "false"
-$env:APP_DATA_DIRECTORY = ".\data-demo"
+$env:APP_DATA_DIRECTORY = Join-Path $env:TEMP "drivespark-viva-demo"
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -70,9 +72,9 @@ All seeded users use `DriveSpark123!`:
 
 - Admin: `admin@drivingschool.test`
 - Instructors: `instructor1@drivingschool.test` through `instructor5@drivingschool.test`
-- Students: `student1@drivingschool.test` through `student10@drivingschool.test` (students 1?7 Active, 8?9 Pending, 10 Suspended)
+- Students: `student1@drivingschool.test` through `student10@drivingschool.test` (students 1–7 Active, 8–9 Pending, 10 Suspended)
 
-The fixtures contain 6 packages, 6 vehicles, 7 paid enrollments, 15 bookings and 10 reviews. The seed idempotency test runs the loader twice and checks stable record counts. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo.
+The fixtures contain 6 packages, 6 vehicles, 7 paid enrollments, 15 bookings and 10 reviews. The seed idempotency test runs the loader twice and checks stable record counts. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo. The first seed expects a fresh isolated data directory; do not seed over real coursework records. Names such as `DemoMake` and placeholder contact/social links are demonstration content, not real businesses or destinations.
 
 ### Module folders and owners
 
@@ -96,7 +98,7 @@ Automated tests are under `src/test/java`. To run the full verification suite on
 ## Team workflow
 
 - `main` is for stable releases; `develop` is the integration branch.
-- Create `feature/ITxxxxxxxx-topic` branches from `develop` and open pull requests into `develop`.
+- The project lead performs all Git operations. The member branch/PR plan is produced after Phase 6; this documentation does not run Git commands.
 - Coordinate changes to shared APIs and storage rules in `CONTRACTS.md` with the team before merging.
 - Do not push directly to `main` after the initial setup. Use your own Git identity.
 
@@ -148,19 +150,26 @@ Then run the app as usual with `.\mvnw.cmd spring-boot:run`. Tailwind configurat
 
 | Token | Value | Use |
 |---|---|---|
-| Page | `#0B1120` | Deep navy-charcoal background |
-| Surface / raised | `#111827` / `#1F2937` | Cards and controls |
-| Primary / hover | `#6366F1` / `#818CF8` | Indigo brand accents and focus |
-| Accent / hover | `#F59E0B` / `#FBBF24` | Warm highlights |
-| Main / secondary text | `#F1F5F9` / `#94A3B8` | Body copy and labels |
-| Muted token | `#64748B` | Decorative-only token; too low contrast for normal text on the page background |
-| Feedback | `#22C55E`, `#F59E0B`, `#EF4444`, `#38BDF8` | Success, warning, danger and info |
+| Page | `#050505` | Near-black page background |
+| Surface / raised | `#0A0A0A` / `#171717` | Quiet surfaces and controls |
+| Primary / hover | `#F59E0B` / `#FBBF24` | Primary actions and small warning highlights |
+| Main text | `#FFFFFF` | Headings and important values |
+| Body / secondary text | `#D4D4D4` / `#A3A3A3` | Paragraphs, labels and supporting information |
+| Divider / field border | `#262626` / `#525252` | Thin separators and form outlines |
 
-The page background, main text and secondary text have contrast ratios above WCAG AA for normal text. `#64748B` is retained as a design token but should only be used for non-text decoration; use `text-slate-400` for readable muted copy. Gradient action buttons use lighter indigo/sky fills with dark text so their labels stay legible. Font stacks prefer Inter and Poppins/Plus Jakarta Sans when locally available, then system UI. No remote fonts are loaded, so font rendering works offline.
+The design uses one local variable font: **Inter**, served as `DriveSpark Inter` from `static/css/inter-latin-variable.woff2`. Its unmodified SIL Open Font License is beside it in `INTER_LICENSE.txt`. The font was copied from the npm package `@fontsource-variable/inter` version **5.3.0**; there is no runtime font CDN request and no additional npm dependency to install for it. The framework build remains Tailwind CSS 3.4.17.
+
+Headings use a light-to-medium weight and responsive sizes up to 88px. Shared focus outlines are white with an offset; amber stays restrained. Reduced motion disables the hero zoom, parallax, smooth scrolling and reveal animation. Essential content and native links/forms remain usable without JavaScript. Contrast measurements and automated accessibility results describe the checked states, not a WCAG certification.
 
 ### Shared pieces and assets
 
-`common/navbar.jspf` owns the responsive role-aware navigation, `common/dashboard-sidebar.jspf` supplies the dashboard sidebar/mobile drawer, and `common/footer.jspf` owns the footer and shared toast/confirmation dialog. Reusable view fragments are in `common/components/`; shared component styles (`ds-button`, cards, inputs, tables, badges, alerts and page containers) are in `app.css`. `images/logo.svg` is the header/footer brand mark, `images/logo-icon.svg` is a compact brand icon, `images/favicon.svg` is the tab icon, `images/hero-night-road.svg` is the local home illustration, and `images/error-road.svg` illustrates error pages. Add real photos using the paths and accessibility guidance in `src/main/resources/static/images/README.md`.
+`common/navbar.jspf` owns the role-aware navigation, `common/dashboard-sidebar.jspf` supplies the workspace rail/native mobile menu, and `common/footer.jspf` supplies the black footer and shared toast/confirmation dialog. Reusable fragments live in `common/components/`; shared styles live in `app.css`. Rebuild `tailwind.css` after changing CSS or JSP classes.
+
+The current header and footer use our HTML text wordmark. Home and About use original CSS road scenery and gradients; `images/favicon.svg` is our own monochrome car icon. Earlier local `logo.svg`, `logo-icon.svg`, `hero-night-road.svg` and `error-road.svg` assets remain available; the error illustration is still used. No Rivian logo, media, font file, icon or code is included.
+
+The [image guide](src/main/resources/static/images/README.md) lists eight optional photo filenames and the current fallback credit for each. No photo is shipped or requested by default, so absent optional photos do not create 404 requests. Download and credit any future photo locally before adding its CSS reference.
+
+The home spotlight displays the first active package from existing data; it implies no discount. Its review carousel reads only the approved public review page, copies text safely, and has manual Previous/Next controls plus a normal-link fallback. Location and opening hours are clearly marked placeholders.
 
 ### Reusable JSP fragment examples
 
@@ -171,6 +180,7 @@ Fragments are static JSP includes. Set their expected variables immediately befo
 <%@ include file="/WEB-INF/views/common/components/status-badge.jspf" %>
 
 <c:set var="ratingFieldName" value="rating" />
+<c:set var="ratingFieldId" value="review-${review.id}-rating" />
 <c:set var="ratingLabel" value="Instructor rating" />
 <c:set var="ratingValue" value="${param.rating}" />
 <%@ include file="/WEB-INF/views/common/components/star-input.jspf" %>
@@ -182,11 +192,75 @@ Fragments are static JSP includes. Set their expected variables immediately befo
 
 `confirm-dialog.jspf` is included by the shared footer; mark the existing POST form with `data-confirm="Delete this record?"` to request confirmation. The native dialog supports keyboard dismissal and then submits that same form. `toasts.jspf` renders the existing `success`, `message`, `formError`, and `error` model attributes. `review-tabs.jspf` supplies admin moderation filter links. `star-display.jspf` uses `ratingValue` (including decimal averages); `skeleton.jspf`, `search-bar.jspf`, `pagination.jspf`, and `breadcrumbs.jspf` provide shared structures for pages that support those interactions.
 
-### Credits
+### Credits and licenses
 
-- Tailwind CSS CLI, configuration and utility framework: [Tailwind CSS v3 documentation](https://v3.tailwindcss.com/docs/installation).
-- No Tailwind UI, Flowbite, HyperUI, Preline, daisyUI, paid templates or copied template blocks were used. The JSP layouts, component styles and SVG illustrations in this project were written for DriveSpark Academy.
+| Source | Used here | License / attribution |
+|---|---|---|
+| [Tailwind CSS 3.4.17](https://github.com/tailwindlabs/tailwindcss/tree/v3.4.17) and [v3 documentation](https://v3.tailwindcss.com/docs/installation) | Local CLI, utilities and responsive/focus patterns adapted into project components | MIT; copyright Tailwind Labs, Inc. See the [upstream license](https://github.com/tailwindlabs/tailwindcss/blob/v3.4.17/LICENSE) and included [license notice](docs/TAILWIND_LICENSE.txt). |
+| [Inter](https://github.com/rsms/inter), distributed through [Fontsource](https://fontsource.org/fonts/inter) (`@fontsource-variable/inter` 5.3.0) | Local `inter-latin-variable.woff2`, copied from the package's `inter-latin-wght-normal.woff2` | Copyright 2016 The Inter Project Authors. SIL Open Font License 1.1; [included unmodified license](src/main/resources/static/css/INTER_LICENSE.txt). |
+| DriveSpark JSP layouts, `ds-*` CSS, vanilla JS, CSS landscapes and local SVG assets | Coursework-specific components, text and original artwork | File headers identify the team owner. No third-party template or photo is claimed as project-authored. |
+| [Rivian](https://rivian.com/) | Visual inspiration for restrained typography, open spacing and cinematic section proportions | Inspiration only. No Rivian assets, text, font files, icons, media or code were copied or bundled. |
+
+No paid Tailwind UI code, CDN scripts or hot-linked media are bundled. No Unsplash/Pexels photo is currently shipped; future downloads need a photographer, original page URL, license URL, download date and edit credit in both READMEs. No Flowbite, HyperUI, Preline, daisyUI or Meraki UI package was installed. Dependencies already declared in `pom.xml` retain their upstream licenses.
 
 ### Current UI coverage notes
 
-The shared dashboard sidebar/drawer is applied to student, instructor and admin dashboards. Browser error dispatches use branded 403, 404, and 500 JSPs; JSON error responses remain Spring Boot's JSON format. The reusable fragment directory includes accessible star input/display, modal, toast, tabs, skeleton, empty-state, search, pagination, badge, and breadcrumb structures. Most pages use the shared styles, but page-specific visual review and data-dependent information still vary. Social destinations intentionally use `#` placeholders until official profile URLs are supplied.
+The twelve-section home page, public catalog/detail/instructor/review/information pages, authentication forms and role workspaces use the premium black/white/amber theme. Role menus and existing URLs are retained. The workspace CSS covers related student, instructor and admin forms and lists; Java services, the manual bubble sort and linked-node FIFO were not changed during this restyle.
+
+Tabs support arrow keys, Home/End and direct fragment links. Skip links move focus to main content; native mobile disclosures remain usable without scripts. Public review cards retain `.ds-review-card`, a plain-text `blockquote`, metadata `p` and `.ds-star-display` so the home reader can reuse approved content. Print styles use white paper, dark text and neutral chart bars; interactive controls are omitted from paper output.
+
+The footer contains no pretend social links. Confirm the real address and hours before replacing placeholder copy. See [the test checklist](docs/TEST_CHECKLIST.md) for the final browser checks and remaining manual limits.
+
+## Viva and ownership documents
+
+- [CRUD map](docs/CRUD_MAP.md): 99 verified class/method rows connecting eight entities to repositories, services, URLs and JSPs.
+- [OOP/SOLID map](docs/OOP_SOLID_MAP.md): ten concrete examples per member, with the limits of each example explained.
+- [Viva guide](docs/VIVA_GUIDE.md): exact owned Java/JSP/CSS/JS files, five-sentence stories, CRUD chains, OOP/SOLID references, five questions and five demo interactions per member.
+- [Test checklist](docs/TEST_CHECKLIST.md): actual dated automated results and browser verification limits.
+
+Shared files have one owner: Java foundation, startup and integration documentation belong to 135; `tailwind.config.js` and npm build wiring belong to 135; `app.css`, generated `tailwind.css`, `site.js`, navigation/layout and general shared components belong to 136. Review stars and moderation filters belong to 137. The viva guide lists the exact shared-file assignments; module use does not transfer file ownership.
+
+## Shared component maintenance
+
+| Component | Source | How to use it |
+|---|---|---|
+| Cards, buttons, labels, fields and focus rings | `static/css/app.css` → `static/css/tailwind.css` | Use existing `ds-*` classes and Tailwind utilities, then rebuild CSS. Do not edit the generated bundle by hand. |
+| Navigation and dashboard menu | `common/navbar.jspf`, `common/dashboard-sidebar.jspf` | Existing role data comes from NavigationInterceptor; native links/details remain usable without JS. |
+| Two-panel tabs | `common/components/tabs.jspf` | Set `tabsLabel`, `firstTabTitle`, `secondTabTitle`, `firstPanelId`, `secondPanelId`; give panels unique IDs and keep both visible in fallback HTML. JS adds keyboard tab behaviour. |
+| Star input | `common/components/star-input.jspf` | Set `ratingFieldName`, a unique `ratingFieldId` per form, `ratingLabel` and `ratingValue`; the existing submitted field name remains unchanged. Native radio inputs work without JS. |
+| Fractional star display | `common/components/star-display.jspf` | Set decimal `ratingValue`; clipped fill and an accessible label show the stored average. |
+| Toasts and confirmation | `common/components/toasts.jspf`, `confirm-dialog.jspf` | Shared footer includes these once. Success messages auto-hide; errors stay until dismissed. `data-confirm` protects an existing form without changing its route. |
+| Optional motion, loading and print | `static/js/site.js` | One local file handles progressive enhancement. Animation respects reduced motion; form validation and named inputs retain their existing behaviour. |
+| Report charts, exact tables and print | `admin/reports.jsp`, `static/css/report.css` | Bars use saved counts, tables keep exact values, and print CSS changes the report to white paper. Export is a normal admin-only CSV link. |
+
+The checked-in CSS and local assets let the app run without Node after dependencies have been downloaded. A first Maven/npm installation still needs its dependencies available locally or a network connection. `target/`, `node_modules/`, runtime demo folders and credentials should not be included in member PRs. Include generated `src/main/resources/static/css/tailwind.css` so running the app does not require a CSS build.
+
+## Earlier Phase 5 verification
+
+2026-11-08, Java 17, `.\mvnw.cmd clean verify`:
+
+```text
+Tests run: 575, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+Total time: 01:00 min
+```
+
+`npm run build:css`, compile, documentation links and `git diff --check` also passed. New Phase 5 tests add student account CRUD/history protection (6) and package lifecycle/deletion protection (4). Existing tests were not weakened or changed. Accessibility evidence and its limits are in [the checklist](docs/TEST_CHECKLIST.md); this is not the complete Phase 6 role audit.
+
+## Premium UI maintenance and verification
+
+Shared presentation owner: **IT26101136** (`app.css`, generated `tailwind.css`, `site.js`, layout fragments, local font/license and image guide). Root README and test evidence owner: **IT26101135**. Report stylesheet owner: **IT26101137**. Existing module ownership remains unchanged.
+
+For CSS/template changes, run `npm run build:css`, then restart the app. For the full Java suite, use `.\mvnw.cmd clean verify`. Include generated `tailwind.css`, the local font and its license in the eventual member PR; exclude `target/` and `node_modules/`. No Git write commands are performed by this workflow.
+
+Phase E verification is recorded in [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md). Accessibility tooling is a temporary development check and is not loaded by the application. Member names remain `[Name]` until the group supplies them.
+
+### Final restyle verification (2026-11-08)
+
+```text
+Tests run: 575, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+Total time: 57.501 s
+```
+
+The final browser audit checked 32 page/role combinations at 375/768/1280px, plus expanded controls and error pages. It found no automated WCAG-tagged violations in the checked final states. Print previews/PDFs and CSV export were checked. Screen-reader testing and full measured contrast over every gradient state remain UNVERIFIED; see the checklist for the exact scope. No tests were changed.

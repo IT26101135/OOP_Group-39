@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : NavigationInterceptor.java
+WHAT IT DOES (simple words): Supports navigation interceptor for the account or course workflow.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.interceptor;
 
 import com.drivingschool.auth.model.User;
@@ -19,6 +29,7 @@ public class NavigationInterceptor implements HandlerInterceptor {
     private final AuthSessionService authSessionService;
     private final CsrfTokenService csrfTokenService;
 
+    // Receives the helpers this class needs so each job stays separate.
     public NavigationInterceptor(
             AuthSessionService authSessionService,
             CsrfTokenService csrfTokenService) {
@@ -28,6 +39,7 @@ public class NavigationInterceptor implements HandlerInterceptor {
     }
 
     @Override
+    // Adds shared navigation and security details after the controller prepares a page.
     public void postHandle(
             HttpServletRequest request,
             HttpServletResponse response,

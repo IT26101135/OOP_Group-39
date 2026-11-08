@@ -1,4 +1,14 @@
-// Module owner: IT26101136
+/**
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Learning packages and enrollment
+FILE     : LearningPackageService.java
+WHAT IT DOES (simple words): Applies the rules for learning package.
+REAL-LIFE EXAMPLE: A course folder keeps the learning plan and enrollment details together.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.learningpackage.service;
 
 import com.drivingschool.common.exception.DuplicateRecordException;
@@ -15,7 +25,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-public class LearningPackageService {
+// SOLID: S - This class is responsible for application rules.
+public class LearningPackageService implements LearningPackageCatalog {
 
     private static final Object PACKAGE_WRITE_LOCK = new Object();
 
@@ -23,15 +34,18 @@ public class LearningPackageService {
     private final BookingRepository bookings;
     private final EnrollmentRepository enrollments;
 
+    // Receives the helpers this class needs so each job stays separate.
     public LearningPackageService(LearningPackageRepository repository) {
         this(repository, null, null);
     }
 
+    // Receives the helpers this class needs so each job stays separate.
     public LearningPackageService(LearningPackageRepository repository,
                                   BookingRepository bookings) {
         this(repository, bookings, null);
     }
 
+    // Receives the helpers this class needs so each job stays separate.
     public LearningPackageService(LearningPackageRepository repository,
                                   BookingRepository bookings,
                                   EnrollmentRepository enrollments) {
@@ -45,6 +59,8 @@ public class LearningPackageService {
         this.enrollments = enrollments;
     }
 
+    // Handles create package for this class without changing another class's job.
+    // CRUD: CREATE - adds a new package and saves it
     public LearningPackage createPackage(
             String name,
             String description,
@@ -57,6 +73,8 @@ public class LearningPackageService {
                 validityDays, active, PackageType.MANUAL, lessonCount);
     }
 
+    // Handles create package for this class without changing another class's job.
+    // CRUD: CREATE - adds a new package and saves it
     public LearningPackage createPackage(
             String name,
             String description,
@@ -107,15 +125,21 @@ public class LearningPackageService {
         }
     }
 
+    // Handles list packages for this class without changing another class's job.
+    // CRUD: READ   - finds or lists packages
     public List<LearningPackage> listPackages() {
         return repository.readAllStrict();
     }
 
+    // Handles find package by id for this class without changing another class's job.
+    // CRUD: READ   - finds or lists packages
     public Optional<LearningPackage> findPackageById(String id) {
         validatePackageId(id);
         return repository.findByIdStrict(id);
     }
 
+    // Handles update package metadata for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing package
     public LearningPackage updatePackageMetadata(
             String id,
             String name,
@@ -160,6 +184,8 @@ public class LearningPackageService {
         }
     }
 
+    // Handles update package for this class without changing another class's job.
+    // CRUD: UPDATE - changes an existing package
     public LearningPackage updatePackage(String id, String name,
                                          String description, BigDecimal price,
                                          int lessonCount, int validityDays,
@@ -180,6 +206,8 @@ public class LearningPackageService {
         }
     }
 
+    // Stores the package active after the checks required by this record.
+    // CRUD: UPDATE - changes an existing package
     public LearningPackage setPackageActive(String id, boolean active) {
         synchronized (PACKAGE_WRITE_LOCK) {
             validatePackageId(id);
@@ -192,11 +220,15 @@ public class LearningPackageService {
         }
     }
 
+    // Handles delete package for this class without changing another class's job.
+    // CRUD: DELETE - removes a package
     public void deletePackage(String id) {
         synchronized (PACKAGE_WRITE_LOCK) {
             validatePackageId(id);
             repository.findByIdStrict(id).orElseThrow(() ->
                     new RecordNotFoundException("Learning package not found: " + id));
+            // Older booking files may hold a package ID in the enrollment field.
+            // Preserve that compatibility check as well as current enrollment links.
             if (bookings != null && bookings.readAllStrict().stream()
                     .anyMatch(booking -> id.equals(booking.getEnrollmentId()))) {
                 throw new ValidationException(
@@ -211,6 +243,7 @@ public class LearningPackageService {
         }
     }
 
+    // Stops the operation if validate package id rules are not met.
     private static void validatePackageId(String id) {
         if (id == null || !id.matches("P(?!000)[0-9]{3}")) {
             throw new ValidationException(
@@ -218,6 +251,7 @@ public class LearningPackageService {
         }
     }
 
+    // Stops the operation if ensure unique name rules are not met.
     private static void ensureUniqueName(
             List<LearningPackage> packages,
             String name,
@@ -241,6 +275,7 @@ public class LearningPackageService {
         }
     }
 
+    // Handles normalize name for this class without changing another class's job.
     private static String normalizeName(String name) {
         return name.trim().toLowerCase(Locale.ROOT);
     }

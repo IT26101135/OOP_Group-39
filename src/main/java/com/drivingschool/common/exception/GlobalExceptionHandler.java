@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+ * ============================================================
+ * MEMBER   : IT26101135 - [Name]
+ * MODULE   : Shared foundation
+ * FILE     : GlobalExceptionHandler.java
+ * WHAT IT DOES (simple words): Shows a friendly error page.
+ * REAL-LIFE EXAMPLE: The receptionist explains what went wrong and what to do next.
+ * OOP USED : Exception handling
+ * CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+ * ============================================================
+ */
 package com.drivingschool.common.exception;
 
 import org.slf4j.Logger;
@@ -9,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.server.ResponseStatusException;
 
+// SOLID: S - One shared place turns application problems into friendly pages.
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -16,6 +27,7 @@ public class GlobalExceptionHandler {
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ValidationException.class)
+    // Explains which information needs correcting.
     public ModelAndView handleValidation(ValidationException exception) {
         return errorPage(
                 HttpStatus.BAD_REQUEST,
@@ -25,6 +37,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RecordNotFoundException.class)
+    // Explains that the requested record could not be found.
     public ModelAndView handleNotFound(RecordNotFoundException exception) {
         return errorPage(
                 HttpStatus.NOT_FOUND,
@@ -34,6 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DuplicateRecordException.class)
+    // Explains that a record with those details already exists.
     public ModelAndView handleDuplicate(DuplicateRecordException exception) {
         return errorPage(
                 HttpStatus.CONFLICT,
@@ -43,6 +57,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(StorageException.class)
+    // Logs the failure type and shows a safe message without private details.
     public ModelAndView handleStorage(StorageException exception) {
         // Log the failure type without exposing records or internal paths.
         Throwable cause = exception.getCause();
@@ -63,6 +78,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
+    // Sends visitors to login or explains why access is refused.
     public ModelAndView handleResponseStatus(
             ResponseStatusException exception) {
 
@@ -84,6 +100,7 @@ public class GlobalExceptionHandler {
         throw exception;
     }
 
+    // Builds the shared error page with its correct HTTP status.
     private ModelAndView errorPage(
             HttpStatus status,
             String title,

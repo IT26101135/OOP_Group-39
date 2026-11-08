@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : StudentProfileController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for student profile.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.student.controller;
 
 import com.drivingschool.auth.annotation.RequireLogin;
@@ -7,7 +17,7 @@ import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.student.dto.StudentProfile;
 import com.drivingschool.student.form.StudentProfileForm;
-import com.drivingschool.student.service.StudentProfileService;
+import com.drivingschool.student.api.StudentProfiles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -20,17 +30,21 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequireLogin
 @RequestMapping("/student/profile")
+// SOLID: S - This class is responsible for web requests and pages.
 public class StudentProfileController {
-    private final StudentProfileService profileService;
+    // SOLID: D - Receive the small profile contract through the constructor.
+    private final StudentProfiles profileService;
     private final CsrfTokenService csrfTokenService;
 
-    public StudentProfileController(StudentProfileService profileService,
+    // Receives the helpers this class needs so each job stays separate.
+    public StudentProfileController(StudentProfiles profileService,
                                     CsrfTokenService csrfTokenService) {
         this.profileService = profileService;
         this.csrfTokenService = csrfTokenService;
     }
 
     @InitBinder("profileForm")
+    // Limits form fields so students cannot overwrite their role or lesson balance.
     public void configureBinding(WebDataBinder binder) {
         binder.setAllowedFields("name", "email", "phone", "nic", "dateOfBirth",
                 "address", "licenseTypeWanted", "emergencyContact");
@@ -38,6 +52,8 @@ public class StudentProfileController {
     }
 
     @GetMapping
+    // Prepares the profile page and its existing form details.
+    // CRUD: READ   - finds or lists student profiles
     public String showProfile(HttpServletRequest request,
                               HttpServletResponse response, Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -48,6 +64,8 @@ public class StudentProfileController {
     }
 
     @GetMapping("/edit")
+    // Prepares the edit page and its existing form details.
+    // CRUD: READ   - finds or lists student profiles
     public String showEdit(HttpServletRequest request,
                            HttpServletResponse response, Model model) {
         response.setHeader("Cache-Control", "no-store");
@@ -66,6 +84,8 @@ public class StudentProfileController {
     }
 
     @PostMapping("/edit")
+    // Accepts the profile form and keeps helpful messages beside invalid details.
+    // CRUD: UPDATE - changes an existing student profile
     public String updateProfile(
             @ModelAttribute("profileForm") StudentProfileForm form,
             BindingResult bindingResult,
@@ -98,6 +118,7 @@ public class StudentProfileController {
         // Storage and authorization failures go to the existing global handler.
     }
 
+    // Handles edit page for this class without changing another class's job.
     private String editPage(HttpServletRequest request, Model model) {
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrfTokenService.getOrCreateToken(request));

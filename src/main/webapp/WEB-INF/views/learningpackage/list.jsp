@@ -1,14 +1,56 @@
-<%-- Module owner: IT26101136 --%>
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Learning packages and shared UI
+FILE     : list.jsp
+WHAT IT DOES (simple words): Presents learning packages with clear links and readable details.
+REAL-LIFE EXAMPLE: A welcome desk helps learners choose their next step.
+OOP USED : Not applicable (JSP presentation; controllers supply saved data)
+CRUD     : READ (displays page information); existing forms keep their original operations
+============================================================
+--%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:url value="/css/tailwind.css" var="appCssUrl" /><c:url value="/bookings" var="bookingsUrl" />
 <!DOCTYPE html>
 <html lang="en"><head>
-    <meta name="description" content="Learning packages at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
-    <meta name="theme-color" content="#0B1120">
-    <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Learning packages</title><link rel="stylesheet" href="<c:out value='${appCssUrl}' />"></head>
-<body><%@ include file="/WEB-INF/views/common/navbar.jspf" %>
-<main id="main-content" class="ds-container ds-section"><h1>Learning packages</h1>
-<div class="ds-filter-pills" role="group" aria-label="Filter packages by type"><button type="button" class="ds-filter-pill is-active" data-package-filter="all" aria-pressed="true">All types</button><button type="button" class="ds-filter-pill" data-package-filter="MANUAL" aria-pressed="false">Manual</button><button type="button" class="ds-filter-pill" data-package-filter="AUTOMATIC" aria-pressed="false">Automatic</button><button type="button" class="ds-filter-pill" data-package-filter="MOTORCYCLE" aria-pressed="false">Motorcycle</button><button type="button" class="ds-filter-pill" data-package-filter="REFRESHER" aria-pressed="false">Refresher</button></div>
-<c:choose><c:when test="${empty packages}"><p>There are no active packages at the moment.</p></c:when><c:otherwise><div class="ds-feature-grid"><c:forEach items="${packages}" var="learningPackage" varStatus="pkgStatus"><article class="ds-feature-card <c:if test='${pkgStatus.first}'>ds-featured-package</c:if>" data-package-card data-package-type="<c:out value='${learningPackage.type}' />"><c:if test="${pkgStatus.first}"><span class="ds-popular-ribbon">Most popular</span></c:if><div class="ds-package-mark" aria-hidden="true"><c:choose><c:when test="${learningPackage.type eq 'MOTORCYCLE'}"><svg viewBox="0 0 32 32"><circle cx="8" cy="22" r="5"/><circle cx="24" cy="22" r="5"/><path d="m8 22 5-9 5 9H8l4-6h9l3 6m-11-9h4"/></svg></c:when><c:when test="${learningPackage.type eq 'REFRESHER'}"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"/><path d="M16 9v8l5 3M7 5l3 3m15-3-3 3"/></svg></c:when><c:otherwise><svg viewBox="0 0 32 32"><path d="M4 19h24l-3-8a3 3 0 0 0-3-2H10a3 3 0 0 0-3 2l-3 8Zm2 0v5m20-5v5M8 20h16"/><circle cx="10" cy="23" r="2"/><circle cx="22" cy="23" r="2"/></svg></c:otherwise></c:choose></div><span class="ds-package-tag" data-type="<c:out value='${learningPackage.type}' />"><c:out value="${learningPackage.type}" /></span><h2><c:out value="${learningPackage.name}" /></h2><p><c:out value="${learningPackage.description}" /></p><p>Type: <c:out value="${learningPackage.type}" /></p><p>LKR <c:out value="${learningPackage.price}" /></p><p><c:out value="${learningPackage.lessonCount}" /> lessons · <c:out value="${learningPackage.durationHours}" /> hours</p><c:url value="/packages/${learningPackage.id}" var="packageDetailUrl" /><a class="ds-button" href="<c:out value='${packageDetailUrl}' />">View package</a></article></c:forEach></div><p class="ds-filter-empty" hidden>No packages match this type.</p></c:otherwise></c:choose>
-</main><%@ include file="/WEB-INF/views/common/footer.jspf" %></body></html>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Explore lesson types, prices and validity periods to find your DriveSpark Academy learning path.">
+<title>Learning packages | DriveSpark Academy</title>
+<link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
+<link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
+</head><body>
+<%@ include file="/WEB-INF/views/common/navbar.jspf" %>
+
+<main id="main-content" class="ds-public ds-catalog ds-container">
+    <%-- LearningPackageController supplies active packages and their saved prices. --%>
+    <header class="ds-public-heading"><p class="ds-eyebrow">THE ROAD IS YOURS TO LEARN</p><h1>Find your<br>learning path.</h1><p>Choose your vehicle type. Compare the lessons, time and support for your next chapter.</p></header>
+    <%-- The existing shared JavaScript filters these records; without it all packages remain visible. --%>
+    <div class="ds-filter-pills ds-catalog-filters" role="group" aria-label="Filter packages by type">
+        <button type="button" class="ds-filter-pill is-active" data-package-filter="all" aria-pressed="true">All types</button>
+        <button type="button" class="ds-filter-pill" data-package-filter="MANUAL" aria-pressed="false">Manual</button>
+        <button type="button" class="ds-filter-pill" data-package-filter="AUTOMATIC" aria-pressed="false">Automatic</button>
+        <button type="button" class="ds-filter-pill" data-package-filter="MOTORCYCLE" aria-pressed="false">Motorcycle</button>
+        <button type="button" class="ds-filter-pill" data-package-filter="REFRESHER" aria-pressed="false">Refresher</button>
+    </div>
+    <noscript><p>All available packages are shown below. Choose a package to view its details.</p></noscript>
+    <c:choose><c:when test="${empty packages}"><section class="ds-public-empty"><h2>Your next chapter is on its way.</h2><p>No active packages are available right now.</p><a class="ds-home-text-link" href="<c:url value='/contact' />">Ask about learning options</a></section></c:when><c:otherwise>
+        <div class="ds-catalog-grid">
+            <c:forEach items="${packages}" var="learningPackage">
+                <%-- LearningPackageController provides each package; c:out keeps saved text safe. --%>
+                <article class="ds-catalog-panel" data-package-card data-package-type="<c:out value='${learningPackage.type}' />" data-reveal>
+                    <p class="ds-eyebrow"><c:out value="${learningPackage.type}" /> / LEARNING PACKAGE</p>
+                    <h2><c:out value="${learningPackage.displayName}" /></h2>
+                    <p class="ds-catalog-description"><c:out value="${learningPackage.description}" /></p>
+                    <p class="ds-catalog-price"><span>LKR</span> <c:out value="${learningPackage.price}" /></p>
+                    <dl class="ds-public-facts"><div><dt>Lessons</dt><dd><c:out value="${learningPackage.lessonCount}" /></dd></div><div><dt>Driving time</dt><dd><c:out value="${learningPackage.durationHours}" /> hours</dd></div><div><dt>Validity from enrolment</dt><dd><c:out value="${learningPackage.validityDays}" /> days</dd></div></dl>
+                    <c:url value="/packages/${learningPackage.id}" var="packageDetailUrl" />
+                    <a class="ds-button ds-button-outline" href="<c:out value='${packageDetailUrl}' />">View package</a>
+                </article>
+            </c:forEach>
+        </div><p class="ds-filter-empty" hidden>No packages match this type.</p>
+    </c:otherwise></c:choose>
+    <p class="ds-public-note">Prices are from the current project data. Payment is simulated for this university project.</p>
+</main>
+<%@ include file="/WEB-INF/views/common/footer.jspf" %>
+</body></html>

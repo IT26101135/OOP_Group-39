@@ -1,4 +1,14 @@
-// Module owner: IT26101134
+/**
+============================================================
+MEMBER   : IT26101134 - [Name]
+MODULE   : Bookings, FIFO queue and scheduling
+FILE     : Booking.java
+WHAT IT DOES (simple words): Keeps the details and validation rules of booking.
+REAL-LIFE EXAMPLE: A reception waiting line handles the oldest request first.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 
 package com.drivingschool.booking.model;
 
@@ -9,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 
+// OOP: ENCAPSULATION - Private fields protect details; constructors and methods validate changes.
 public class Booking implements Identifiable {
 
     private final String id;
@@ -26,6 +37,7 @@ public class Booking implements Identifiable {
     private String requestedVehicleId;
 
     @JsonCreator
+    // Receives the helpers or validates the details needed to create this object.
     public Booking(
             @JsonProperty("id") String id,
             @JsonProperty("studentId") String studentId,
@@ -37,6 +49,7 @@ public class Booking implements Identifiable {
             @JsonProperty("status") BookingStatus status,
             @JsonProperty("createdAt") LocalDateTime createdAt) {
 
+        // Step 1: Give the request valid filing numbers for the booking and student.
         this.id = validateId(id, "B");
         this.studentId = validateId(studentId, "S");
 
@@ -46,6 +59,7 @@ public class Booking implements Identifiable {
         }
 
         this.enrollmentId = enrollmentId;
+        // Step 2: A lesson needs real times, with the end after the start.
         this.startTime = requireValue(startTime, "startTime");
         this.endTime = requireValue(endTime, "endTime");
         this.createdAt = requireValue(createdAt, "createdAt");
@@ -60,6 +74,7 @@ public class Booking implements Identifiable {
         validateOptionalId(instructorId, "I", "instructorId");
         validateOptionalId(vehicleId, "V", "vehicleId");
 
+        // Step 3: Instructor and vehicle must be assigned together for this status.
         validateAssignmentState(
                 status, instructorId, vehicleId);
 
@@ -67,6 +82,7 @@ public class Booking implements Identifiable {
         this.vehicleId = vehicleId;
     }
 
+    // Stops invalid id before the record can be saved.
     private static String validateId(
             String value, String prefix) {
 
@@ -87,6 +103,7 @@ public class Booking implements Identifiable {
         return value;
     }
 
+    // Stops invalid optional id before the record can be saved.
     private static void validateOptionalId(
             String value, String prefix, String fieldName) {
 
@@ -101,6 +118,7 @@ public class Booking implements Identifiable {
         }
     }
 
+    // Stops invalid assignment state before the record can be saved.
     private static void validateAssignmentState(
             BookingStatus status,
             String instructorId,
@@ -142,6 +160,8 @@ public class Booking implements Identifiable {
         }
     }
 
+    // T means the same kind of value comes back: this one null check serves dates and statuses.
+    // Keeps the require value step in one place for this module.
     private static <T> T requireValue(
             T value, String fieldName) {
 
@@ -154,44 +174,55 @@ public class Booking implements Identifiable {
     }
 
     @Override
+    // Lets callers read the id without exposing the private field.
     public String getId() {
         return id;
     }
 
+    // Lets callers read the student id without exposing the private field.
     public String getStudentId() {
         return studentId;
     }
 
+    // Lets callers read the enrollment id without exposing the private field.
     public String getEnrollmentId() {
         return enrollmentId;
     }
 
+    // Lets callers read the start time without exposing the private field.
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
+    // Lets callers read the end time without exposing the private field.
     public LocalDateTime getEndTime() {
         return endTime;
     }
 
+    // Lets callers read the instructor id without exposing the private field.
     public String getInstructorId() {
         return instructorId;
     }
 
+    // Lets callers read the vehicle id without exposing the private field.
     public String getVehicleId() {
         return vehicleId;
     }
 
+    // Lets callers read the status without exposing the private field.
     public BookingStatus getStatus() {
         return status;
     }
 
+    // Lets callers read the created at without exposing the private field.
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    // Lets callers read the rejection reason without exposing the private field.
     public String getRejectionReason() { return rejectionReason; }
 
+    // Changes the rejection reason through the record's validation rules.
     public void setRejectionReason(String rejectionReason) {
         if (rejectionReason != null && rejectionReason.length() > 300) {
             throw new ValidationException("Rejection reason is too long.");
@@ -199,17 +230,22 @@ public class Booking implements Identifiable {
         this.rejectionReason = rejectionReason;
     }
 
+    // Lets callers read the requested instructor id without exposing the private field.
     public String getRequestedInstructorId() { return requestedInstructorId; }
+    // Changes the requested instructor id through the record's validation rules.
     public void setRequestedInstructorId(String id) {
         validateOptionalId(id, "I", "requestedInstructorId");
         this.requestedInstructorId = id;
     }
+    // Lets callers read the requested vehicle id without exposing the private field.
     public String getRequestedVehicleId() { return requestedVehicleId; }
+    // Changes the requested vehicle id through the record's validation rules.
     public void setRequestedVehicleId(String id) {
         validateOptionalId(id, "V", "requestedVehicleId");
         this.requestedVehicleId = id;
     }
 
+    // Keeps the reject step in one place for this module.
     public void reject(String reason) {
         if (status != BookingStatus.PENDING) {
             throw new ValidationException("Only pending requests can be rejected.");
@@ -221,6 +257,7 @@ public class Booking implements Identifiable {
         rejectionReason = reason.trim();
     }
 
+    // Keeps the confirm step in one place for this module.
     public void confirm(String instructorId, String vehicleId) {
         if (status != BookingStatus.PENDING) {
             throw new ValidationException(
@@ -237,6 +274,7 @@ public class Booking implements Identifiable {
     }
 
     /** Stores an administrator's proposed assignment while instructor approval is pending. */
+    // Keeps the assign for instructor step in one place for this module.
     public void assignForInstructor(String instructorId, String vehicleId) {
         if (status != BookingStatus.PENDING) {
             throw new ValidationException("Only pending requests can be assigned.");
@@ -247,6 +285,7 @@ public class Booking implements Identifiable {
         this.vehicleId = vehicleId;
     }
 
+    // Marks a confirmed lesson complete through the booking rules.
     public void complete() {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException(
@@ -256,6 +295,7 @@ public class Booking implements Identifiable {
         this.status = BookingStatus.COMPLETED;
     }
 
+    // Keeps the mark no show step in one place for this module.
     public void markNoShow() {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException("Only confirmed lessons can be marked no-show.");
@@ -263,6 +303,7 @@ public class Booking implements Identifiable {
         status = BookingStatus.NO_SHOW;
     }
 
+    // Sends the owned request through the cancellation and notice-period checks.
     public void cancel() {
         if (status != BookingStatus.PENDING
                 && status != BookingStatus.CONFIRMED) {
@@ -274,6 +315,7 @@ public class Booking implements Identifiable {
         this.status = BookingStatus.CANCELLED;
     }
 
+    // Checks conflicts before changing an existing confirmed lesson's resources.
     public void reassign(String newInstructorId, String newVehicleId) {
         if (status != BookingStatus.CONFIRMED) throw new ValidationException("Only confirmed lessons can be reassigned.");
         validateId(newInstructorId, "I");
@@ -282,6 +324,7 @@ public class Booking implements Identifiable {
         vehicleId = newVehicleId;
     }
 
+    // Stores the administrator's reason when a lesson must be cancelled.
     public void forceCancel(String reason) {
         if (status == BookingStatus.COMPLETED || status == BookingStatus.CANCELLED)
             throw new ValidationException("Completed or cancelled lessons cannot be force-cancelled.");

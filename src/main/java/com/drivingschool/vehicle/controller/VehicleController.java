@@ -1,4 +1,14 @@
-// Module owner: IT26101132
+/**
+============================================================
+MEMBER   : IT26101132 - [Name]
+MODULE   : Vehicles and Sample Data
+FILE     : VehicleController.java
+WHAT IT DOES (simple words): Accepts fleet forms and prepares the vehicle pages.
+REAL-LIFE EXAMPLE: Like a fleet logbook showing which teaching cars need attention.
+OOP USED : See labelled classes and methods below; presentation files display their results
+CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
+============================================================
+*/
 package com.drivingschool.vehicle.controller;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -11,7 +21,7 @@ import com.drivingschool.vehicle.model.Vehicle;
 import com.drivingschool.vehicle.model.TransmissionType;
 import com.drivingschool.vehicle.model.VehicleCategory;
 import com.drivingschool.vehicle.model.VehicleOperationalStatus;
-import com.drivingschool.vehicle.service.VehicleService;
+import com.drivingschool.vehicle.api.VehicleOperations;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -26,16 +36,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin/vehicles")
 public class VehicleController {
 
-    private final VehicleService vehicleService;
+    // SOLID: D - The controller receives the fleet interface through its constructor.
+    private final VehicleOperations vehicleService;
     private final CsrfTokenService csrfTokenService;
 
+    // Receives the details this class needs and keeps them ready for its own job.
     public VehicleController(
-            VehicleService vehicleService,
+            VehicleOperations vehicleService,
             CsrfTokenService csrfTokenService) {
         this.vehicleService = vehicleService;
         this.csrfTokenService = csrfTokenService;
     }
 
+    // Allows only known vehicle fields from the browser.
     @InitBinder("vehicleCreateForm")
     public void configureCreateBinding(WebDataBinder binder) {
         binder.setAllowedFields(
@@ -50,6 +63,7 @@ public class VehicleController {
         binder.setAutoGrowNestedPaths(false);
     }
 
+    // Keeps the URL-selected identity separate from editable form fields.
     @InitBinder("vehicleEditForm")
     public void configureEditBinding(WebDataBinder binder) {
         binder.setAllowedFields(
@@ -62,6 +76,8 @@ public class VehicleController {
     }
 
     // GET /admin/vehicles
+    // Prepares fleet cards and safe form tokens for the admin page.
+    // CRUD: READ   - finds or lists vehicles
     @GetMapping
     public String listVehicles(
             HttpServletRequest request,
@@ -80,6 +96,7 @@ public class VehicleController {
     }
 
     // GET /admin/vehicles/create
+    // Opens an empty vehicle form with the allowed type and status choices.
     @GetMapping("/create")
     public String showCreateForm(
             HttpServletRequest request,
@@ -97,6 +114,8 @@ public class VehicleController {
     }
 
     // POST /admin/vehicles/create
+    // Checks the new vehicle and prevents a duplicate registration before saving.
+    // CRUD: CREATE - adds a new vehicle and saves it
     @PostMapping("/create")
     public String createVehicle(
             @ModelAttribute("vehicleCreateForm")
@@ -109,6 +128,7 @@ public class VehicleController {
 
         response.setHeader("Cache-Control", "no-store");
 
+        // Step 1: Return the typed form when a date or choice could not be read.
         if (bindingResult.hasErrors()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute(
@@ -118,6 +138,7 @@ public class VehicleController {
             return createPage(request, model);
         }
 
+        // Step 2: Let the fleet rules validate the details before saving.
         try {
             vehicleService.createVehicle(
                     form.getRegistrationNumber(),
@@ -129,6 +150,7 @@ public class VehicleController {
                     form.getLastServiceDate(), form.getNextServiceDate()
             );
 
+            // Step 3: Tell the administrator the new vehicle was saved.
             redirectAttributes.addFlashAttribute(
                     "vehicleCreated",
                     true
@@ -149,6 +171,7 @@ public class VehicleController {
     }
 
     // GET /admin/vehicles/{id}/edit
+    // Fills the edit form from the vehicle chosen in the URL.
     @GetMapping("/{id}/edit")
     public String showEditForm(
             @PathVariable String id,
@@ -158,8 +181,10 @@ public class VehicleController {
 
         response.setHeader("Cache-Control", "no-store");
 
+        // Step 1: Load the URL-selected vehicle so the form starts with its saved details.
         Vehicle vehicle = vehicleService.getVehicleByIdStrict(id);
 
+        // Step 2: Copy its editable details into the form without changing the saved vehicle.
         VehicleEditForm form = new VehicleEditForm();
         form.setRegistrationNumber(vehicle.getRegistrationNumber());
         form.setMake(vehicle.getMake());
@@ -178,6 +203,8 @@ public class VehicleController {
     }
 
     // POST /admin/vehicles/{id}/edit
+    // Checks a replacement record before changing the stored vehicle.
+    // CRUD: UPDATE - changes an existing vehicle
     @PostMapping("/{id}/edit")
     public String updateVehicle(
             @PathVariable String id,
@@ -191,7 +218,7 @@ public class VehicleController {
 
         response.setHeader("Cache-Control", "no-store");
 
-        // Strictly load the target selected by the URL, not by submitted form data.
+        // Step 1: Load the target selected by the URL, not by submitted form data.
         Vehicle existingVehicle =
                 vehicleService.getVehicleByIdStrict(id);
 
@@ -205,6 +232,7 @@ public class VehicleController {
             return editPage(request, model);
         }
 
+        // Step 2: Validate a replacement before changing the existing fleet record.
         try {
             vehicleService.updateVehicle(
                     id,
@@ -219,6 +247,7 @@ public class VehicleController {
                     form.getNextServiceDate() == null ? existingVehicle.getNextServiceDate() : form.getNextServiceDate()
             );
 
+            // Step 3: Show success only after the checked replacement has been saved.
             redirectAttributes.addFlashAttribute(
                     "vehicleUpdated",
                     true
@@ -240,6 +269,8 @@ public class VehicleController {
         }
     }
 
+    // Keeps lesson history intact and removes only an unreferenced vehicle.
+    // CRUD: DELETE - removes a vehicle
     @PostMapping("/{id}/delete")
     public String deleteVehicle(@PathVariable String id,
                                 RedirectAttributes redirectAttributes) {
@@ -248,6 +279,7 @@ public class VehicleController {
         return "redirect:/admin/vehicles";
     }
 
+    // Keeps the entered values while showing the create form and allowed choices.
     private String createPage(
             HttpServletRequest request,
             Model model) {
@@ -270,6 +302,7 @@ public class VehicleController {
         return "vehicle/create";
     }
 
+    // Keeps the entered values while showing the edit form and allowed choices.
     private String editPage(
             HttpServletRequest request,
             Model model) {
@@ -282,6 +315,7 @@ public class VehicleController {
         return "vehicle/edit";
     }
 
+    // Adds the session token that protects vehicle form submissions.
     private void addCsrfAttributes(
             HttpServletRequest request,
             Model model) {

@@ -1,9 +1,23 @@
-// Module owner: IT26101134
+/**
+============================================================
+MEMBER   : IT26101134 - [Name]
+MODULE   : Bookings, FIFO queue and scheduling
+FILE     : AdminBookingController.java
+WHAT IT DOES (simple words): Prepares pages and accepts forms for admin booking.
+REAL-LIFE EXAMPLE: A reception waiting line handles the oldest request first.
+OOP USED : Encapsulation (private fields and public methods)
+CRUD     : See the labelled operations; model and view files support these operations.
+============================================================
+*/
 package com.drivingschool.booking.controller;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
 import com.drivingschool.auth.service.CsrfTokenService;
-import com.drivingschool.booking.service.BookingService;
+import com.drivingschool.booking.service.AdminBookingOperations;
+import com.drivingschool.instructor.model.Instructor;
+import com.drivingschool.vehicle.model.Vehicle;
+import com.drivingschool.vehicle.model.VehicleOperationalStatus;
+import java.util.ArrayList;
 import com.drivingschool.instructor.repository.InstructorRepository;
 import com.drivingschool.vehicle.repository.VehicleRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,14 +38,17 @@ import java.util.Map;
 @Controller
 @RequireAdmin
 @RequestMapping("/admin/bookings")
+// SOLID: S - This class is responsible for web requests and page data.
 public class AdminBookingController {
 
-    private final BookingService bookingService;
+    // SOLID: D - Admin pages receive the booking administration contract.
+    private final AdminBookingOperations bookingService;
     private final InstructorRepository instructors;
     private final VehicleRepository vehicles;
     private final CsrfTokenService csrf;
 
-    public AdminBookingController(BookingService bookingService,
+    // Receives the helpers or validates the details needed to create this object.
+    public AdminBookingController(AdminBookingOperations bookingService,
                                   InstructorRepository instructors,
                                   VehicleRepository vehicles,
                                   CsrfTokenService csrf) {
@@ -42,6 +59,8 @@ public class AdminBookingController {
     }
 
     @GetMapping
+    // Prepares the saved records and filter choices needed by this page.
+    // CRUD: READ   - finds or lists bookings
     public String list(HttpServletRequest request, HttpServletResponse response,
                        Model model,
                        @RequestParam(required = false) String from,
@@ -55,10 +74,8 @@ public class AdminBookingController {
         List<Booking> pendingQueue = bookingService.getPendingQueue(request);
         model.addAttribute("pendingQueue", pendingQueue);
         Map<String, Integer> queuePositions = new HashMap<>();
-        for (Booking booking : bookingList) {
-            if (booking.getStatus() == BookingStatus.PENDING && booking.getInstructorId() == null) {
-                queuePositions.put(booking.getId(), bookingService.getQueuePosition(request, booking.getId()));
-            }
+        for (int index = 0; index < pendingQueue.size(); index++) {
+            queuePositions.put(pendingQueue.get(index).getId(), index + 1);
         }
         model.addAttribute("queuePositions", queuePositions);
         model.addAttribute("queueSize", pendingQueue.size());
@@ -67,17 +84,17 @@ public class AdminBookingController {
         model.addAttribute("filterInstructor", instructorId);
         model.addAttribute("filterVehicle", vehicleId);
         model.addAttribute("filterStatus", status);
-        model.addAttribute("instructors", instructors.readAllStrict().stream()
-                .filter(com.drivingschool.instructor.model.Instructor::isActive).toList());
-        model.addAttribute("vehicles", vehicles.readAllStrict().stream()
-                .filter(v -> v.getOperationalStatus()
-                        == com.drivingschool.vehicle.model.VehicleOperationalStatus.IN_SERVICE).toList());
+        model.addAttribute("bookingStatuses", BookingStatus.values());
+        model.addAttribute("instructors", activeInstructors());
+        model.addAttribute("vehicles", availableVehicles());
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrf.getOrCreateToken(request));
         return "admin/bookings";
     }
 
     @PostMapping("/reassign")
+    // Checks conflicts before changing an existing confirmed lesson's resources.
+    // CRUD: UPDATE - changes an existing booking
     public String reassign(HttpServletRequest request, @RequestParam String bookingId,
                            @RequestParam String instructorId, @RequestParam String vehicleId,
                            RedirectAttributes flash) {
@@ -87,6 +104,8 @@ public class AdminBookingController {
     }
 
     @PostMapping("/force-cancel")
+    // Stores the administrator's reason when a lesson must be cancelled.
+    // CRUD: UPDATE - changes an existing booking
     public String forceCancel(HttpServletRequest request, @RequestParam String bookingId,
                               @RequestParam String reason, RedirectAttributes flash) {
         bookingService.forceCancel(request, bookingId, reason);
@@ -95,17 +114,25 @@ public class AdminBookingController {
     }
 
     @PostMapping("/assign")
+    // Allows assignment only for the FIFO head and records any conflict reason.
+    // CRUD: UPDATE - changes an existing booking
     public String assign(HttpServletRequest request,
                          @RequestParam String bookingId,
                          @RequestParam String instructorId,
                          @RequestParam String vehicleId,
                          RedirectAttributes flash) {
-        bookingService.assign(request, bookingId, instructorId, vehicleId);
-        flash.addFlashAttribute("success", "Instructor and vehicle assigned.");
+        Booking result = bookingService.assign(request, bookingId, instructorId, vehicleId);
+        if (result.getStatus() == BookingStatus.REJECTED) {
+            flash.addFlashAttribute("error", "Request rejected: " + result.getRejectionReason());
+        } else {
+            flash.addFlashAttribute("success", "Instructor and vehicle assigned.");
+        }
         return "redirect:/admin/bookings";
     }
 
     @PostMapping("/process-next")
+    // Takes only the FIFO head for assignment and checks it again before saving.
+    // CRUD: UPDATE - changes an existing booking
     public String processNext(HttpServletRequest request,
                               @RequestParam String instructorId,
                               @RequestParam String vehicleId,
@@ -119,11 +146,30 @@ public class AdminBookingController {
     }
 
     @PostMapping("/complete")
+    // Marks a confirmed lesson complete through the booking rules.
+    // CRUD: UPDATE - changes an existing booking
     public String complete(HttpServletRequest request,
                            @RequestParam String bookingId,
                            RedirectAttributes flash) {
         bookingService.complete(request, bookingId);
         flash.addFlashAttribute("success", "Lesson marked complete.");
         return "redirect:/admin/bookings";
+    }
+    // Keeps the active instructors step in one place for this module.
+    private List<Instructor> activeInstructors() {
+        List<Instructor> result = new ArrayList<>();
+        for (Instructor instructor : instructors.readAllStrict()) {
+            if (instructor.isActive()) result.add(instructor);
+        }
+        return result;
+    }
+
+    // Keeps the available vehicles step in one place for this module.
+    private List<Vehicle> availableVehicles() {
+        List<Vehicle> result = new ArrayList<>();
+        for (Vehicle vehicle : vehicles.readAllStrict()) {
+            if (vehicle.getOperationalStatus() == VehicleOperationalStatus.IN_SERVICE) result.add(vehicle);
+        }
+        return result;
     }
 }

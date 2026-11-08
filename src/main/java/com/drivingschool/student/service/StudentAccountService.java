@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : StudentAccountService.java
+WHAT IT DOES (simple words): Applies the rules for student account.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.student.service;
 
 import com.drivingschool.auth.model.Role;
@@ -13,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class StudentAccountService {
 
     private final AuthSessionService auth;
@@ -21,6 +32,7 @@ public class StudentAccountService {
     private final ReviewRepository reviews;
     private final EnrollmentRepository enrollments;
 
+    // Receives the helpers this class needs so each job stays separate.
     public StudentAccountService(AuthSessionService auth,
                                  UserRepository users,
                                  BookingRepository bookings,
@@ -33,6 +45,8 @@ public class StudentAccountService {
         this.enrollments = enrollments;
     }
 
+    // Removes the account only when no learning history depends on it.
+    // CRUD: DELETE - removes a student account
     public void deleteOwnAccount(HttpServletRequest request) {
         User user = auth.requireLogin(request);
         if (user.getRole() != Role.STUDENT) {

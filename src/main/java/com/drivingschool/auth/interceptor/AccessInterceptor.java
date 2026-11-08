@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : AccessInterceptor.java
+WHAT IT DOES (simple words): Supports access interceptor for the account or course workflow.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.interceptor;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -18,11 +28,13 @@ public class AccessInterceptor implements HandlerInterceptor {
 
     private final AuthSessionService authSessionService;
 
+    // Receives the helpers this class needs so each job stays separate.
     public AccessInterceptor(AuthSessionService authSessionService) {
         this.authSessionService = authSessionService;
     }
 
     @Override
+    // Checks the controller access labels before the requested page may run.
     public boolean preHandle(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -44,6 +56,9 @@ public class AccessInterceptor implements HandlerInterceptor {
         return true;
     }
 
+    // Spring reads the login/admin labels already attached to controllers.
+    // Class<? extends Annotation> means any annotation type; this helper never changes code.
+    // Refuses access unless the current account meets the requires rule.
     private boolean requires(
             HandlerMethod handler,
             Class<? extends Annotation> annotationType) {
