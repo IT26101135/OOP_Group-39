@@ -51,6 +51,7 @@ public class BookingConflictChecker {
     private final LearningPackageRepository packages;
     private final UserRepository users;
     private final Clock clock;
+    private final PaidEnrollmentGuard paidEnrollments;
 
     // Receives the helpers or validates the details needed to create this object.
     public BookingConflictChecker(BookingRepository bookings,
@@ -59,7 +60,7 @@ public class BookingConflictChecker {
                                   InstructorRepository instructors,
                                   VehicleRepository vehicles,
                                   LearningPackageRepository packages,
-                                  UserRepository users, Clock clock) {
+                                  UserRepository users, Clock clock, PaidEnrollmentGuard paidEnrollments) {
         this.bookings = bookings;
         this.availability = availability;
         this.leaves = leaves;
@@ -68,6 +69,7 @@ public class BookingConflictChecker {
         this.packages = packages;
         this.users = users;
         this.clock = clock;
+        this.paidEnrollments = paidEnrollments;
     }
 
     /** Returns null when every applicable check passes; otherwise returns the first reason. */
@@ -84,6 +86,8 @@ public class BookingConflictChecker {
         if (!start.isAfter(LocalDateTime.now(clock))) return "The lesson time must be in the future.";
 
         // Step 1: Check the student still has the enrollment needed for this request.
+        String paymentProblem = paidEnrollments.problemFor(target.getStudentId(), target.getEnrollmentId());
+        if (paymentProblem != null) return paymentProblem;
         User student = users.findByIdStrict(target.getStudentId())
                 .orElseThrow(() -> new RecordNotFoundException("Student account not found."));
         if (!(student instanceof Student profile) || profile.getLessonsRemaining() <= 0

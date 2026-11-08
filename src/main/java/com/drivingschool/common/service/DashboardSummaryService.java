@@ -59,7 +59,7 @@ public class DashboardSummaryService implements DashboardSummaryProvider {
                 summary.setStudentCount(summary.getStudentCount() + 1);
             }
         }
-        // Step 2: Add lesson and simulated-payment totals from their original records.
+        // Step 2: Add lesson, waiting-payment and paid-revenue totals from their original records.
         countBookings(summary);
         countPayments(summary);
         return summary;
@@ -78,11 +78,13 @@ public class DashboardSummaryService implements DashboardSummaryProvider {
         }
     }
 
-    // Adds simulated paid amounts using decimal arithmetic suitable for money.
+    // Counts waiting receipts separately; only confirmed Paid amounts become revenue.
     private void countPayments(DashboardSummary summary) {
         for (Enrollment enrollment : enrollments.readAllStrict()) {
-            if ("PAID".equalsIgnoreCase(enrollment.getPaymentStatus())) {
+            if (enrollment.isPaid()) {
                 summary.setPaidRevenue(summary.getPaidRevenue().add(enrollment.getAmount()));
+            } else if ("AWAITING_PAYMENT".equals(enrollment.getStatus())) {
+                summary.setAwaitingPayments(summary.getAwaitingPayments() + 1);
             }
         }
     }

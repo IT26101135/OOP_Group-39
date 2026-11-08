@@ -17,6 +17,10 @@ import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.auth.service.CsrfTokenService;
 import com.drivingschool.learningpackage.service.EnrollmentOperations;
 import com.drivingschool.learningpackage.model.Enrollment;
+import com.drivingschool.common.exception.DuplicateRecordException;
+import com.drivingschool.student.model.Student;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -45,15 +49,18 @@ public class EnrollmentController {
     private final AuthSessionService auth;
     private final CsrfTokenService csrf;
     private final Clock clock;
+    private final String paymentAdminEmail;
 
     // Receives the helpers this class needs so each job stays separate.
     public EnrollmentController(EnrollmentOperations enrollmentService,
                                 AuthSessionService auth,
-                                CsrfTokenService csrf, Clock clock) {
+                                CsrfTokenService csrf, Clock clock,
+                                @Value("${app.payment.admin-email:admin@drivespark.test}") String paymentAdminEmail) {
         this.enrollmentService = enrollmentService;
         this.auth = auth;
         this.csrf = csrf;
         this.clock = clock;
+        this.paymentAdminEmail = paymentAdminEmail;
     }
 
     @GetMapping
@@ -66,6 +73,9 @@ public class EnrollmentController {
         List<Enrollment> enrollments = enrollmentService.ownEnrollments(request);
         model.addAttribute("enrollments", enrollments);
         model.addAttribute("expiryLabels", expiryLabels(enrollments));
+        Student student = (Student) auth.requireLogin(request);
+        model.addAttribute("activeEnrollmentId", student.getActiveEnrollmentId());
+        model.addAttribute("lessonsRemaining", student.getLessonsRemaining());
         model.addAttribute("csrfParameterName", CsrfTokenService.PARAMETER_NAME);
         model.addAttribute("csrfToken", csrf.getOrCreateToken(request));
         return "student/enrollments";
@@ -78,9 +88,29 @@ public class EnrollmentController {
                          @RequestParam String packageId,
                          RedirectAttributes flash) {
         requireStudent(request);
-        enrollmentService.enroll(request, packageId);
-        flash.addFlashAttribute("enrolled", true);
-        return "redirect:/enrollments";
+        try {
+            Enrollment enrollment = enrollmentService.enroll(request, packageId);
+            return "redirect:/enrollments/" + enrollment.getId() + "/payment";
+        } catch (DuplicateRecordException exception) {
+            flash.addFlashAttribute("error", exception.getMessage());
+            return "redirect:/enrollments";
+        }
+    }
+
+    // Shows only the owner's payment instructions; no email or receipt upload is performed.
+    // CRUD: READ   - finds or lists enrollments
+    @GetMapping("/{id}/payment")
+    public String payment(HttpServletRequest request, HttpServletResponse response,
+                          @PathVariable String id, Model model) {
+        requireStudent(request);
+        response.setHeader("Cache-Control", "no-store");
+        // Step 1: Check ownership before looking up any course or payment details.
+        Enrollment enrollment = enrollmentService.ownEnrollment(request, id);
+        model.addAttribute("enrollment", enrollment);
+        // Step 2: Display the saved amount and the configured school contact address.
+        model.addAttribute("packageName", enrollmentService.packageName(enrollment.getPackageId()));
+        model.addAttribute("paymentAdminEmail", paymentAdminEmail);
+        return "student/payment-instructions";
     }
 
     @PostMapping("/update")
@@ -103,12 +133,15 @@ public class EnrollmentController {
         return "redirect:/enrollments";
     }
 
+    // Starts the validity countdown only after payment, keeping old receipts readable.
     private Map<String, String> expiryLabels(List<Enrollment> enrollments) {
         Map<String, String> labels = new LinkedHashMap<>();
         LocalDate today = LocalDate.now(clock);
         for (Enrollment enrollment : enrollments) {
             LocalDate validUntil = enrollment.getValidUntil();
-            if (validUntil == null) labels.put(enrollment.getId(), "Expiry not recorded");
+            if ("AWAITING_PAYMENT".equals(enrollment.getStatus())) labels.put(enrollment.getId(), "Starts after payment confirmation");
+            else if ("CANCELLED".equals(enrollment.getStatus())) labels.put(enrollment.getId(), "Request cancelled");
+            else if (validUntil == null) labels.put(enrollment.getId(), "Expiry not recorded");
             else if (validUntil.isBefore(today)) labels.put(enrollment.getId(), "Expired");
             else if (!validUntil.isAfter(today.plusDays(14))) labels.put(enrollment.getId(), "Expires within 14 days");
             else labels.put(enrollment.getId(), "Within validity period");

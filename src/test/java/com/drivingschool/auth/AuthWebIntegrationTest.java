@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+ * ============================================================
+ * MEMBER   : IT26101135 - [Name]
+ * MODULE   : Authentication and Students
+ * FILE     : AuthWebIntegrationTest.java
+ * WHAT IT DOES (simple words): Checks account forms, sessions and role access together.
+ * REAL-LIFE EXAMPLE: Rehearses entering and leaving the school through reception.
+ * OOP USED : Abstraction and exception handling
+ * CRUD     : CREATE and READ student accounts
+ * ============================================================
+ */
 package com.drivingschool.auth;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -42,6 +52,7 @@ class AuthWebIntegrationTest {
     static Path dataDirectory;
 
     @DynamicPropertySource
+    // Prepares the account details needed by these practice checks: configure properties.
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add(
                 "app.data-directory",
@@ -63,6 +74,7 @@ class AuthWebIntegrationTest {
     private UserRepository userRepository;
 
     @Test
+    // Checks the account rule using temporary data: registration login navigation and logout work together.
     void registrationLoginNavigationAndLogoutWorkTogether()
             throws Exception {
 
@@ -137,6 +149,7 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: registration without csrf cannot create an account.
     void registrationWithoutCsrfCannotCreateAnAccount()
             throws Exception {
 
@@ -158,6 +171,7 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: admin endpoint rejects anonymous and student but allows admin.
     void adminEndpointRejectsAnonymousAndStudentButAllowsAdmin()
             throws Exception {
 
@@ -205,6 +219,7 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: failed login refreshes session and allows correct retry.
     void failedLoginRefreshesSessionAndAllowsCorrectRetry()
             throws Exception {
 
@@ -258,11 +273,9 @@ class AuthWebIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // Prepares the account details needed by these practice checks: login.
     private MockHttpSession login(String email, String password)
             throws Exception {
-        userRepository.readAllStrict().stream().filter(user -> user.getEmail().equalsIgnoreCase(email)).findFirst()
-                .ifPresent(user -> { if (user.getStatus() == AccountStatus.PENDING) { user.setStatus(AccountStatus.ACTIVE); userRepository.update(user); } });
-
         MvcResult page = mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -287,14 +300,17 @@ class AuthWebIntegrationTest {
         return authenticatedSession;
     }
 
+    // Prepares the account details needed by these practice checks: unique email.
     private String uniqueEmail() {
         return "test-" + UUID.randomUUID() + "@example.com";
     }
 
+    // Prepares the account details needed by these practice checks: session of.
     private MockHttpSession sessionOf(MvcResult result) {
         return (MockHttpSession) result.getRequest().getSession(false);
     }
 
+    // Prepares the account details needed by these practice checks: token of.
     private String tokenOf(MvcResult result) {
         return (String) result.getModelAndView()
                 .getModel().get("csrfToken");
@@ -304,6 +320,7 @@ class AuthWebIntegrationTest {
     static class ProbeConfiguration {
 
         @Bean
+        // Registers two harmless test pages so the real role guards can be exercised.
         AccessProbeController accessProbeController() {
             return new AccessProbeController();
         }
@@ -315,6 +332,7 @@ class AuthWebIntegrationTest {
         @RequireLogin
         @ResponseBody
         @GetMapping("/integration-probe/account")
+        // Checks the account rule using temporary data: account.
         public String account() {
             return "account-access";
         }
@@ -322,6 +340,7 @@ class AuthWebIntegrationTest {
         @RequireAdmin
         @ResponseBody
         @GetMapping("/integration-probe/admin")
+        // Checks the account rule using temporary data: admin.
         public String admin() {
             return "admin-access";
         }

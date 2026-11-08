@@ -135,20 +135,17 @@ public class AdminReportService implements ReportCatalog {
         return result;
     }
 
-    // Uses enrollment amounts captured at purchase time rather than today's package prices.
+    // Counts confirmed Paid receipts only, using captured prices rather than today's course prices.
+    // CRUD: READ   - finds or lists paid enrollment revenue
     public Map<String, String> revenue() {
         BigDecimal paid = BigDecimal.ZERO;
-        BigDecimal unpaid = BigDecimal.ZERO;
         for (Enrollment enrollment : enrollments.readAllStrict()) {
-            if ("PAID".equalsIgnoreCase(enrollment.getPaymentStatus())) {
+            if (enrollment.isPaid()) {
                 paid = paid.add(enrollment.getAmount());
-            } else {
-                unpaid = unpaid.add(enrollment.getAmount());
             }
         }
         Map<String, String> result = new LinkedHashMap<>();
         result.put("PAID", paid.toPlainString());
-        result.put("UNPAID", unpaid.toPlainString());
         return result;
     }
 

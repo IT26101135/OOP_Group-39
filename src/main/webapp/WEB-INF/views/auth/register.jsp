@@ -34,7 +34,7 @@ CRUD     : See CRUD labels on the record operations.
 <main id="main-content" class="ds-container ds-section ds-auth-page ds-public-auth">
     <%-- AuthController supplies the introduction and account messages below. --%>
     <header class="ds-auth-heading"><p class="ds-eyebrow">START SOMETHING GOOD</p><h1>Your first step.</h1>
-    <p>Create your student account. An administrator will review your registration before you can log in.</p></header>
+    <p>Create your student account and log in immediately. Lessons become available after your package payment is confirmed.</p></header>
 
     <c:if test="${not empty formError}">
         <p role="alert"><c:out value="${formError}" /></p>

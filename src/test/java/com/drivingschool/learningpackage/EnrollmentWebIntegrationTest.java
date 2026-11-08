@@ -80,7 +80,7 @@ class EnrollmentWebIntegrationTest {
         mvc.perform(get("/enrollments")).andExpect(redirectedUrl("/login?required"));
     }
 
-    // A valid form creates a receipt, shows it, and saves the student's learning goal.
+    // A valid form opens owned payment instructions without unlocking any lessons.
     @Test
     void createsReadsAndUpdatesWithValidToken() throws Exception {
         String packageId = packages.nextId("P");
@@ -88,14 +88,45 @@ class EnrollmentWebIntegrationTest {
                 new BigDecimal("1000.00"), 5, 30, true));
         String token = token();
         mvc.perform(post("/enrollments").session(session).param("_csrf", token)
-                .param("packageId", packageId)).andExpect(redirectedUrl("/enrollments"));
+                .param("packageId", packageId)).andExpect(redirectedUrlPattern("/enrollments/E*/payment"));
         Enrollment enrollment = findOwnEnrollment();
+        assertEquals("AWAITING_PAYMENT", enrollment.getStatus());
+        assertEquals(0, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+        mvc.perform(get("/enrollments/" + enrollment.getId() + "/payment").session(session))
+                .andExpect(status().isOk()).andExpect(view().name("student/payment-instructions"))
+                .andExpect(model().attribute("packageName", "Course " + packageId))
+                .andExpect(model().attribute("paymentAdminEmail", "admin@drivespark.test"));
         mvc.perform(get("/enrollments").session(session)).andExpect(status().isOk())
                 .andExpect(model().attributeExists("enrollments", "expiryLabels"));
         mvc.perform(post("/enrollments/update").session(session).param("_csrf", token)
                 .param("enrollmentId", enrollment.getId()).param("learningGoal", "Confident parking"))
                 .andExpect(redirectedUrl("/enrollments"));
         assertEquals("Confident parking", enrollments.findByIdStrict(enrollment.getId()).orElseThrow().getLearningGoal());
+    }
+
+    // A duplicate submit returns a useful explanation and leaves just one payment request.
+    @Test
+    void duplicateRequestRedirectsWithFriendlyMessage() throws Exception {
+        String packageId = packages.nextId("P");
+        packages.save(new LearningPackage(packageId, "Course " + packageId, "Driving lessons",
+                new BigDecimal("1200"), 5, 30, true));
+        mvc.perform(post("/enrollments").session(session).param("_csrf", token())
+                .param("packageId", packageId)).andExpect(status().is3xxRedirection());
+        mvc.perform(post("/enrollments").session(session).param("_csrf", token())
+                .param("packageId", packageId)).andExpect(redirectedUrl("/enrollments"))
+                .andExpect(flash().attributeExists("error"));
+    }
+
+    // Neither an anonymous visitor nor another student may view a payment reference.
+    @Test
+    void paymentInstructionsRequireOwner() throws Exception {
+        Enrollment other = new Enrollment(enrollments.nextId("E"), "S999", "P001",
+                LocalDateTime.now(), new BigDecimal("1000"), "UNPAID");
+        enrollments.save(other);
+        mvc.perform(get("/enrollments/" + other.getId() + "/payment"))
+                .andExpect(redirectedUrl("/login?required"));
+        mvc.perform(get("/enrollments/" + other.getId() + "/payment").session(session))
+                .andExpect(status().isForbidden());
     }
 
     // Missing tokens and another student's IDs cannot remove or edit records.

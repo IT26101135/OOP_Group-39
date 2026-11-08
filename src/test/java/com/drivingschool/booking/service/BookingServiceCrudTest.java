@@ -21,6 +21,8 @@ import com.drivingschool.common.exception.*;
 import com.drivingschool.instructor.repository.InstructorRepository;
 import com.drivingschool.learningpackage.model.LearningPackage;
 import com.drivingschool.learningpackage.repository.LearningPackageRepository;
+import com.drivingschool.learningpackage.repository.EnrollmentRepository;
+import com.drivingschool.learningpackage.model.Enrollment;
 import com.drivingschool.student.model.Student;
 import com.drivingschool.vehicle.repository.VehicleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,11 +60,15 @@ class BookingServiceCrudTest {
         student.setLessonsRemaining(5);
         student.setActiveEnrollmentId("E001");
         UserRepository users = new UserRepository(directory.toString(), mapper);
+        // Booking fixtures start with a real paid receipt instead of only account pointers.
+        EnrollmentRepository receipts = new EnrollmentRepository(directory.toString(), mapper);
+        receipts.save(new Enrollment("E001", "S001", "P001", LocalDateTime.now(clock), new BigDecimal("1000"), "PAID"));
         users.save(student);
         auth = mock(AuthSessionService.class);
         when(auth.requireLogin(request)).thenReturn(student);
         service = new BookingService(bookings, packages, new InstructorRepository(directory, mapper),
-                new VehicleRepository(directory, mapper), auth, users, clock);
+                new VehicleRepository(directory, mapper), auth, users, clock,
+                new PaidEnrollmentGuard(receipts, users, packages, clock));
     }
 
     // Create, list, cancel and delete must all act on the same owned request.

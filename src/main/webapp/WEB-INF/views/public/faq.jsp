@@ -15,7 +15,7 @@ CRUD     : READ (displays page information); existing forms keep their original 
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#050505">
-<meta name="description" content="Find clear answers about DriveSpark Academy accounts, packages, lesson requests and simulated payments.">
+<meta name="description" content="Find clear answers about DriveSpark Academy accounts, packages, lesson requests and manual payments.">
 <title>Frequently asked questions | DriveSpark Academy</title>
 <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
 <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
@@ -27,9 +27,9 @@ CRUD     : READ (displays page information); existing forms keep their original 
     <header class="ds-public-heading"><p class="ds-eyebrow">A CLEARER ROAD AHEAD</p><h1>A few things<br>worth knowing.</h1><p>Before your first lesson, get familiar with how your learning journey works.</p></header>
     <%-- Native details keeps the accordion usable with a keyboard and without JavaScript. --%>
     <section class="ds-faq-questions" aria-label="Common questions">
-        <details><summary>How do I start?</summary><div><p>Create a student account and wait for administrator approval. Once approved, log in and choose a learning package.</p><a href="<c:url value='/register' />">Create your student account</a></div></details>
+        <details><summary>How do I start?</summary><div><p>Create a student account, log in immediately and choose a learning package. Enrollment saves an unpaid request; lessons become available after payment confirmation.</p><a href="<c:url value='/register' />">Create your student account</a></div></details>
         <details><summary>How are lessons booked?</summary><div><p>Students with an active package can request a one-hour lesson. An administrator confirms an instructor and vehicle, subject to availability.</p><a href="<c:url value='/packages' />">Explore learning packages</a></div></details>
-        <details><summary>Can I pay online?</summary><div><p>No online payment is integrated. Enrolment payment is simulated for this university project.</p></div></details>
+        <details><summary>Can I pay online?</summary><div><p>Pay by bank transfer or at our office. Your enrollment payment instructions show the amount, reference and contact email. Send your receipt using your own email service; this system does not send email or upload receipts.</p></div></details>
         <details><summary>Where can I see my progress?</summary><div><p>After signing in as a student, open your progress page to review completed lessons and instructor feedback.</p><a href="<c:url value='/student/progress' />">View student progress</a></div></details>
         <details><summary>Where is the academy?</summary><div><p>The project uses Colombo, Sri Lanka as a placeholder location. Contact the academy to confirm the street address and opening hours before travelling.</p><a href="<c:url value='/contact' />">Contact the academy</a></div></details>
     </section>

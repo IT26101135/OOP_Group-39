@@ -161,6 +161,8 @@ public class AuthController {
         }
 
         try {
+            // Preserve only our fixed package destination across session rotation.
+            Object packageReturn = request.getSession(true).getAttribute("packageLoginReturn");
             LoginResult result = authSessionService.loginWithResult(
                     request,
                     form.getEmail(),
@@ -179,10 +181,16 @@ public class AuthController {
             }
 
             if (result == LoginResult.SUCCESS) {
+                if (packageReturn instanceof String destination && destination.matches("/packages/P(?!000)[0-9]{3}")) {
+                    return "redirect:" + destination;
+                }
                 return "redirect:" + authSessionService
                         .getCurrentUser(request).orElseThrow().getDashboardPath();
             }
 
+            if (packageReturn instanceof String destination && destination.matches("/packages/P(?!000)[0-9]{3}")) {
+                request.getSession(true).setAttribute("packageLoginReturn", destination);
+            }
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             String message = "Email or password is incorrect.";
             if (result == LoginResult.PENDING_APPROVAL) {

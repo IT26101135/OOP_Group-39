@@ -45,3 +45,26 @@ Instructor portraits are optional local paths starting with a single `/`; other 
 ## Placeholder details
 
 Colombo, the street address, opening hours, vehicle safety descriptions and sample numbers are project demonstration content. Get directions opens Contact while a real address is unconfirmed. Confirm real business details before replacing these notes.
+
+## Photo Credits
+
+hero-road: Photo by Marcelo Mora on Pexels (Pexels License) - https://www.pexels.com/photo/scenic-mountain-road-at-sunset-32540808/
+
+safety-bg: Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/photo-of-a-car-s-dashboard-9661322/
+
+location: Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/cars-parked-near-building-on-street-in-daylight-7442030/
+
+cta-drive: Photo by Mustafa Ödemiş on Pexels (Pexels License) - https://www.pexels.com/photo/rainy-road-trip-view-through-windshield-34730119/
+
+flexible-bg: Photo by Anna Hinckel on Pexels (Pexels License) - https://www.pexels.com/photo/a-time-lapse-photography-of-a-highway-at-night-4599217/
+
+mission: Photo by Mitchell Henderson on Pexels (Pexels License) - https://www.pexels.com/photo/road-in-mountains-15993667/
+
+vehicle-manual: Photo by FBO Media on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-blue-sport-hatchback-in-minimalist-setting-35549144/
+
+vehicle-automatic: Photo by Oli Liao on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-black-sedan-parked-in-urban-setting-35628774/
+
+vehicle-motorcycle: Photo by Raj Pillay on Pexels (Pexels License) - https://www.pexels.com/photo/triumph-street-triple-765-r-27704082/
+
+promo-lesson: Photo by Bas Peperzak on Unsplash (Unsplash License) -
+https://unsplash.com/photos/driving-test-instructor-and-student-tyhpK_QelPo

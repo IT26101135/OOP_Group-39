@@ -85,8 +85,14 @@ Instructor IDs are now accepted by `AuthSessionService` alongside student
 and administrator IDs. Existing instructor profile records without matching
 user accounts cannot log in until an account is created for them.
 
-These lesson requests do not represent paid enrollments and do not decrement
-package lesson counts. Lesson length is currently fixed at 60 minutes.
+Lesson requests require a matching Paid enrollment with remaining lessons.
+Completing a lesson decrements its active enrollment balance. Lesson length
+is fixed at 60 minutes. Enrollment itself creates an Awaiting payment request;
+`GET /enrollments/{id}/payment` shows its amount, reference and manual instructions.
+Administrators use `GET /admin/enrollments`, `POST /admin/enrollments/mark-paid`
+and `POST /admin/enrollments/cancel-request`. Only Awaiting payment requests can
+be decided; Paid and Cancelled receipts stay in history. The shared account
+lock serializes these decisions and booking writes within one application JVM.
 
 ## Implemented: Identifiable
 

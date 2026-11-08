@@ -73,6 +73,19 @@ class AdminReportServiceTest {
         }
     }
 
+    // Cancelled requests and waiting receipts are not income, including in the shared CSV rows.
+    @Test
+    void revenueExcludesWaitingAndCancelledRequests() {
+        enrollments.save(new Enrollment("E001", "S001", "P001", time, new BigDecimal("100"), "PAID"));
+        enrollments.save(new Enrollment("E002", "S002", "P001", time, new BigDecimal("200"), "UNPAID"));
+        Enrollment cancelled = new Enrollment("E003", "S003", "P001", time, new BigDecimal("300"), "UNPAID");
+        cancelled.setStatus("CANCELLED");
+        enrollments.save(cancelled);
+        assertEquals("100", reports.revenue().get("PAID"));
+        assertEquals(1, reports.revenue().size());
+        assertEquals(1, reports.all().get(reports.all().size() - 1).getRows().size());
+    }
+
     // Months appear in calendar order even when enrollment records were saved in reverse order.
     @Test
     void monthsAreChronologicalAndAmountsUseEnrollmentSnapshots() {
@@ -81,7 +94,7 @@ class AdminReportServiceTest {
         enrollments.save(new Enrollment("E003", "S003", "P002", time.plusMonths(1), new BigDecimal("35.10"), "UNPAID"));
         assertEquals(List.of("2026-01", "2026-02", "2026-03"), new ArrayList<>(reports.enrollmentsByMonth().keySet()));
         assertEquals("151.00", reports.revenue().get("PAID"));
-        assertEquals("35.10", reports.revenue().get("UNPAID"));
+        assertFalse(reports.revenue().containsKey("UNPAID"));
         assertEquals(2L, reports.enrollmentsByPackage().get("P001"));
     }
 

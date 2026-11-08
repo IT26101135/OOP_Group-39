@@ -1,4 +1,14 @@
-// Module owner: IT26101134
+/**
+ * ============================================================
+ * MEMBER   : IT26101134 - [Name]
+ * MODULE   : Bookings and scheduling
+ * FILE     : BookingCutoffTest.java
+ * WHAT IT DOES (simple words): Checks lesson rules with spare accounts and receipts.
+ * REAL-LIFE EXAMPLE: Practises checking tickets before reserving driving slots.
+ * OOP USED : Abstraction and exception handling
+ * CRUD     : READ and UPDATE booking rules
+ * ============================================================
+ */
 package com.drivingschool.booking.service;
 
 import com.drivingschool.auth.repository.UserRepository;
@@ -17,14 +27,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class BookingCutoffTest {
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     private Student student() { return new Student("S001", "Student One", "one@example.test",
             new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("StrongPass123"), "+94771234567"); }
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     private BookingService service(Booking booking, BookingRepository repo, AuthSessionService auth) {
         when(repo.findByIdStrict(booking.getId())).thenReturn(Optional.of(booking));
         return new BookingService(repo, mock(LearningPackageRepository.class),
                 mock(InstructorRepository.class), mock(VehicleRepository.class), auth,
-                mock(UserRepository.class), Clock.fixed(Instant.parse("2030-01-01T08:00:00Z"), ZoneOffset.UTC));
+                mock(UserRepository.class), Clock.fixed(Instant.parse("2030-01-01T08:00:00Z"), ZoneOffset.UTC),
+                mock(PaidEnrollmentGuard.class));
     }
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     @Test void changeInside24HoursIsRejected() {
         Student owner = student(); AuthSessionService auth = mock(AuthSessionService.class);
         when(auth.requireLogin(any())).thenReturn(owner);
@@ -37,6 +51,7 @@ class BookingCutoffTest {
                 () -> service.cancelOwnBooking(mock(HttpServletRequest.class), "B001"));
         verify(repo, never()).update(any());
     }
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     @Test void changeExactly24HoursAwayIsAllowed() {
         Student owner = student(); AuthSessionService auth = mock(AuthSessionService.class);
         when(auth.requireLogin(any())).thenReturn(owner);

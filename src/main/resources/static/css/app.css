@@ -217,6 +217,12 @@ CRUD     : Displays existing data; does not save records
   @media (max-width: 767px) { .ds-container { @apply px-0; } }
 }
 
+/* Payment receipts use colour and plain words, so their meaning never depends on colour alone. */
+.ds-dashboard-shell .ds-payment-status[data-status='AWAITING_PAYMENT'] { color: #FDE68A; background: #F59E0B0D; border-color: #F59E0B66; }
+.ds-dashboard-shell .ds-payment-status[data-status='PAID'] { color: #BBF7D0; background: #22C55E0D; border-color: #22C55E66; }
+.ds-dashboard-shell .ds-payment-status[data-status='CANCELLED'] { color: #FECACA; background: #EF44440D; border-color: #EF444466; }
+.ds-payment-instructions { overflow-wrap: anywhere; }
+
 @media print {
   :root { color-scheme: light; }
   body { background: #fff !important; color: #0A0A0A !important; }
@@ -314,7 +320,7 @@ body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
 .ds-footer-notes { padding-block: 2rem; border-top: 1px solid #262626; color: #A3A3A3; font-size: 11px; line-height: 1.8; }
 .ds-footer-notes > p { max-width: 54rem; }
 .ds-footer-bottom { padding-top: 2rem; padding-bottom: 0; border: 0; font-size: 11px; }
-@media (max-width: 1100px) {
+@media (max-width: 1023px) {
   .ds-navbar { grid-template-columns: 1fr auto; gap: 1rem; min-height: 80px; }
   .ds-nav-toggle { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; padding: .5rem 0; border: 0; background: transparent; color: #FFFFFF; font-size: 12px; }
   .ds-js .ds-nav { position: fixed; inset: 0; z-index: 80; display: none; height: 100svh; max-height: none; padding: 6rem 1.5rem 3rem; overflow-y: auto; background: #050505; }
@@ -458,7 +464,7 @@ body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
   .ds-home-reviews { margin-top: 4rem; }
 }
 /* Pages keep native content visible even if scripting is unavailable. */
-@media (max-width: 1100px) { html:not(.ds-js) body:has([data-cinematic]) .ds-header { position: relative; background: #000000; } }
+@media (max-width: 1023px) { html:not(.ds-js) body:has([data-cinematic]) .ds-header { position: relative; background: #000000; } }
 @media (prefers-reduced-motion: reduce) { .ds-home .ds-cinematic-background { animation: none; transform: none; } }
 @media print {
   .ds-home-section, .ds-home .ds-cinematic-section { min-height: 0; padding-block: 2rem; break-inside: avoid; }
@@ -789,4 +795,25 @@ html body :focus-visible { outline: 2px solid #FFFFFF !important; outline-offset
   progress { accent-color: #404040; }
   progress::-webkit-progress-bar { background: #E5E5E5 !important; }
   progress::-webkit-progress-value { background: #404040 !important; }
+}
+
+/* PackageNavigationAdvice supplies the content; these local gradients stand in for future photos. */
+.ds-package-panel[hidden] { display: none !important; }
+.ds-package-panel { position: fixed; top: 88px; left: 3vw; right: 3vw; max-height: calc(100svh - 104px); overflow: auto; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; padding: 24px; border-radius: 18px; background: #FFFFFF; color: #171717; box-shadow: 0 16px 40px #0005; z-index: 90; }
+.ds-package-choice { min-width: 0; }
+.ds-package-choice h2 { font-size: 26px; line-height: 1.2; margin: 18px 0 10px; color: #171717; }
+.ds-package-choice p { color: #525252; font-size: 14px; margin: 10px 0; }
+.ds-package-thumbnail { height: 125px; border-radius: 10px; background: linear-gradient(155deg,#737373,#171717 55%,#F59E0B55); }
+.ds-package-thumbnail[data-type='AUTOMATIC'] { background: linear-gradient(145deg,#D4D4D4,#404040 65%,#171717); }
+.ds-package-thumbnail[data-type='MOTORCYCLE'] { background: linear-gradient(25deg,#171717,#A3A3A3 55%,#262626); }
+.ds-package-enroll { display: inline-block; padding: 10px 24px; background: #000; color: #FFF !important; border-radius: 999px; font-size: 14px; }
+.ds-package-view { display: block; color: #171717 !important; text-decoration: underline; font-size: 14px; padding: 12px 0; }
+.ds-package-panel a:focus-visible { outline: 3px solid #B45309; outline-offset: 3px; }
+.ds-package-trigger[aria-expanded='true'], .ds-nav-link[aria-current='page'] { background: #E5E5E5; color: #171717; border-radius: 999px; padding-inline: 12px; }
+@media (max-width: 1023px) {
+  .ds-package-menu { width: 100%; }
+  .ds-package-panel { position: static; display: grid; grid-template-columns: 1fr; margin: 8px 0; padding: 16px; max-height: none; width: 100%; }
+  .ds-package-thumbnail { height: 64px; width: 88px; float: right; margin-left: 12px; }
+  .ds-package-choice { padding-block: 8px; border-bottom: 1px solid #D4D4D4; }
+  .ds-package-choice h2 { font-size: 24px; margin-top: 0; }
 }

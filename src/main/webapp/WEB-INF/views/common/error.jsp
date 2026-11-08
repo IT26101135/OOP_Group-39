@@ -40,6 +40,8 @@ CRUD     : Supports error messages for CREATE, READ, UPDATE and DELETE
     </p>
 
     <p><c:out value="${message}"/></p>
+    <%-- Booking rules explain payment problems here; this link gives students a useful next step. --%>
+    <p><a class="ds-home-text-link" href="<c:url value='/enrollments' />">My enrollments and payment instructions</a></p>
 
     <p>The page could not be opened. Return home and continue from there.</p>
     <c:choose>

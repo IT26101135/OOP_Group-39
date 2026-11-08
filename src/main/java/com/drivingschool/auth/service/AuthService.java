@@ -51,7 +51,7 @@ public class AuthService {
                 passwordHasher.hash(UUID.randomUUID().toString());
     }
 
-    // Checks the new student details and saves an account for administrator approval.
+    // Checks the new student details and lets them sign in straight away.
     // CRUD: CREATE - adds a new student account and saves it
     public Student registerStudent(
             String name,
@@ -60,6 +60,7 @@ public class AuthService {
             String rawPassword) {
 
         return AccountWriteCoordinator.execute(() -> {
+            // Step 1: Check the email is available before preparing the account.
             String normalizedEmail = normalizeRegistrationEmail(email);
 
             List<User> users = userRepository.readAllStrict();
@@ -80,8 +81,10 @@ public class AuthService {
                     passwordHash,
                     phone
             );
-            student.setStatus(AccountStatus.PENDING);
+            // Step 2: Student registration is active; admin-controlled statuses still exist.
+            student.setStatus(AccountStatus.ACTIVE);
 
+            // Step 3: Save the account with its hashed password.
             userRepository.save(student);
             return student;
         });

@@ -19,6 +19,9 @@ import java.util.List;
 // OOP: ABSTRACTION - Callers use this promise instead of the implementation details.
 // SOLID: I - This interface describes one small job for its callers.
 public interface StudentBookingOperations {
+    // Explains why this student's saved payment or lesson balance cannot support booking.
+    // CRUD: READ   - finds or lists enrollments
+    String bookingProblem(HttpServletRequest request);
     // Lists only this student's requests in lesson-time order.
     List<Booking> getOwnBookings(HttpServletRequest request);
     // Shows a queue position only after checking the request belongs to this student.

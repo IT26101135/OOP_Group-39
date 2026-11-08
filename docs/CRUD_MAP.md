@@ -132,3 +132,25 @@ This map was checked against the current source, not earlier logs. Each operatio
 - Enrollment UPDATE changes the learning goal, not the purchase amount or ownership. DELETE permits only owned, inactive, unpaid enrollments with no booking history. Paid receipts are retained.
 - A review must concern the student's own completed lesson and is unique per lesson. Changed feedback returns to PENDING. Only approved feedback contributes to public instructor ratings.
 - FileRepository supplies the common safe file operations; a repository override delegates to its parent and keeps those storage checks.
+
+## Manual enrollment payments (2026-11-08)
+
+Existing student enrollment routes and form fields remain unchanged. Cancelled and Paid receipts are retained; DELETE still applies only to unused Awaiting payment records without booking history.
+
+| Member | Entity | Operation | Class | Method | URL | JSP page |
+|---|---|---|---|---|---|---|
+| IT26101136 | Enrollment instructions | READ | EnrollmentRepository | findByIdStrict (inherited) | GET /enrollments/{id}/payment | student/payment-instructions.jsp |
+| IT26101136 | Enrollment instructions | READ | EnrollmentService | ownEnrollment | GET /enrollments/{id}/payment | student/payment-instructions.jsp |
+| IT26101136 | Enrollment instructions | READ | EnrollmentController | payment | GET /enrollments/{id}/payment | student/payment-instructions.jsp |
+| IT26101136 | Waiting enrollments | READ | EnrollmentRepository | readAllStrict | GET /admin/enrollments | admin/enrollments.jsp |
+| IT26101136 | Waiting enrollments | READ | EnrollmentService | awaitingPayments | GET /admin/enrollments | admin/enrollments.jsp |
+| IT26101136 | Waiting enrollments | READ | AdminEnrollmentController | list | GET /admin/enrollments | admin/enrollments.jsp |
+| IT26101136 | Payment confirmation | UPDATE | EnrollmentRepository | update | POST /admin/enrollments/mark-paid | admin/enrollments.jsp |
+| IT26101136 | Payment confirmation | UPDATE | EnrollmentService | markPaid | POST /admin/enrollments/mark-paid | admin/enrollments.jsp |
+| IT26101136 | Payment confirmation | UPDATE | AdminEnrollmentController | markPaid | POST /admin/enrollments/mark-paid | admin/enrollments.jsp |
+| IT26101136 | Payment cancellation | UPDATE | EnrollmentRepository | update | POST /admin/enrollments/cancel-request | admin/enrollments.jsp |
+| IT26101136 | Payment cancellation | UPDATE | EnrollmentService | cancelRequest | POST /admin/enrollments/cancel-request | admin/enrollments.jsp |
+| IT26101136 | Payment cancellation | UPDATE | AdminEnrollmentController | cancel | POST /admin/enrollments/cancel-request | admin/enrollments.jsp |
+| IT26101134 | Booking payment eligibility | READ | PaidEnrollmentGuard | problemFor, requirePaid | POST /bookings; /bookings/reschedule; /admin/bookings/assign; /admin/bookings/reassign; /admin/bookings/process-next | booking/list.jsp; admin/bookings.jsp |
+
+The admin POST forms use `enrollmentId`; cancellation additionally accepts optional `reason` (up to 300 characters). Payment changes are UPDATE, not DELETE. Booking cancellation and rejection can retire unsupported requests without granting lessons.

@@ -102,7 +102,7 @@ public class DemoDataSeedRunner implements CommandLineRunner {
             String id = String.format("S%03d", i), email = String.format("student%d@drivingschool.test", i);
             if (!accountExists(email)) {
                 Student student = new Student(id, "Student " + i, email, passwords.hash(DEMO_PASSWORD), "+9477111000" + i);
-                student.setStatus(i == 10 ? AccountStatus.SUSPENDED : i >= 8 ? AccountStatus.PENDING : AccountStatus.ACTIVE);
+                student.setStatus(i == 10 ? AccountStatus.SUSPENDED : i == 9 ? AccountStatus.PENDING : AccountStatus.ACTIVE);
                 users.save(student);
             }
         }
@@ -142,12 +142,41 @@ public class DemoDataSeedRunner implements CommandLineRunner {
     private void seedEnrollments() {
         for (int i = 1; i <= 7; i++) {
             String studentId = String.format("S%03d", i), enrollmentId = String.format("E%03d", i);
+            // An existing receipt must never be recreated or refill an exhausted balance.
+            if (enrollments.findByIdStrict(enrollmentId).isPresent()) continue;
             Student student = (Student) users.findByIdStrict(studentId).orElse(null);
             if (student == null || student.getActiveEnrollmentId() != null) continue;
             LearningPackage learningPackage = packages.findByIdStrict(String.format("P%03d", (i - 1) % 6 + 1)).orElseThrow();
             Enrollment enrollment = new Enrollment(enrollmentId, studentId, learningPackage.getId(), LocalDateTime.now().minusDays(i), learningPackage.getPrice(), "PAID");
+            enrollment.setValidUntil(enrollment.getEnrolledAt().toLocalDate().plusDays(learningPackage.getValidityDays()));
             enrollments.save(enrollment); student.setActivePackageId(learningPackage.getId()); student.setActiveEnrollmentId(enrollment.getId()); student.setLessonsRemaining(learningPackage.getLessonCount()); users.update(student);
         }
+        seedPaymentExample("E008", "AWAITING_PAYMENT");
+        seedPaymentExample("E009", "CANCELLED");
+    }
+
+    // Adds cashier examples without replacing decisions made during an earlier demo run.
+    private void seedPaymentExample(String enrollmentId, String status) {
+        if (enrollments.findByIdStrict(enrollmentId).isPresent()) return;
+        Student student = (Student) users.findByIdStrict("S008").orElse(null);
+        if (student == null) return;
+        if ("AWAITING_PAYMENT".equals(status)
+                && (student.getActivePackageId() != null || hasAwaitingRequest(student.getId()))) return;
+        LearningPackage selected = packages.findByIdStrict("P001").orElseThrow();
+        Enrollment enrollment = new Enrollment(enrollmentId, student.getId(), selected.getId(),
+                LocalDateTime.now().minusDays(1), selected.getPrice(), "UNPAID");
+        enrollment.setStatus(status);
+        if ("CANCELLED".equals(status)) enrollment.setCancellationReason("Sample request withdrawn before payment.");
+        enrollments.save(enrollment);
+    }
+
+    // Keeps a restart from creating a second unpaid request for the same student.
+    private boolean hasAwaitingRequest(String studentId) {
+        for (Enrollment enrollment : enrollments.readAllStrict()) {
+            if (enrollment.getStudentId().equals(studentId)
+                    && "AWAITING_PAYMENT".equals(enrollment.getStatus())) return true;
+        }
+        return false;
     }
 
     // Adds the original working-week blocks without duplicating their IDs.

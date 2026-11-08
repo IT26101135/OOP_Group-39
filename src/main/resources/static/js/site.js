@@ -321,9 +321,9 @@ function prepareNavigation(nav) {
   nav.querySelector('.ds-nav-close').addEventListener('click', () => setNavigationOpen(nav, false));
   nav.addEventListener('keydown', (event) => handleNavigationKey(event, nav));
   nav.addEventListener('click', (event) => {
-    if (event.target.closest('a[href]') && nav.classList.contains('is-open')) setNavigationOpen(nav, false);
+    if (event.target.closest('a[href]') && !event.target.closest('.ds-package-trigger') && nav.classList.contains('is-open')) setNavigationOpen(nav, false);
   });
-  window.matchMedia('(max-width: 1100px)').addEventListener('change', () => setNavigationOpen(nav, false));
+  window.matchMedia('(max-width: 1023px)').addEventListener('change', () => setNavigationOpen(nav, false));
   document.addEventListener('click', (event) => {
     nav.querySelectorAll('.ds-nav-group[open]').forEach((group) => {
       if (!group.contains(event.target)) group.open = false;
@@ -479,3 +479,35 @@ document.addEventListener('DOMContentLoaded', () => {
   prepareHomeReviews();
   prepareLessonChoice();
 });
+
+// Enhances a normal link; without scripts every visitor can still open the packages page.
+(function preparePackageMenu() {
+  const trigger = document.querySelector('.ds-package-trigger');
+  const panel = document.querySelector('#package-panel');
+  if (!trigger || !panel) return;
+  const group = trigger.closest('.ds-package-menu');
+  const desktopMouse = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)');
+  let restoring = false;
+  // Keeps expanded state and visible content together without loading any extra data.
+  function change(open, restore) {
+    panel.hidden = !open;
+    trigger.setAttribute('aria-expanded', String(open));
+    if (open) document.querySelectorAll('.ds-nav-group[open]').forEach(item => { item.open = false; });
+    if (restore) { restoring = true; trigger.focus(); restoring = false; }
+  }
+  trigger.addEventListener('click', event => { event.preventDefault(); change(true, false); });
+  trigger.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); change(true, false); }
+  });
+  trigger.addEventListener('focus', () => { if (desktopMouse.matches && !restoring) change(true, false); });
+  group.addEventListener('mouseenter', () => { if (desktopMouse.matches && !restoring) change(true, false); });
+  group.addEventListener('mouseleave', () => { if (desktopMouse.matches) change(false, false); });
+  group.addEventListener('focusout', event => { if (!group.contains(event.relatedTarget)) change(false, false); });
+  document.addEventListener('click', event => { if (!group.contains(event.target)) change(false, false); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); event.stopImmediatePropagation(); change(false, true); }
+  }, true);
+  document.querySelectorAll('.ds-nav-group').forEach(item => item.addEventListener('toggle', () => { if (item.open) change(false, false); }));
+  document.querySelectorAll('.ds-nav-toggle, .ds-nav-close').forEach(button => button.addEventListener('click', () => change(false, false)));
+  window.addEventListener('resize', () => change(false, false));
+})();

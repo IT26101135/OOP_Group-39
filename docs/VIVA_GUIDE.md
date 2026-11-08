@@ -101,7 +101,7 @@ Integration documents: `README.md`, `docs/CRUD_MAP.md`, `docs/OOP_SOLID_MAP.md`,
 
 ### My module in five sentences
 
-My module registers students and checks their login details. It stores password hashes and keeps profile changes behind validated methods. New student accounts wait for administrator approval before they can log in. Students can read and update their own profiles, while account deletion is refused when learning history still refers to them. The shared session, role, CSRF, exception and file-storage code helps all six modules work together.
+My module registers students and checks their login details. It stores password hashes and keeps profile changes behind validated methods. New student accounts are Active and can log in immediately; explicitly Pending or Suspended accounts stay blocked. Students can read and update their own profiles, while account deletion is refused when learning history still refers to them. The shared session, role, CSRF, exception and file-storage code helps all six modules work together.
 
 ### My CRUD entity and methods
 
@@ -263,8 +263,9 @@ Open `/instructors` first. This five-interaction demo changes display order only
 
 ### My files
 
-**Java (15):**
+**Java (16):**
 
+- [booking/service/PaidEnrollmentGuard.java](../src/main/java/com/drivingschool/booking/service/PaidEnrollmentGuard.java)
 - [booking/controller/AdminBookingController.java](../src/main/java/com/drivingschool/booking/controller/AdminBookingController.java)
 - [booking/controller/BookingController.java](../src/main/java/com/drivingschool/booking/controller/BookingController.java)
 - [booking/model/Booking.java](../src/main/java/com/drivingschool/booking/model/Booking.java)
@@ -447,8 +448,10 @@ Sign in as the demo administrator in temporary data. Prepare a unique plate such
 
 ### My files
 
-**Java (13):**
+**Java (15):**
 
+- [learningpackage/service/EnrollmentAdministration.java](../src/main/java/com/drivingschool/learningpackage/service/EnrollmentAdministration.java)
+- [learningpackage/controller/AdminEnrollmentController.java](../src/main/java/com/drivingschool/learningpackage/controller/AdminEnrollmentController.java)
 - [learningpackage/config/LearningPackageConfig.java](../src/main/java/com/drivingschool/learningpackage/config/LearningPackageConfig.java)
 - [learningpackage/controller/EnrollmentController.java](../src/main/java/com/drivingschool/learningpackage/controller/EnrollmentController.java)
 - [learningpackage/controller/LearningPackageController.java](../src/main/java/com/drivingschool/learningpackage/controller/LearningPackageController.java)
@@ -463,8 +466,10 @@ Sign in as the demo administrator in temporary data. Prepare a unique plate such
 - [learningpackage/service/LearningPackageCatalog.java](../src/main/java/com/drivingschool/learningpackage/service/LearningPackageCatalog.java)
 - [learningpackage/service/LearningPackageService.java](../src/main/java/com/drivingschool/learningpackage/service/LearningPackageService.java)
 
-**JSP / JSPF (22):**
+**JSP / JSPF (24):**
 
+- [student/payment-instructions.jsp](../src/main/webapp/WEB-INF/views/student/payment-instructions.jsp)
+- [admin/enrollments.jsp](../src/main/webapp/WEB-INF/views/admin/enrollments.jsp)
 - [admin/packages.jsp](../src/main/webapp/WEB-INF/views/admin/packages.jsp)
 - [common/components/breadcrumbs.jspf](../src/main/webapp/WEB-INF/views/common/components/breadcrumbs.jspf)
 - [common/components/confirm-dialog.jspf](../src/main/webapp/WEB-INF/views/common/components/confirm-dialog.jspf)
@@ -496,7 +501,7 @@ Sign in as the demo administrator in temporary data. Prepare a unique plate such
 
 ### My module in five sentences
 
-My module describes the driving courses offered by the school. Administrators can create, read, update and safely delete packages that have no attached history. Students choose one active course and receive an enrollment receipt and lesson balance. Students can read enrollment history and update a learning goal, while paid or referenced enrollments are retained. I also maintain shared cards, navigation, motion and accessible browser helpers.
+My module describes the driving courses offered by the school. Administrators can create, read, update and safely delete packages that have no attached history. Students request a course and receive an Awaiting payment receipt; only administrator payment confirmation grants lessons. Students can read enrollment history and update a learning goal, while Paid, Cancelled or referenced enrollments are retained. I also maintain shared cards, navigation, motion and accessible browser helpers.
 
 ### My CRUD entity and methods
 
@@ -548,6 +553,8 @@ Sign in as student1 and open `/packages` first. The seeded account already has a
 
 ### Tests to show the examiner
 
+- [learningpackage/AdminEnrollmentWebIntegrationTest.java](../src/test/java/com/drivingschool/learningpackage/AdminEnrollmentWebIntegrationTest.java)
+- [learningpackage/service/EnrollmentPaymentServiceTest.java](../src/test/java/com/drivingschool/learningpackage/service/EnrollmentPaymentServiceTest.java)
 - [learningpackage/service/LearningPackageLifecycleTest.java](../src/test/java/com/drivingschool/learningpackage/service/LearningPackageLifecycleTest.java)
 - [learningpackage/service/EnrollmentServiceTest.java](../src/test/java/com/drivingschool/learningpackage/service/EnrollmentServiceTest.java)
 - [learningpackage/EnrollmentWebIntegrationTest.java](../src/test/java/com/drivingschool/learningpackage/EnrollmentWebIntegrationTest.java)
@@ -694,3 +701,29 @@ Shared Java foundation (`common/**`, accounts and application startup) belongs t
 ## Verification limits
 
 Consult [TEST_CHECKLIST.md](TEST_CHECKLIST.md) for dated evidence. A passing JUnit test does not establish a visual browser pass. Pages or states not viewed at 375, 768 and 1280 pixels remain visually UNVERIFIED. Destructive live actions were not submitted. The complete role/menu/static-file audit and Git branch plan belong to Phase 6.
+
+## Manual payment flow: five-step viva demo (2026-11-08)
+
+Use a fresh temporary demo directory. The app does not send email or accept uploaded receipts. Use your own email service outside the application; the administrator checks payment manually.
+
+1. **Register and log in** as a new student (IT26101135). The saved account is Active immediately; an explicitly Pending account still cannot log in.
+2. **Enroll** in a package (IT26101136). Show the captured amount, `ENR-<id>` reference, Awaiting payment state, configured contact email and payment instructions. No lessons or validity are granted yet.
+3. **Try Book / My bookings** (IT26101134). The page explains the Paid requirement and links to My enrollments. A forged POST is checked again on the server.
+4. **Use a separate admin session**, open Awaiting payment and confirm **Mark as Paid** (IT26101136). The cashier checks the receipt outside this system first. Confirmation starts validity today and grants the package's lesson count. Repeating the action says already handled.
+5. **Return to the student session and book** an available instructor hour. The request joins the hand-written FIFO queue. Its payment is checked again on reschedule, assignment, reassignment, FIFO processing, instructor acceptance and completion.
+
+### Files and explanations to show
+
+- IT26101135: `UserRepository.clearUnpaidBalance` hides unsupported balances; `DashboardSummaryService.countPayments` calculates the waiting count and Paid revenue without writing records. `StudentEnrollmentBalanceTest` covers Paid, unpaid, Cancelled and missing receipts.
+- IT26101136: `Enrollment.setStatus` validates three clear states; `getPaymentStatus` maps only Paid to PAID. Missing old payment fields default to Paid. `EnrollmentAdministration` is a small admin interface, injected into `AdminEnrollmentController`. `EnrollmentService.markPaid` and `cancelRequest` reload and decide inside the shared cashier lock. `EnrollmentPaymentServiceTest` covers repeat clicks and competing administrators; `AdminEnrollmentWebIntegrationTest` covers real roles and CSRF.
+- IT26101134: `PaidEnrollmentGuard.problemFor` reads the receipt, its owner, balance, course and expiry. `BookingService` uses the same lock as account changes. Invalid unpaid or Cancelled queue heads become REJECTED with an explanation. Student cancellation, force cancellation, rejection and deletion of already-cancelled bookings remain available for cleanup.
+- IT26101132: `DemoDataSeedRunner.seedPaymentExample` adds one Awaiting payment and one Cancelled receipt alongside seven Paid receipts. Restarting does not duplicate receipts, undo decisions or refill an exhausted balance. Student8 is Active for the cashier demo; student9 remains Pending and student10 Suspended.
+- IT26101137: `AdminReportService.revenue` counts Paid receipts only. Awaiting payment and Cancelled amounts never enter the Revenue report or its CSV rows.
+
+### Short answers for the payment demo
+
+- **Why is enrollment not booking permission?** An unpaid request is only a payment slip; a Paid receipt and remaining lessons are needed to reserve a lesson.
+- **Why save the amount?** A later course price change must not change the student's requested price or old revenue.
+- **Why one lock?** It acts like one cashier desk, so two administrators cannot both decide the same request or refill lessons twice. The lock protects this one running Java application, not several servers sharing files.
+- **What happens to cancelled requests?** Their reference and optional reason stay in history, and any linked Pending bookings are rejected. The student may request a package again.
+- **Why can an admin not confirm a Suspended student or inactive course?** The current account and course must permit learning before lesson tickets are issued. A Pending student also needs account approval first.

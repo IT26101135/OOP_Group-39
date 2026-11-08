@@ -175,3 +175,38 @@ These are calculated colour-pair measurements. axe marked contrast over gradient
 - README local links were checked. Code changes retained member headers and explanatory comments; all CRUD/OOP/SOLID Java labels, routes, form field names, bubble sort and FIFO implementations were preserved.
 
 The original numbered Phase 6 complete role/security audit and Git branch plan are separate work; this A–E restyle did not execute or replace that plan. No Git write commands or folder changes were performed.
+
+## Manual payment Phase 2 checklist (2026-11-08)
+
+Use temporary demo data only. Register a new student, enroll, attempt booking while unpaid, confirm payment in a separate admin session, then book a real available instructor slot. No payment gateway, sent email or receipt upload is involved.
+
+- [x] Unit/service tests: captured amount, validity from confirmation day, lesson grant, inactive course, Suspended student, duplicate confirmation, cancellation of Paid receipts, repeated cancellation, cancellation reason validation, and re-enrollment after cancellation.
+- [x] Concurrent admin tests: confirm/confirm and confirm/cancel allow exactly one decision; the other caller gets already handled.
+- [x] Server booking tests: forged unpaid requests, both request overloads, reschedule, assign, reassign, FIFO processing, instructor acceptance, completion and no-show.
+- [x] Invalid unpaid/Cancelled FIFO heads are saved as REJECTED with a clear reason; later requests can join the queue.
+- [x] Admin payment web tests: list, confirmation, cancellation, role guards and missing CSRF tokens.
+- [x] Dashboard count includes Awaiting payment only; Paid revenue excludes Awaiting payment and Cancelled amounts.
+- [x] Seed test: all three payment states, repeated runs without duplicates, retained decisions and no refilling used lesson balances.
+- [x] Final clean verify and browser evidence: recorded below after execution.
+
+New admin routes: `GET /admin/enrollments`, `POST /admin/enrollments/mark-paid`, `POST /admin/enrollments/cancel-request`. Student payment instructions remain at `GET /enrollments/{id}/payment`.
+
+Cancellation/rejection and deletion of already-cancelled bookings stay available to retire unsupported requests; they do not grant booking permission. A real Paid enrollment with remaining lessons is required when promising a new or changed lesson. Legacy Paid receipts without expiry remain readable.
+
+### Phase 2 final verification
+
+2026-11-08, Java 17, `npm run build:css`, `.\mvnw.cmd -q -DskipTests compile` and `.\mvnw.cmd clean verify` completed successfully. The final summary was:
+
+```text
+Tests run: 608, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+Total time: 01:11 min
+```
+
+The Phase 1 baseline was 585 tests. Phase 2 adds 23: EnrollmentPaymentServiceTest (10), AdminEnrollmentWebIntegrationTest (4), SchedulingWebIntegrationTest (8), and one additional AdminReportServiceTest. No live test was removed. BookingServiceCrudTest gained a real Paid receipt fixture; BookingConflictCheckerTest gained the receipt dependency and expects the clearer Paid message; BookingCutoffTest only supplies the new constructor dependency. DashboardSummaryServiceTest includes Cancelled history and the Awaiting payment count. DemoDataSeedRunnerTest expects nine receipts and checks retained decisions/exhausted balances. The existing report chronology test now expects no UNPAID Revenue row.
+
+Browser checks used only `${java.io.tmpdir}/drivespark-payment-phase2-check`, after verifying the server process arguments. The old app was stopped before restart. At 375, 768 and 1280px, the admin waiting list and empty state, admin dashboard count, student Awaiting payment/Paid/Cancelled enrollments, unpaid booking guidance and the successful Paid booking page were captured and reviewed. The red Cancelled display is now VERIFIED. Payment and cancellation used the shared confirm dialog in temporary data; repeated confirmation showed already handled. A deliberate forged unpaid POST returned 400 with the payment explanation and My enrollments link. There were no JavaScript exceptions, overflow or unexpected HTTP errors.
+
+The hand-off used 30 page/width cases; final restart checks used 15 more, with no repeated writes. Reports were checked at all three widths and CSV Revenue contained exactly the Paid row, `137500.00`, for the final temporary fixtures. Restart preserved handled receipts and the saved student booking. Screenshots and logs are outside the project in the system temporary directory, prefixed `drivespark-payment-phase2-`.
+
+An inconsistent amber secondary Cancelled badge found during visual review was corrected; both cancellation labels are red. The existing outdated Browserslist database warning remains. A complete screen-reader audit and multi-server/file-crash recovery remain UNVERIFIED; no multi-file durable transaction was introduced. Bubble sort, the linked-node FIFO implementation, role guards, CSRF and password hashing were preserved. No Git write commands or project folder changes were performed.

@@ -43,14 +43,14 @@ CRUD     : READ (displays page information); existing forms keep their original 
                     <h2><c:out value="${learningPackage.displayName}" /></h2>
                     <p class="ds-catalog-description"><c:out value="${learningPackage.description}" /></p>
                     <p class="ds-catalog-price"><span>LKR</span> <c:out value="${learningPackage.price}" /></p>
-                    <dl class="ds-public-facts"><div><dt>Lessons</dt><dd><c:out value="${learningPackage.lessonCount}" /></dd></div><div><dt>Driving time</dt><dd><c:out value="${learningPackage.durationHours}" /> hours</dd></div><div><dt>Validity from enrolment</dt><dd><c:out value="${learningPackage.validityDays}" /> days</dd></div></dl>
+                    <dl class="ds-public-facts"><div><dt>Lessons</dt><dd><c:out value="${learningPackage.lessonCount}" /></dd></div><div><dt>Driving time</dt><dd><c:out value="${learningPackage.durationHours}" /> hours</dd></div><div><dt>Validity after payment</dt><dd><c:out value="${learningPackage.validityDays}" /> days</dd></div></dl>
                     <c:url value="/packages/${learningPackage.id}" var="packageDetailUrl" />
                     <a class="ds-button ds-button-outline" href="<c:out value='${packageDetailUrl}' />">View package</a>
                 </article>
             </c:forEach>
         </div><p class="ds-filter-empty" hidden>No packages match this type.</p>
     </c:otherwise></c:choose>
-    <p class="ds-public-note">Prices are from the current project data. Payment is simulated for this university project.</p>
+    <p class="ds-public-note">Prices are from the current project data. Pay outside the system by bank transfer or at our office. Lessons unlock after payment confirmation.</p>
 </main>
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>
 </body></html>

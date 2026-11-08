@@ -84,7 +84,9 @@ public class BookingController {
         Student student = (Student) auth.requireLogin(request);
         model.addAttribute("bookings", ownBookings);
         addRequestGroups(ownBookings, model);
-        model.addAttribute("canBook", student.getActiveEnrollmentId() != null && student.getLessonsRemaining() > 0);
+        String bookingProblem = bookingService.bookingProblem(request);
+        model.addAttribute("bookingProblem", bookingProblem);
+        model.addAttribute("canBook", bookingProblem == null);
         model.addAttribute("packages", activeOwnPackage(student.getActivePackageId()));
         model.addAttribute("instructors", activeInstructors());
         model.addAttribute("today", LocalDate.now(clock));

@@ -20,6 +20,7 @@ public class DashboardSummary {
     private int pendingBookings;
     private int confirmedBookings;
     private int completedBookings;
+    private int awaitingPayments;
     private java.math.BigDecimal paidRevenue = java.math.BigDecimal.ZERO;
 
     // Shares the student count through a public method while the field stays private.
@@ -76,6 +77,15 @@ public class DashboardSummary {
     public void setCompletedBookings(int value) {
         if (value < 0) throw new IllegalArgumentException("Dashboard totals cannot be negative.");
         completedBookings = value;
+    }
+
+    // Shows the cashier how many requests still need a payment decision.
+    public int getAwaitingPayments() { return awaitingPayments; }
+
+    // Keeps the dashboard count valid even when there are no waiting receipts.
+    public void setAwaitingPayments(int value) {
+        if (value < 0) throw new IllegalArgumentException("Dashboard totals cannot be negative.");
+        awaitingPayments = value;
     }
 
     // Shares the paid revenue through a public method while the field stays private.

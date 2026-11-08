@@ -30,7 +30,7 @@ CRUD     : CREATE, READ, UPDATE, DELETE for reviews; reports READ saved data
 <button class="ds-button ds-button-outline" type="button" data-print>Print report</button></div>
 </header>
 <noscript><p class="no-print mb-5">Use your browser menu to print this report. CSV export works without JavaScript.</p></noscript>
-<p class="mb-6 text-sm text-slate-400">Counts include saved history. Instructor and vehicle usage count all assigned lesson statuses, not just completed lessons. Revenue uses amounts recorded at enrollment.</p>
+<p class="mb-6 text-sm text-slate-400">Counts include saved history. Instructor and vehicle usage count all assigned lesson statuses, not just completed lessons. Revenue counts Paid enrollments only, using their captured amounts. Awaiting payment and Cancelled requests are excluded from revenue.</p>
 <div class="ds-report-grid grid gap-6 xl:grid-cols-2">
 <c:forEach items="${reports}" var="report" varStatus="sectionIndex">
 <section class="ds-card ds-report-section" aria-labelledby="report-${sectionIndex.index}">

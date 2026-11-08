@@ -67,23 +67,26 @@ class EnrollmentServiceTest {
         service = new EnrollmentService(enrollments, packages, users, auth, clock, bookings);
     }
 
-    // Checks creation, own-list reading and a saved note update without changing the receipt.
+    // A request keeps its captured price but gives no lessons or validity before payment.
     @Test
     void createsReadsAndUpdatesOwnEnrollment() {
         Enrollment created = service.enroll(request, "P001");
         assertEquals(1, service.ownEnrollments(request).size());
-        assertEquals(LocalDate.of(2026, 12, 8), created.getValidUntil());
+        assertNull(created.getValidUntil());
+        assertEquals("AWAITING_PAYMENT", created.getStatus());
+        assertEquals("ENR-" + created.getId(), created.getReferenceCode());
         service.updateLearningGoal(request, created.getId(), "  Practise parking  ");
         Enrollment saved = enrollments.findByIdStrict(created.getId()).orElseThrow();
         assertEquals("Practise parking", saved.getLearningGoal());
         assertEquals(new BigDecimal("25000.00"), saved.getAmount());
-        assertEquals("PAID", saved.getPaymentStatus());
+        assertEquals("UNPAID", saved.getPaymentStatus());
         Student savedStudent = (Student) users.findByIdStrict("S001").orElseThrow();
-        assertEquals(10, savedStudent.getLessonsRemaining());
-        assertEquals(created.getId(), savedStudent.getActiveEnrollmentId());
+        assertEquals(0, savedStudent.getLessonsRemaining());
+        assertNull(savedStudent.getActiveEnrollmentId());
+        assertNull(savedStudent.getActivePackageId());
     }
 
-    // A second active enrollment must not create a second receipt.
+    // A second payment request must not create another receipt or lesson balance.
     @Test
     void rejectsDuplicateActiveEnrollment() {
         service.enroll(request, "P001");
@@ -113,7 +116,9 @@ class EnrollmentServiceTest {
     // A student's receipt remains even when they have no active lesson balance.
     @Test
     void protectsPaidReceipt() {
-        Enrollment enrollment = service.enroll(request, "P001");
+        Enrollment enrollment = new Enrollment("E001", "S001", "P001",
+                LocalDateTime.now(clock), course.getPrice(), "PAID");
+        enrollments.save(enrollment);
         student.setLessonsRemaining(0);
         assertThrows(ValidationException.class, () -> service.deleteOwnEnrollment(request, enrollment.getId()));
         assertTrue(enrollments.findByIdStrict(enrollment.getId()).isPresent());
@@ -165,6 +170,66 @@ class EnrollmentServiceTest {
         Enrollment legacy = service.ownEnrollments(request).get(0);
         assertNull(legacy.getValidUntil());
         assertNull(legacy.getLearningGoal());
+        assertEquals("PAID", legacy.getStatus());
+        assertEquals("PAID", legacy.getPaymentStatus());
+        assertEquals("ENR-E001", legacy.getReferenceCode());
+    }
+
+    // Receipts from before payment fields existed stay paid and retain the saved balance.
+    @Test
+    void loadsOldFormatWithoutPaymentFieldsAsPaidAndActive() throws Exception {
+        student.setActivePackageId("P001");
+        student.setLessonsRemaining(4);
+        student.setActiveEnrollmentId("E001");
+        users.update(student);
+        Files.writeString(directory.resolve("enrollments.txt"),
+                "{\"id\":\"E001\",\"studentId\":\"S001\",\"packageId\":\"P001\","
+                + "\"enrolledAt\":\"2026-01-01T09:00:00\",\"amount\":1000}\n");
+        Enrollment old = enrollments.findByIdStrict("E001").orElseThrow();
+        assertEquals("PAID", old.getStatus());
+        assertEquals("PAID", old.getPaymentStatus());
+        assertEquals("ENR-E001", old.getReferenceCode());
+        Student loaded = (Student) users.findByIdStrict("S001").orElseThrow();
+        assertEquals("E001", loaded.getActiveEnrollmentId());
+        assertEquals("P001", loaded.getActivePackageId());
+        assertEquals(4, loaded.getLessonsRemaining());
+    }
+
+    // Old explicitly unpaid receipts remain requests; they must never become paid by default.
+    @Test
+    void preservesOldUnpaidReceiptAndNewCancelledState() throws Exception {
+        Enrollment request = unpaid("E001", "S001");
+        enrollments.save(request);
+        assertEquals("AWAITING_PAYMENT", enrollments.findByIdStrict("E001").orElseThrow().getStatus());
+        request.setStatus("CANCELLED");
+        enrollments.update(request);
+        Enrollment cancelled = enrollments.findByIdStrict("E001").orElseThrow();
+        assertEquals("CANCELLED", cancelled.getStatus());
+        assertEquals("UNPAID", cancelled.getPaymentStatus());
+        assertFalse(cancelled.isPaid());
+        assertNull(cancelled.getValidUntil());
+    }
+
+    // Cancelled history does not prevent a student from requesting a package again.
+    @Test
+    void permitsNewRequestAfterCancellation() {
+        Enrollment cancelled = unpaid("E001", "S001");
+        cancelled.setStatus("CANCELLED");
+        enrollments.save(cancelled);
+        Enrollment next = service.enroll(request, "P001");
+        assertEquals("AWAITING_PAYMENT", next.getStatus());
+        assertNotEquals(cancelled.getId(), next.getId());
+        assertEquals(0, ((Student) users.findByIdStrict("S001").orElseThrow()).getLessonsRemaining());
+    }
+
+    // The payment page lookup refuses another student's reference and invalid states.
+    @Test
+    void protectsInstructionsAndRejectsUnknownState() {
+        Enrollment other = unpaid("E001", "S002");
+        enrollments.save(other);
+        assertThrows(ResponseStatusException.class, () -> service.ownEnrollment(request, "E001"));
+        assertThrows(ValidationException.class, () -> other.setStatus("APPROVED"));
+        assertEquals("AWAITING_PAYMENT", other.getStatus());
     }
 
     // The same display-name contract gives a different heading for each record type.

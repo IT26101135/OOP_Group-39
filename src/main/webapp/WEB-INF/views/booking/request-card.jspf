@@ -16,7 +16,7 @@ CRUD     : See the labelled operations; model and view files support these opera
 <p>Enrollment <c:out value="${booking.enrollmentId}" /></p>
 <c:if test="${booking.status eq 'PENDING'}"><c:choose><c:when test="${booking.instructorId == null}"><p class="mt-3"><span class="ds-queue-position">FIFO position <c:out value="${queuePositions[booking.id]}" /></span></p><p class="mt-2">Your request is waiting for assignment.</p></c:when><c:otherwise><p class="mt-3 text-indigo-200">Assigned - waiting for instructor approval.</p></c:otherwise></c:choose></c:if>
 <c:if test="${not empty booking.instructorId}"><p>Instructor <c:out value="${booking.instructorId}" /> - Vehicle <c:out value="${booking.vehicleId}" /></p></c:if>
-<c:if test="${not empty booking.rejectionReason}"><p class="mt-3 rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-amber-100"><c:out value="${booking.rejectionReason}" /></p></c:if>
+<c:if test="${not empty booking.rejectionReason}"><p class="mt-3 rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-amber-100"><c:out value="${booking.rejectionReason}" /> <a class="ds-home-text-link" href="<c:url value='/enrollments' />">My enrollments</a></p></c:if>
 <c:if test="${booking.status eq 'PENDING' or booking.status eq 'CONFIRMED'}">
 <details class="mt-5"><summary>Change this request</summary><p>Changes need advance notice. A rescheduled request joins the back of the queue.</p>
 <%-- BookingController rechecks ownership, the notice period and availability on submission. --%>

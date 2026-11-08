@@ -45,6 +45,12 @@ CRUD     : See CRUD labels on the record operations.
             Manage your driving school from here.
         </p>
     </header>
+    <%-- DashboardSummaryService counts waiting receipts from existing enrollment records. --%>
+    <section class="ds-feature-card mt-6" aria-labelledby="awaiting-payments-title">
+        <h2 id="awaiting-payments-title">Awaiting payment <span class="status-badge ds-payment-status" data-status="AWAITING_PAYMENT"><c:out value="${summary.awaitingPayments}" default="0" /></span></h2>
+        <p class="mt-3">Review payment receipts before unlocking student lessons.</p>
+        <a class="ds-button ds-button-outline mt-4" href="<c:url value='/admin/enrollments' />">Awaiting payment</a>
+    </section>
 
     <%-- This block shows a page section. AdminDashboardController supplies the page data. --%>
 <section class="ds-workspace-statistics" aria-label="Key academy statistics">

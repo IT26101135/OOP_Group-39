@@ -25,9 +25,33 @@ CRUD     : Displays existing data; does not save records
         <nav class="ds-nav" id="primary-navigation" aria-label="Main navigation">
             <button class="ds-nav-close" type="button" aria-label="Close navigation menu">Close <span aria-hidden="true">&#215;</span></button>
             <a class="ds-nav-link" href="<c:url value='/' />">Home</a>
+            <%-- PackageNavigationAdvice supplies one preloaded choice per course type. --%>
+            <div class="ds-package-menu">
+                <a class="ds-nav-link ds-package-trigger" href="<c:url value='/packages' />" <c:if test="${not empty packageNavigation}">aria-expanded="false" aria-controls="package-panel"</c:if>>Packages</a>
+                <c:if test="${not empty packageNavigation}">
+                    <div id="package-panel" class="ds-package-panel" hidden aria-label="Learning packages">
+                        <c:forEach items="${packageNavigation}" var="choice">
+                            <article class="ds-package-choice">
+                                <div class="ds-package-thumbnail" data-type="${choice.type}" role="img" aria-label="${choice.title} driving course illustration"></div>
+                                <h2><c:out value="${choice.title}" /></h2>
+                                <p><c:out value="${choice.tagline}" /></p>
+                                <c:choose><c:when test="${choice.available}">
+                                    <p>From LKR <c:out value="${choice.price}" /></p>
+                                    <c:if test="${not navLoggedIn or navRole eq 'STUDENT'}">
+                                        <c:url value="/packages/${choice.packageId}/start" var="entryUrl" />
+                                        <a class="ds-package-enroll" href="<c:out value='${entryUrl}' />">Enroll</a>
+                                    </c:if>
+                                </c:when><c:otherwise><p>Coming soon</p></c:otherwise></c:choose>
+                                <c:url value="/packages" var="typeUrl"><c:param name="type" value="${choice.type}" /></c:url>
+                                <a class="ds-package-view" href="<c:out value='${typeUrl}' />">View packages</a>
+                            </article>
+                        </c:forEach>
+                    </div>
+                </c:if>
+            </div>
             <c:choose>
                 <c:when test="${not navLoggedIn}">
-                    <a class="ds-nav-link" href="<c:url value='/packages' />">Packages</a>
+
                     <a class="ds-nav-link" href="<c:url value='/instructors' />">Instructors</a>
                     <a class="ds-nav-link" href="<c:url value='/about' />">About</a>
                     <details class="ds-nav-group"><summary>Explore</summary><div class="ds-nav-submenu">
@@ -48,6 +72,7 @@ CRUD     : Displays existing data; does not save records
                 </c:when>
                 <c:when test="${navRole eq 'ADMIN'}">
                     <a class="ds-nav-link" href="<c:url value='/admin/bookings' />">Bookings</a>
+                    <a class="ds-nav-link" href="<c:url value='/admin/enrollments' />">Awaiting payment</a>
                     <a class="ds-nav-link" href="<c:url value='/admin/students' />">Students</a>
                     <details class="ds-nav-group"><summary>Teaching</summary><div class="ds-nav-submenu">
                         <a class="ds-nav-link" href="<c:url value='/admin/instructors' />">Instructors</a>

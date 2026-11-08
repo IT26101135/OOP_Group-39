@@ -46,8 +46,10 @@ class DashboardSummaryServiceTest {
         List<Booking> lessons = List.of(booking(BookingStatus.PENDING),
                 booking(BookingStatus.COMPLETED), booking(BookingStatus.CANCELLED));
         when(bookings.readAllStrict()).thenReturn(lessons);
+        Enrollment cancelled = enrollment("E003", "UNPAID");
+        cancelled.setStatus("CANCELLED");
         when(enrollments.readAllStrict()).thenReturn(List.of(enrollment("E001", "PAID"),
-                enrollment("E002", "UNPAID")));
+                enrollment("E002", "UNPAID"), cancelled));
         DashboardSummary summary = new DashboardSummaryService(users,
                 mock(InstructorRepository.class), mock(VehicleRepository.class),
                 mock(LearningPackageRepository.class), bookings, enrollments).readSummary();
@@ -56,6 +58,7 @@ class DashboardSummaryServiceTest {
         assertEquals(1, summary.getCompletedBookings());
         assertEquals(0, summary.getConfirmedBookings());
         assertEquals(new BigDecimal("2500.50"), summary.getPaidRevenue());
+        assertEquals(1, summary.getAwaitingPayments());
         verify(users).readAllStrict();
         verify(bookings).readAllStrict();
         verify(enrollments).readAllStrict();

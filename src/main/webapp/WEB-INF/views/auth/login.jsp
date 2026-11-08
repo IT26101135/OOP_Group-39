@@ -37,7 +37,7 @@ CRUD     : See CRUD labels on the record operations.
     <p>Log in to continue your journey to confident driving.</p></header>
 
     <c:if test="${param.registered != null}">
-        <p role="status">Your account was created. An administrator must approve it before you can log in.</p>
+        <p role="status">Your account was created. You can log in now.</p>
     </c:if>
 
     <c:if test="${param.loggedOut != null}">

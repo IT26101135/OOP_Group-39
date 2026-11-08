@@ -77,3 +77,18 @@ These are concrete examples to explain, not a claim that every class satisfies e
 - `FileRepository<T>` uses `T` to mean the kind of record in that filing drawer. Its shared file locks, atomic replacement, JSON reader and ID counter are infrastructure; explain the purpose before discussing the implementation.
 - `AccountWriteCoordinator.execute` lets one account change finish before another starts. Existing simple callbacks keep several steps inside that shared lock; they are not a database transaction or a guarantee across multiple application processes.
 - Basic MVC roles are consistent: controller = web requests, service = school rules, repository = file storage, model = validated details. Constructor injection means Spring gives a class the helper it needs.
+
+## Manual payment examples (2026-11-08)
+
+| Member | Pillar or principle | Class | Method | One-sentence viva explanation |
+|---|---|---|---|---|
+| IT26101136 | Encapsulation | Enrollment | setStatus, setCancellationReason | Private state can contain only one of three payment states and a checked optional note. |
+| IT26101136 | Abstraction / I | EnrollmentAdministration | markPaid, cancelRequest | The cashier page needs a small admin contract rather than all student operations. |
+| IT26101136 | D / S | AdminEnrollmentController | constructor, markPaid | The controller receives its contract and handles forms while the service makes payment decisions. |
+| IT26101136 | Exception handling | EnrollmentService | requireAwaiting, paymentStudent, payablePackage | Friendly exceptions explain repeated decisions, suspended students and inactive courses. |
+| IT26101134 | S / Exception handling | PaidEnrollmentGuard | problemFor, requirePaid | One helper reads payment evidence and explains why a lesson cannot be promised. |
+| IT26101135 | Encapsulation | DashboardSummary | getAwaitingPayments, setAwaitingPayments | A private validated count is shown through public methods. |
+| IT26101132 | S | DemoDataSeedRunner | seedPaymentExample | The loader prepares examples without replacing an earlier cashier decision. |
+| IT26101137 | S | AdminReportService | revenue | The report adds only captured amounts from Paid receipts. |
+
+The existing inheritance, LearningRecord polymorphism and other SOLID examples above remain in place. The shared AccountWriteCoordinator lock serializes payment decisions and booking writes in one JVM. This is coordination, not a durable multi-file transaction or a lock across several application servers.

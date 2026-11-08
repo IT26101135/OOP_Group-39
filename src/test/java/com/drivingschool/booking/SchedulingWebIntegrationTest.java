@@ -12,6 +12,9 @@
 package com.drivingschool.booking;
 
 import com.drivingschool.auth.model.AccountStatus;
+import com.drivingschool.auth.model.Admin;
+import com.drivingschool.common.exception.ValidationException;
+import com.drivingschool.booking.service.BookingService;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.service.AuthService;
 import com.drivingschool.auth.service.AuthSessionService;
@@ -23,6 +26,8 @@ import com.drivingschool.instructor.model.Instructor;
 import com.drivingschool.instructor.repository.AvailabilityRepository;
 import com.drivingschool.instructor.service.InstructorAccountService;
 import com.drivingschool.learningpackage.model.LearningPackage;
+import com.drivingschool.learningpackage.model.Enrollment;
+import com.drivingschool.learningpackage.repository.EnrollmentRepository;
 import com.drivingschool.learningpackage.service.LearningPackageService;
 import com.drivingschool.learningpackage.service.EnrollmentService;
 import com.drivingschool.student.model.Student;
@@ -60,9 +65,11 @@ class SchedulingWebIntegrationTest {
     @Autowired InstructorAccountService instructorAccounts;
     @Autowired LearningPackageService packages;
     @Autowired EnrollmentService enrollments;
+    @Autowired EnrollmentRepository receipts;
     @Autowired UserRepository users;
     @Autowired AvailabilityRepository hours;
     @Autowired BookingRepository bookings;
+    @Autowired BookingService bookingService;
     @Autowired Clock clock;
     private Instructor instructor;
     private Student student;
@@ -96,10 +103,24 @@ class SchedulingWebIntegrationTest {
                 new BigDecimal("1000.00"), 5, 30, true);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setSession(studentSession);
-        enrollments.enroll(request, course.getId());
+        preparePaidEnrollment(request);
         lessonTime = LocalDate.now(clock).plusDays(3).atTime(10, 0);
         hours.save(new Availability(hours.nextId("H"), instructor.getId(), lessonTime.getDayOfWeek(),
                 LocalTime.of(9, 0), LocalTime.of(12, 0)));
+    }
+
+    // Scheduling tests start after payment; enrollment creation itself is now unpaid.
+    private void preparePaidEnrollment(MockHttpServletRequest request) {
+        // Step 1: Record the request through the real enrollment service.
+        Enrollment enrollment = enrollments.enroll(request, course.getId());
+        // Step 2: Prepare a paid fixture instead of assuming enrollment grants lessons.
+        enrollment.setStatus("PAID");
+        enrollment.setValidUntil(LocalDate.now(clock).plusDays(course.getValidityDays()));
+        receipts.update(enrollment);
+        student.setActivePackageId(course.getId());
+        student.setLessonsRemaining(course.getLessonCount());
+        student.setActiveEnrollmentId(enrollment.getId());
+        users.update(student);
     }
 
     // A real student form must create, show, cancel and delete its own request with CSRF protection.
@@ -151,6 +172,134 @@ class SchedulingWebIntegrationTest {
                 .param("startTime", "08:00").param("endTime", "12:00"))
                 .andExpect(redirectedUrl("/instructor/availability"));
         assertEquals(LocalTime.of(8, 0), hours.findByIdStrict(own.getId()).orElseThrow().getStartTime());
+    }
+
+    // A forged form cannot book an unpaid course, and neither service overload may bypass payment.
+    @Test
+    void unpaidEnrollmentBlocksBothRequestPaths() throws Exception {
+        changePaymentState("AWAITING_PAYMENT");
+        MockHttpServletRequest request = studentRequest();
+        assertThrows(ValidationException.class, () -> bookingService.requestLesson(request, course.getId(), lessonTime));
+        assertThrows(ValidationException.class, () -> bookingService.requestLesson(request, course.getId(), instructor.getId(), lessonTime));
+        mvc.perform(post("/bookings").session(studentSession).param("_csrf", token("/bookings", studentSession))
+                .param("packageId", course.getId()).param("instructorId", instructor.getId())
+                .param("startTime", lessonTime.toString())).andExpect(status().isBadRequest())
+                .andExpect(model().attribute("message", org.hamcrest.Matchers.containsString("Paid enrollment")));
+    }
+
+    // Failed rescheduling must leave the original request and its date intact.
+    @Test
+    void unpaidEnrollmentCannotReschedule() throws Exception {
+        Booking old = requestLesson();
+        changePaymentState("AWAITING_PAYMENT");
+        assertThrows(ValidationException.class, () -> bookingService.rescheduleOwnBooking(studentRequest(), old.getId(), lessonTime.plusHours(1)));
+        Booking saved = bookings.findByIdStrict(old.getId()).orElseThrow();
+        assertEquals(BookingStatus.PENDING, saved.getStatus());
+        assertEquals(lessonTime, saved.getStartTime());
+    }
+
+    // The oldest unpaid request is rejected with a reason before invalid resource IDs are used.
+    @Test
+    void adminAssignmentRejectsUnpaidHead() throws Exception {
+        clearTemporaryBookings();
+        Booking old = requestLesson();
+        changePaymentState("AWAITING_PAYMENT");
+        Booking result = bookingService.assign(adminRequest(), old.getId(), "I999", "V999");
+        assertEquals(BookingStatus.REJECTED, result.getStatus());
+        assertTrue(result.getRejectionReason().contains("Awaiting payment"));
+    }
+
+    // A cancelled legacy head leaves the FIFO line and cannot prevent the next request joining it.
+    @Test
+    void fifoProcessingRejectsCancelledHeadAndContinues() throws Exception {
+        clearTemporaryBookings();
+        Booking old = requestLesson();
+        changePaymentState("CANCELLED");
+        MockHttpServletRequest admin = adminRequest();
+        Booking rejected = bookingService.processNext(admin, "I999", "V999");
+        assertEquals(BookingStatus.REJECTED, rejected.getStatus());
+        assertTrue(rejected.getRejectionReason().contains("Cancelled"));
+        assertTrue(bookingService.getPendingQueue(admin).isEmpty());
+        changePaymentState("PAID");
+        Booking next = requestLesson();
+        assertEquals(next.getId(), bookingService.getPendingQueue(admin).get(0).getId());
+    }
+
+    // Reassignment cannot move resources for a lesson whose saved receipt is no longer Paid.
+    @Test
+    void reassignRequiresPaidReceipt() throws Exception {
+        Booking old = requestLesson();
+        old.confirm(instructor.getId(), "V001");
+        bookings.update(old);
+        changePaymentState("AWAITING_PAYMENT");
+        assertThrows(ValidationException.class, () -> bookingService.reassign(adminRequest(), old.getId(), "I999", "V999"));
+        assertEquals("V001", bookings.findByIdStrict(old.getId()).orElseThrow().getVehicleId());
+    }
+
+    // Instructor and completion routes must recheck the receipt instead of trusting assigned IDs.
+    @Test
+    void instructorAndCompletionWritesRequirePaidReceipt() throws Exception {
+        Booking old = requestLesson();
+        old.assignForInstructor(instructor.getId(), "V001");
+        bookings.update(old);
+        changePaymentState("AWAITING_PAYMENT");
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        assertThrows(ValidationException.class, () -> bookingService.acceptAssignedLesson(teacher, old.getId()));
+        old.confirm(instructor.getId(), "V001");
+        bookings.update(old);
+        assertThrows(ValidationException.class, () -> bookingService.complete(adminRequest(), old.getId()));
+        assertThrows(ValidationException.class, () -> bookingService.completeAssignedLesson(teacher, old.getId()));
+        assertThrows(ValidationException.class, () -> bookingService.markNoShowAssignedLesson(teacher, old.getId()));
+        assertEquals(BookingStatus.CONFIRMED, bookings.findByIdStrict(old.getId()).orElseThrow().getStatus());
+    }
+
+    // A paid receipt with no tickets left still cannot create another request.
+    @Test
+    void exhaustedEnrollmentCannotRequestLessons() {
+        student.setLessonsRemaining(0);
+        users.update(student);
+        assertThrows(ValidationException.class, () -> bookingService.requestLesson(studentRequest(), course.getId(), lessonTime));
+    }
+
+    // A Paid receipt whose validity has ended cannot reserve a new lesson.
+    @Test
+    void expiredPaidEnrollmentCannotRequestLessons() {
+        Enrollment expired = new Enrollment(student.getActiveEnrollmentId(), student.getId(), course.getId(),
+                LocalDateTime.now(clock).minusDays(10), course.getPrice(), "PAID");
+        expired.setValidUntil(LocalDate.now(clock).minusDays(1));
+        receipts.update(expired);
+        assertTrue(assertThrows(ValidationException.class,
+                () -> bookingService.requestLesson(studentRequest(), course.getId(), lessonTime)).getMessage().contains("expired"));
+    }
+
+    // Changes only this test receipt to reproduce old or externally changed payment data.
+    private void changePaymentState(String status) {
+        Enrollment receipt = receipts.findByIdStrict(student.getActiveEnrollmentId()).orElseThrow();
+        receipt.setStatus(status);
+        receipts.update(receipt);
+    }
+
+    // Supplies the real signed-in student's session to direct service checks.
+    private MockHttpServletRequest studentRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(studentSession);
+        return request;
+    }
+
+    // Creates a real temporary administrator session for assignment checks.
+    private MockHttpServletRequest adminRequest() {
+        String id = users.nextId("A");
+        String email = "admin-" + id + "@example.test";
+        users.save(new Admin(id, "Test Cashier", email, student.getPasswordHash()));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(login(email));
+        return request;
+    }
+
+    // Gives FIFO checks a private empty line inside this class's temporary directory.
+    private void clearTemporaryBookings() {
+        for (Booking booking : bookings.readAllStrict()) bookings.delete(booking.getId());
     }
 
     // Creates a student request using the actual slot and conflict services.

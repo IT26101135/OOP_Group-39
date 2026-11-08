@@ -48,8 +48,8 @@ Spring annotations connect some classes automatically. `@SpringBootApplication` 
 ## Current implementation
 
 - Visitor pages: Home, About, Packages, Instructors (manual bubble sort), FAQ, Contact, and approved Reviews.
-- Authentication uses BCrypt hashes, server-side account statuses, sessions, role guards, CSRF checks, and simulated password reset tokens. New student accounts wait for admin approval.
-- Students can edit profiles, enroll in one active package, view lesson balance/progress, request an available one-hour instructor slot, see FIFO position, cancel/reschedule under the 24-hour rule, and review a completed lesson once.
+- Authentication uses BCrypt hashes, server-side account statuses, sessions, role guards, CSRF checks, and simulated password reset tokens. New student accounts are Active and can log in immediately. Accounts explicitly marked Pending or Suspended remain blocked.
+- Students can edit profiles, request enrollment, view lesson balance/progress, request an available one-hour instructor slot with an active paid package, see FIFO position, cancel/reschedule under the 24-hour rule, and review a completed lesson once.
 - Instructors can manage weekly availability and leave, accept/decline assigned requests, record attendance, lesson notes and skill scores, and view their reviews.
 - Admins can manage students, instructors, packages and vehicles; process the FIFO request queue; reassign and force-cancel bookings; moderate reviews; and view report tables, animated SVG charts, CSV exports and a white print layout.
 - Booking creation and processing share `BookingConflictChecker`; it checks enrollment, future time, instructor schedule/leave and conflicts, student overlap, vehicle status/type and vehicle overlap.
@@ -74,7 +74,7 @@ All seeded users use `DriveSpark123!`:
 - Instructors: `instructor1@drivingschool.test` through `instructor5@drivingschool.test`
 - Students: `student1@drivingschool.test` through `student10@drivingschool.test` (students 1–7 Active, 8–9 Pending, 10 Suspended)
 
-The fixtures contain 6 packages, 6 vehicles, 7 paid enrollments, 15 bookings and 10 reviews. The seed idempotency test runs the loader twice and checks stable record counts. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo. The first seed expects a fresh isolated data directory; do not seed over real coursework records. Names such as `DemoMake` and placeholder contact/social links are demonstration content, not real businesses or destinations.
+The fixtures contain 6 packages, 6 vehicles, 9 enrollments (7 Paid, 1 Awaiting payment, 1 Cancelled), 15 bookings and 10 reviews. The seed idempotency test repeats the loader, checks stable record counts and ensures handled receipts and exhausted balances stay unchanged. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo. The first seed expects a fresh isolated data directory; do not seed over real coursework records. Names such as `DemoMake` and placeholder contact/social links are demonstration content, not real businesses or destinations.
 
 ### Module folders and owners
 
@@ -235,6 +235,16 @@ Shared files have one owner: Java foundation, startup and integration documentat
 
 The checked-in CSS and local assets let the app run without Node after dependencies have been downloaded. A first Maven/npm installation still needs its dependencies available locally or a network connection. `target/`, `node_modules/`, runtime demo folders and credentials should not be included in member PRs. Include generated `src/main/resources/static/css/tailwind.css` so running the app does not require a CSS build.
 
+## Manual enrollment payments
+
+New student accounts can log in immediately. Enrolling saves one **Awaiting payment** request per student, the current package price and a reference such as `ENR-E001`. It does not activate a package, grant lessons or start the validity countdown. The payment instructions and My enrollments pages show the reference and captured amount.
+
+Pay by bank transfer or at the school office, then send the receipt and reference using your own email service. Set `ADMIN_EMAIL` before starting the app to change the contact address; `app.payment.admin-email` in `application.properties` defaults to `admin@drivespark.test`. This is a placeholder address. Contact the school for its real bank details. **The system does not send email and does not upload receipts.** Administrators use Awaiting payment to confirm a receipt or cancel an unpaid request. Both actions use the shared confirmation dialog; cancellation has an optional reason. Confirmation starts validity on that day and grants the package lesson count.
+
+Enrollment `status` is `AWAITING_PAYMENT`, `PAID` or `CANCELLED`. The existing `paymentStatus` getter maps Paid to `PAID`, and both other states to `UNPAID`. References are derived from the permanent enrollment ID. Old saved receipts without the new state or reference still load as Paid; an explicitly old `UNPAID` receipt loads as Awaiting payment. Missing payment fields also default to Paid for old-format compatibility. Existing paid balances and expiry dates remain intact; no data files need deleting.
+
+New route: `GET /enrollments/{id}/payment` (signed-in owning student only). Existing POST routes and form field names remain unchanged. Awaiting payment, Cancelled, missing or unrelated receipts cannot supply a balance through the account repository. Old-format paid receipts remain valid; no data files need deleting. Every request, reschedule, assignment, reassignment, FIFO-processing, instructor acceptance and completion path checks the saved Paid receipt again. Unpaid or Cancelled legacy queue heads are rejected with a clear reason. Cancellation and rejection remain available for cleanup.
+
 ## Earlier Phase 5 verification
 
 2026-11-08, Java 17, `.\mvnw.cmd clean verify`:
@@ -264,3 +274,50 @@ Total time: 57.501 s
 ```
 
 The final browser audit checked 32 page/role combinations at 375/768/1280px, plus expanded controls and error pages. It found no automated WCAG-tagged violations in the checked final states. Print previews/PDFs and CSV export were checked. Screen-reader testing and full measured contrast over every gradient state remain UNVERIFIED; see the checklist for the exact scope. No tests were changed.
+
+### Manual-payment demonstration
+
+1. Register and log in as a new Active student in temporary demo data.
+2. Choose a package and Enroll. Show its Awaiting payment receipt, amount and reference.
+3. Open Book / My bookings. Booking is blocked with a link to My enrollments; forged forms are checked on the server too.
+4. In a separate admin session, open **Awaiting payment** (`/admin/enrollments`), check the receipt externally and confirm **Mark as Paid**. Double clicks or competing decisions get an already-handled message. Inactive courses and Suspended/Pending students cannot be confirmed.
+5. Return to the student session, choose an available instructor hour and send a booking request.
+
+Admin payment POST routes are `/admin/enrollments/mark-paid` and `/admin/enrollments/cancel-request`. Both accept `enrollmentId`; cancellation also accepts optional `reason` (300 characters maximum). Cancelled receipts remain in history with their explanation and cannot be deleted through the student page. The admin dashboard shows the waiting count; reports and CSV Revenue contain Paid amounts only.
+
+Student8's fresh demo data includes an unpaid request and a cancelled historical request for testing the red badge. Student9 remains the explicit Pending-account example. The loader preserves existing accounts and decisions; it does not change old saved accounts into new demo statuses.
+
+Payment and booking writes share one lock in the running Java application. This prevents two admins handling the same receipt and prevents a booking write racing a payment decision. File storage still has no durable multi-file transaction or coordination between several application instances; run one instance per data directory.
+
+### Manual payment Phase 2 verification (2026-11-08)
+
+```text
+Tests run: 608, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+Total time: 01:11 min
+```
+
+CSS build, compilation and documentation links passed. The complete temporary-data browser hand-off was checked at 375/768/1280px, including a blocked forged unpaid booking, admin confirmation, successful Paid booking, cancellation, red Cancelled labels, waiting-count changes and the no-payments empty state. The app was restarted and handled decisions remained unchanged. Reports and CSV contain Paid revenue only. See [TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md) for test changes, evidence and limits.
+
+## Photo Credits
+
+hero-road: Photo by Marcelo Mora on Pexels (Pexels License) - https://www.pexels.com/photo/scenic-mountain-road-at-sunset-32540808/
+
+safety-bg: Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/photo-of-a-car-s-dashboard-9661322/
+
+location: Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/cars-parked-near-building-on-street-in-daylight-7442030/
+
+cta-drive: Photo by Mustafa Ödemiş on Pexels (Pexels License) - https://www.pexels.com/photo/rainy-road-trip-view-through-windshield-34730119/
+
+flexible-bg: Photo by Anna Hinckel on Pexels (Pexels License) - https://www.pexels.com/photo/a-time-lapse-photography-of-a-highway-at-night-4599217/
+
+mission: Photo by Mitchell Henderson on Pexels (Pexels License) - https://www.pexels.com/photo/road-in-mountains-15993667/
+
+vehicle-manual: Photo by FBO Media on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-blue-sport-hatchback-in-minimalist-setting-35549144/
+
+vehicle-automatic: Photo by Oli Liao on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-black-sedan-parked-in-urban-setting-35628774/
+
+vehicle-motorcycle: Photo by Raj Pillay on Pexels (Pexels License) - https://www.pexels.com/photo/triumph-street-triple-765-r-27704082/
+
+promo-lesson: Photo by Bas Peperzak on Unsplash (Unsplash License) -
+ https://unsplash.com/photos/driving-test-instructor-and-student-tyhpK_QelPo
