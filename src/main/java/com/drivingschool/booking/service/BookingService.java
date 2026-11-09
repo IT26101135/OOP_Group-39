@@ -70,6 +70,8 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
     private final BookingOrder byRequestTime = new PendingRequestOrder();
     @Value("${app.booking.change-cutoff-hours:24}")
     private long changeCutoffHours = 24;
+    @Value("${app.attendance.require-lesson-ended:true}")
+    private boolean requireLessonEnded = true;
     @Autowired(required = false)
     private SlotAvailabilityService slotAvailability;
     @Autowired(required = false)
@@ -116,6 +118,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             paidEnrollments.requirePaid(student.getId(), profile.getActiveEnrollmentId());
+            requireCommitmentRoom(student.getId(), null);
             LocalDateTime endTime = startTime.plusMinutes(LESSON_MINUTES);
             for (Booking existing : bookings.readAllStrict()) {
                 if (existing.getStudentId().equals(student.getId())
@@ -155,6 +158,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             paidEnrollments.requirePaid(student.getId(), ((Student) student).getActiveEnrollmentId());
+            requireCommitmentRoom(student.getId(), null);
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     ((Student) student).getActiveEnrollmentId(), startTime,
                     startTime.plusMinutes(LESSON_MINUTES), null, null,
@@ -185,6 +189,26 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             if (booking.getStudentId().equals(studentId)) own.add(booking);
         }
         return byLessonTime.order(own);
+    }
+
+    // CRUD: READ - a student may open their own booking; an admin may open any booking.
+    public Booking getBookingDetails(HttpServletRequest request, String bookingId) {
+        // Step 1: Refuse other roles before reading any booking details.
+        User user = auth.requireLogin(request);
+        if (user.getRole() != Role.STUDENT && user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Student ownership or administrator access is required.");
+        }
+        if (bookingId == null || !bookingId.matches("B(?!000)[0-9]{3}")) {
+            throw new ValidationException("Booking ID must be B001 to B999.");
+        }
+        // Step 2: Read the record without changing its state or lesson balance.
+        Booking booking = findBooking(bookingId);
+        if (user.getRole() == Role.STUDENT && !user.getId().equals(booking.getStudentId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can only view your own lesson requests.");
+        }
+        return booking;
     }
 
     // Cancels an owned request only when the configured notice period permits it.
@@ -230,6 +254,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             if (!(current instanceof Student student) || student.getActivePackageId() == null
                     || student.getActiveEnrollmentId() == null || student.getLessonsRemaining() < 1)
                 throw new ValidationException("An active package with remaining lessons is required.");
+            requireCommitmentRoom(studentId, old.getId());
             String requestedInstructor = old.getRequestedInstructorId() != null
                     ? old.getRequestedInstructorId() : old.getInstructorId();
             if (requestedInstructor == null || slotAvailability == null
@@ -416,6 +441,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                 bookings.update(target);
                 return target;
             }
+            requireCommitmentRoom(target.getStudentId(), target.getId());
             Instructor instructor = instructors.findByIdStrict(instructorId)
                     .orElseThrow(() -> new RecordNotFoundException("Instructor not found."));
             Vehicle vehicle = vehicles.findByIdStrict(vehicleId)
@@ -447,7 +473,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             paidEnrollments.requirePaid(target.getStudentId(), target.getEnrollmentId());
-            target.complete();
+            target.complete(LocalDateTime.now(clock), requireLessonEnded);
             bookings.update(target);
             decrementPackageLessons(target);
             return target;
@@ -531,7 +557,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                         "You can only complete lessons assigned to you.");
             }
             paidEnrollments.requirePaid(target.getStudentId(), target.getEnrollmentId());
-            target.complete();
+            target.complete(LocalDateTime.now(clock), requireLessonEnded);
             bookings.update(target);
             decrementPackageLessons(target);
             return target;
@@ -554,7 +580,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                         "You may only update lessons assigned to you.");
             }
             paidEnrollments.requirePaid(target.getStudentId(), target.getEnrollmentId());
-            target.markNoShow();
+            target.markNoShow(LocalDateTime.now(clock), requireLessonEnded);
             bookings.update(target);
             return target;
         }
@@ -574,6 +600,28 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                     "Student access is required.");
         }
         return user;
+    }
+
+    // CRUD: READ - count current promises while the shared booking lock is held.
+    // Step 1: Reload the balance so another completed lesson cannot leave a stale limit.
+    private void requireCommitmentRoom(String studentId, String excludedBookingId) {
+        Student student = (Student) users.findByIdStrict(studentId)
+                .orElseThrow(() -> new RecordNotFoundException("Student account not found."));
+        int requested = 0;
+        for (Booking booking : bookings.readAllStrict()) {
+            if (studentId.equals(booking.getStudentId())
+                    && !booking.getId().equals(excludedBookingId)
+                    && (booking.getStatus() == BookingStatus.PENDING
+                    || booking.getStatus() == BookingStatus.CONFIRMED)) {
+                requested++;
+            }
+        }
+        // Step 2: The new request, replacement or assignment needs one of the remaining tickets.
+        if (requested >= student.getLessonsRemaining()) {
+            throw new ValidationException("You have " + student.getLessonsRemaining()
+                    + " lessons left and " + requested
+                    + " already requested. Cancel an open request before requesting another lesson.");
+        }
     }
 
     // Uses one lesson only when the booking belongs to the student's active enrollment.

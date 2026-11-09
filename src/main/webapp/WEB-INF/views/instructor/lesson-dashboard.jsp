@@ -47,6 +47,7 @@ CRUD     : See the labelled operations; model and view files support these opera
 <%-- InstructorDashboardController supplies this record card. --%>
 <article class="ds-feature-card">
 <div class="mb-4 flex flex-wrap items-start justify-between gap-3"><div><p class="ds-eyebrow"><c:out value="${booking.id}" /></p><h2><c:out value="${booking.startTime.toLocalDate()}" /></h2><p><c:out value="${booking.startTime.toLocalTime().withSecond(0).withNano(0)}" /> to <c:out value="${booking.endTime.toLocalTime().withSecond(0).withNano(0)}" /></p></div><span class="status-badge" data-status="<c:out value='${booking.status}' />"><c:out value="${booking.status}" /></span></div>
+<p>Package: <c:out value="${bookingPackages[booking.id].packageName}" /> &middot; Course type: <c:out value="${bookingPackages[booking.id].type}" /></p>
 <p>Student: <c:out value="${studentDetails[booking.id].name}" /> (<c:out value="${booking.studentId}" />)</p><p>Vehicle: <c:out value="${booking.vehicleId}" default="Awaiting assignment" /></p>
 <c:if test="${booking.status eq 'PENDING'}">
 <div class="mt-5 grid gap-4 sm:grid-cols-2">

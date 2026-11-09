@@ -1,0 +1,109 @@
+@startuml
+' Documentation owner: IT26101134
+' Names verified against Java source; method parameter lists intentionally hidden.
+title IT26101134 — bookings, FIFO and scheduling
+left to right direction
+skinparam classAttributeIconSize 0
+class Booking {
+  -String id
+  -String studentId
+  -String enrollmentId
+  -String instructorId
+  -String vehicleId
+  -BookingStatus status
+  -LocalDateTime createdAt
+  +void reject()
+  +void assignForInstructor()
+  +void confirm()
+  +void cancel()
+}
+note right of Booking
+Encapsulation: state-changing methods protect booking status.
+end note
+class BookingRepository {
+  +void save()
+  +List<Booking> readAllStrict()
+  +void update()
+  +void delete()
+}
+abstract class FileRepository {
+}
+interface StudentBookingOperations {
+  +Booking requestLesson()
+  +List<Booking> getOwnBookings()
+  +Booking rescheduleOwnBooking()
+  +void deleteCancelledBooking()
+}
+interface AdminBookingOperations {
+  +Booking processNext()
+  +Booking assign()
+  +Booking reassign()
+}
+class BookingController {
+  -StudentBookingOperations bookingService
+  +String request()
+  +String list()
+  +String reschedule()
+  +String delete()
+}
+note right of BookingController
+Controller CRUD: request / list / reschedule / delete.
+end note
+class BookingService {
+  -BookingRepository bookings
+  -PaidEnrollmentGuard paidEnrollments
+  -BookingConflictChecker conflictChecker
+  +Booking requestLesson()
+  +List<Booking> getOwnBookings()
+  +Booking rescheduleOwnBooking()
+  +void deleteCancelledBooking()
+  +Booking processNext()
+  +Booking assign()
+}
+note right of BookingService
+CRUD: requestLesson / getOwnBookings / rescheduleOwnBooking / deleteCancelledBooking. Throws shared ValidationException or RecordNotFoundException; ownership uses HTTP status exceptions.
+end note
+class BookingRequestQueue {
+  -Node head
+  -Node tail
+  -int size
+  +void enqueue()
+  +Booking dequeue()
+  +Booking peek()
+  +int positionOf()
+}
+note right of BookingRequestQueue
+Private static Node has booking: Booking and next: Node. Hand-written linked queue; constructor restores FIFO from saved pending unassigned records.
+end note
+class BookingConflictChecker {
+  -BookingRepository bookings
+  -AvailabilityRepository availability
+  -InstructorLeaveRepository leaves
+  +String conflictReason()
+}
+note right of BookingConflictChecker
+Checks current resources, schedule, leave, payment and overlap. Null means no conflict.
+end note
+class PaidEnrollmentGuard {
+  -EnrollmentRepository enrollments
+  -UserRepository users
+  -LearningPackageRepository packages
+  +void requirePaid()
+  +String problemFor()
+}
+note right of PaidEnrollmentGuard
+Server-side check; an unpaid receipt cannot supply lesson tickets.
+end note
+BookingRepository --|> FileRepository : T = Booking
+BookingRepository --> Booking : stores
+BookingService ..|> StudentBookingOperations
+BookingService ..|> AdminBookingOperations
+BookingController ..> StudentBookingOperations
+BookingService ..> BookingRepository
+BookingService ..> BookingRequestQueue : creates temporary queue
+BookingService ..> BookingConflictChecker
+BookingService ..> PaidEnrollmentGuard
+BookingConflictChecker ..> PaidEnrollmentGuard
+BookingRequestQueue --> Booking : linked nodes
+@enduml
+

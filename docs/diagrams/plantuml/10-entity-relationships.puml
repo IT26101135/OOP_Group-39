@@ -1,0 +1,119 @@
+@startuml
+' Documentation owner: IT26101135
+title Logical entity shapes and ID links - file storage, not database tables
+hide circle
+skinparam linetype ortho
+entity User {
+  * id : String <<PK>>
+  name : String
+  email : String
+  passwordHash : String
+  status : AccountStatus
+}
+entity Student {
+  * id : String <<PK>>
+  activePackageId : String <<FK>>
+  activeEnrollmentId : String <<FK>>
+  lessonsRemaining : int
+}
+entity Admin {
+  * id : String <<PK>>
+}
+entity InstructorAccount {
+  * id : String <<PK>>
+}
+entity Instructor {
+  * id : String <<PK>>
+  name : String
+  active : boolean
+  averageRating : double
+}
+entity Availability {
+  * id : String <<PK>>
+  instructorId : String <<FK>>
+  dayOfWeek : DayOfWeek
+  startTime : LocalTime
+  endTime : LocalTime
+}
+entity InstructorLeave {
+  * id : String <<PK>>
+  instructorId : String <<FK>>
+  date : LocalDate
+  reason : String
+}
+entity LessonRecord {
+  * id : String <<PK>>
+  bookingId : String <<FK>>
+  notes : String
+  readyForTest : boolean
+  updatedAt : LocalDateTime
+}
+entity LearningPackage {
+  * id : String <<PK>>
+  name : String
+  price : BigDecimal
+  lessonCount : int
+  validityDays : int
+  type : PackageType
+}
+entity Enrollment {
+  * id : String <<PK>>
+  studentId : String <<FK>>
+  packageId : String <<FK>>
+  amount : BigDecimal
+  status : String
+  validUntil : LocalDate
+}
+entity Booking {
+  * id : String <<PK>>
+  studentId : String <<FK>>
+  enrollmentId : String <<FK>>
+  instructorId : String <<FK>>
+  vehicleId : String <<FK>>
+  requestedInstructorId : String <<FK>>
+  startTime : LocalDateTime
+  status : BookingStatus
+}
+entity Vehicle {
+  * id : String <<PK>>
+  registrationNumber : String
+  operationalStatus : VehicleOperationalStatus
+  insuranceExpiry : LocalDate
+  nextServiceDate : LocalDate
+}
+entity Review {
+  * id : String <<PK>>
+  studentId : String <<FK>>
+  bookingId : String <<FK>>
+  instructorId : String <<FK>>
+  rating : int
+  status : ReviewStatus
+}
+entity ContactMessage {
+  * id : String <<PK>>
+  name : String
+  email : String
+  message : String
+  createdAt : LocalDateTime
+}
+User ||--o| Student : "same inherited id - extends User"
+User ||--o| Admin : "same inherited id - extends User"
+User ||--o| InstructorAccount : "same inherited id - extends User"
+InstructorAccount o|--o| Instructor : "matching id when paired by account service"
+Instructor ||--o{ Availability : "instructorId - weekly working hours"
+Instructor ||--o{ InstructorLeave : "instructorId"
+Student ||--o{ Enrollment : "studentId - owned receipts"
+LearningPackage ||--o{ Enrollment : "packageId"
+LearningPackage o|--o{ Student : "activePackageId - Paid only"
+Student o|--o| Enrollment : "activeEnrollmentId - optional Paid pointer"
+Student ||--o{ Booking : "studentId"
+Enrollment ||--o{ Booking : "enrollmentId"
+Instructor o|--o{ Booking : "instructorId - null before assignment"
+Instructor o|--o{ Booking : "requestedInstructorId - preferred instructor"
+Vehicle o|--o{ Booking : "vehicleId - null before assignment"
+Booking ||--o| LessonRecord : "bookingId - notes for one lesson"
+Student ||--o{ Review : "studentId"
+Booking o|--o{ Review : "bookingId - optional on legacy reviews"
+Instructor o|--o{ Review : "instructorId - optional on legacy reviews"
+@enduml
+

@@ -1,0 +1,52 @@
+@startuml
+' Documentation owner: IT26101135
+title Sequence A — registration, login, manual payment and booking
+actor "Student browser" as Student
+actor "Admin browser" as Admin
+participant "AuthController" as AC
+participant "AuthService" as AS
+participant "UserRepository" as UR
+participant "AuthSessionService" as SS
+participant "EnrollmentController" as EC
+participant "EnrollmentService" as ES
+participant "EnrollmentRepository" as ER
+participant "AdminEnrollmentController" as AEC
+participant "BookingController" as BC
+participant "BookingService" as BS
+participant "PaidEnrollmentGuard" as PG
+participant "BookingRepository" as BR
+Student -> AC : POST /register: register(...)
+AC -> AS : registerStudent(...)
+note over AS,UR: Under AccountWriteCoordinator.execute: validate email, hash password, create ACTIVE Student.
+AS -> UR : save(student)
+AC --> Student : Redirect to /login?registered
+Student -> AC : POST /login: login(...)
+AC -> SS : loginWithResult(...)
+SS -> AS : authenticate(...)
+AS -> UR : readAllStrict()
+note over SS: Checks real status; invalidates the old session and stores the user ID in a new session.
+AC --> Student : Role-based redirect on success
+Student -> EC : POST /enrollments: enroll(...)
+EC -> ES : enroll(request, packageId)
+note over ES: Shared account lock: require student, reject duplicate waiting/active enrollment, check active package.
+ES -> ER : save(AWAITING_PAYMENT enrollment)
+EC --> Student : Redirect /enrollments/{id}/payment
+Student -> EC : GET /enrollments/{id}/payment: payment(...)
+EC -> ES : ownEnrollment(request, id)
+EC --> Student : Payment instructions, captured amount, computed reference
+note over Student,Admin: Payment and receipt checking happen outside the app. No email is sent and no receipt is uploaded.
+Admin -> AEC : POST /admin/enrollments/mark-paid: markPaid(...)
+AEC -> ES : markPaid(request, enrollmentId)
+note over ES,UR: Admin + shared lock: reload waiting record; reject inactive package or non-ACTIVE student; set PAID and validity.
+ES -> UR : update(student with active IDs and lessons)
+ES -> ER : update(paid enrollment)
+AEC --> Admin : Success redirect /admin/enrollments
+Student -> BC : POST /bookings: request(...)
+BC -> BS : requestLesson(request, packageId, instructorId, startTime)
+BS -> PG : requirePaid(studentId, activeEnrollmentId)
+note over BS: Check saved slot and active package; lock, recheck payment and conflictReason before saving.
+BS -> BR : save(PENDING booking)
+BC --> Student : Redirect /bookings: request is waiting
+note over BC,BR: Admin assignment and instructor acceptance are later steps; requesting does not mean Confirmed.
+@enduml
+

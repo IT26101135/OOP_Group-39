@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import com.drivingschool.learningpackage.service.EnrollmentPresentationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -51,11 +52,14 @@ public class EnrollmentController {
     private final Clock clock;
     private final String paymentAdminEmail;
 
+    private final EnrollmentPresentationService presentation;
+
     // Receives the helpers this class needs so each job stays separate.
     public EnrollmentController(EnrollmentOperations enrollmentService,
                                 AuthSessionService auth,
                                 CsrfTokenService csrf, Clock clock,
-                                @Value("${app.payment.admin-email:admin@drivespark.test}") String paymentAdminEmail) {
+                                @Value("${app.payment.admin-email:admin@drivespark.test}") String paymentAdminEmail, EnrollmentPresentationService presentation) {
+        this.presentation = presentation;
         this.enrollmentService = enrollmentService;
         this.auth = auth;
         this.csrf = csrf;
@@ -70,7 +74,9 @@ public class EnrollmentController {
                        Model model) {
         requireStudent(request);
         response.setHeader("Cache-Control", "no-store");
-        List<Enrollment> enrollments = enrollmentService.ownEnrollments(request);
+        presentation.addStudent(request, model, null);
+        @SuppressWarnings("unchecked")
+        List<Enrollment> enrollments = (List<Enrollment>) model.getAttribute("enrollments");
         model.addAttribute("enrollments", enrollments);
         model.addAttribute("expiryLabels", expiryLabels(enrollments));
         Student student = (Student) auth.requireLogin(request);

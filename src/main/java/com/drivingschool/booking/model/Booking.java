@@ -287,18 +287,38 @@ public class Booking implements Identifiable {
 
     // Marks a confirmed lesson complete through the booking rules.
     public void complete() {
+        complete(LocalDateTime.now(java.time.ZoneId.of("Asia/Colombo")), true);
+    }
+
+    // Step 1: Check attendance time before changing the saved lesson state.
+    public void complete(LocalDateTime now, boolean requireLessonEnded) {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException(
                     "Only CONFIRMED bookings can be completed");
         }
 
+        if (requireLessonEnded && now.isBefore(endTime)) {
+            throw new ValidationException("This lesson has not ended yet. Completion becomes available at "
+                    + endTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                    + " (Asia/Colombo).");
+        }
         this.status = BookingStatus.COMPLETED;
     }
 
     // Keeps the mark no show step in one place for this module.
     public void markNoShow() {
+        markNoShow(LocalDateTime.now(java.time.ZoneId.of("Asia/Colombo")), true);
+    }
+
+    // Step 1: A student cannot be absent before the lesson starts.
+    public void markNoShow(LocalDateTime now, boolean requireLessonEnded) {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException("Only confirmed lessons can be marked no-show.");
+        }
+        if (requireLessonEnded && now.isBefore(startTime)) {
+            throw new ValidationException("This lesson has not started yet. No-show becomes available at "
+                    + startTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                    + " (Asia/Colombo).");
         }
         status = BookingStatus.NO_SHOW;
     }

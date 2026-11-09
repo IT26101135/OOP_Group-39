@@ -1,0 +1,21 @@
+<%--
+MEMBER   : IT26101136 - [Name]
+FILE     : enrollment-usage.jspf
+WHAT IT DOES: Shows read-only package and lesson labels supplied by the controller.
+CRUD     : READ only. OOP: Presentation uses EnrollmentUsageView, not file storage.
+--%>
+<div class="ds-card my-5" aria-label="Package and lesson summary">
+    <h2><c:out value="${usage.packageName}" /></h2>
+    <p>Course type: <c:out value="${usage.type}" /></p>
+    <p class="my-3"><span class="status-badge"><c:out value="${usage.status}" /></span></p>
+    <dl class="grid gap-3 sm:grid-cols-2">
+        <div><dt>Lessons left</dt><dd><c:out value="${usage.lessonsLeft}" /></dd></div>
+        <div><dt>Completed</dt><dd><c:out value="${usage.completed}" /></dd></div>
+        <div><dt>Requested</dt><dd><c:out value="${usage.requested}" /></dd></div>
+        <div><dt>Confirmed</dt><dd><c:out value="${usage.confirmed}" /></dd></div>
+        <div><dt>Valid until</dt><dd><c:out value="${usage.validity}" /></dd></div>
+        <div><dt>Current package offering</dt><dd><c:out value="${usage.lessonCount}" /> lessons</dd></div>
+    </dl>
+    <c:if test="${not empty usage.message}"><p class="mt-4"><c:out value="${usage.message}" /></p></c:if>
+    <a class="ds-home-text-link mt-4" href="<c:url value='${usage.nextUrl}' />"><c:out value="${usage.nextLabel}" /></a>
+</div>

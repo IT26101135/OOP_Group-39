@@ -1,0 +1,72 @@
+@startuml
+' Documentation owner: IT26101135
+title Actual direct cross-package imports
+left to right direction
+rectangle "admin" as admin
+rectangle "auth" as auth
+rectangle "booking" as booking
+rectangle "common" as common
+rectangle "instructor" as instructor
+rectangle "learningpackage" as learningpackage
+rectangle "report" as report
+rectangle "review" as review
+rectangle "sample" as sample
+rectangle "student" as student
+rectangle "vehicle" as vehicle
+admin --> auth
+admin --> common
+admin --> instructor
+admin --> learningpackage
+admin --> student
+auth --> common
+auth --> learningpackage
+auth --> student
+booking --> auth
+booking --> common
+booking --> instructor
+booking --> learningpackage
+booking --> student
+booking --> vehicle
+common --> auth
+common --> booking
+common --> instructor
+common --> learningpackage
+common --> vehicle
+instructor --> auth
+instructor --> booking
+instructor --> common
+instructor --> review
+instructor --> student
+learningpackage --> auth
+learningpackage --> booking
+learningpackage --> common
+learningpackage --> student
+report --> auth
+report --> booking
+report --> instructor
+report --> learningpackage
+report --> review
+report --> vehicle
+review --> auth
+review --> booking
+review --> common
+review --> instructor
+review --> student
+sample --> auth
+sample --> booking
+sample --> instructor
+sample --> learningpackage
+sample --> review
+sample --> student
+sample --> vehicle
+student --> auth
+student --> booking
+student --> common
+student --> instructor
+student --> learningpackage
+student --> review
+vehicle --> auth
+vehicle --> booking
+vehicle --> common
+@enduml
+

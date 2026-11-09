@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.time.Clock;
 import com.drivingschool.common.exception.ValidationException;
-import com.drivingschool.learningpackage.model.LearningPackage;
-import com.drivingschool.learningpackage.service.LearningPackageCatalog;
+import com.drivingschool.learningpackage.service.EnrollmentPresentationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -51,22 +50,22 @@ public class BookingController {
 
     // SOLID: D - Student pages receive only the booking operations they need.
     private final StudentBookingOperations bookingService;
-    private final LearningPackageCatalog packageService;
     private final CsrfTokenService csrf;
     private final SlotAvailabilityService slotService;
     private final InstructorRepository instructors;
     private final AuthSessionService auth;
     private final Clock clock;
 
+    private final EnrollmentPresentationService presentation;
+
     // Receives the helpers or validates the details needed to create this object.
     public BookingController(StudentBookingOperations bookingService,
-                             LearningPackageCatalog packageService,
                              CsrfTokenService csrf,
                              SlotAvailabilityService slotService,
                              InstructorRepository instructors,
-                             AuthSessionService auth, Clock clock) {
+                             AuthSessionService auth, Clock clock, EnrollmentPresentationService presentation) {
+        this.presentation = presentation;
         this.bookingService = bookingService;
-        this.packageService = packageService;
         this.csrf = csrf;
         this.slotService = slotService;
         this.instructors = instructors;
@@ -83,11 +82,11 @@ public class BookingController {
         List<Booking> ownBookings = bookingService.getOwnBookings(request);
         Student student = (Student) auth.requireLogin(request);
         model.addAttribute("bookings", ownBookings);
+        presentation.addStudent(request, model, ownBookings);
         addRequestGroups(ownBookings, model);
         String bookingProblem = bookingService.bookingProblem(request);
         model.addAttribute("bookingProblem", bookingProblem);
         model.addAttribute("canBook", bookingProblem == null);
-        model.addAttribute("packages", activeOwnPackage(student.getActivePackageId()));
         model.addAttribute("instructors", activeInstructors());
         model.addAttribute("today", LocalDate.now(clock));
         addQueuePositions(ownBookings, request, model);
@@ -151,15 +150,6 @@ public class BookingController {
         }
         model.addAttribute("openBookings", open);
         model.addAttribute("historyBookings", history);
-    }
-
-    // Keeps the active own package step in one place for this module.
-    private List<LearningPackage> activeOwnPackage(String packageId) {
-        List<LearningPackage> result = new ArrayList<>();
-        for (LearningPackage course : packageService.listPackages()) {
-            if (course.isActive() && course.getId().equals(packageId)) result.add(course);
-        }
-        return result;
     }
 
     // Keeps the active instructors step in one place for this module.

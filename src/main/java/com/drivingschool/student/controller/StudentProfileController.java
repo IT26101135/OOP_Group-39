@@ -18,6 +18,7 @@ import com.drivingschool.common.exception.ValidationException;
 import com.drivingschool.student.dto.StudentProfile;
 import com.drivingschool.student.form.StudentProfileForm;
 import com.drivingschool.student.api.StudentProfiles;
+import com.drivingschool.learningpackage.service.EnrollmentPresentationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -36,9 +37,12 @@ public class StudentProfileController {
     private final StudentProfiles profileService;
     private final CsrfTokenService csrfTokenService;
 
+    private final EnrollmentPresentationService presentation;
+
     // Receives the helpers this class needs so each job stays separate.
     public StudentProfileController(StudentProfiles profileService,
-                                    CsrfTokenService csrfTokenService) {
+                                    CsrfTokenService csrfTokenService, EnrollmentPresentationService presentation) {
+        this.presentation = presentation;
         this.profileService = profileService;
         this.csrfTokenService = csrfTokenService;
     }
@@ -60,6 +64,7 @@ public class StudentProfileController {
         // The service additionally enforces student-only access.
         model.addAttribute("profile", profileService.getOwnProfile(request));
         model.addAttribute("navProfileActive", true);
+        presentation.addStudent(request, model, null);
         return "student/profile";
     }
 

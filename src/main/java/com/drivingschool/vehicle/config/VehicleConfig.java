@@ -20,20 +20,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.ObjectProvider;
-import com.drivingschool.vehicle.api.VehicleLookup;
-import com.drivingschool.vehicle.service.VehicleLookupService;
 import java.nio.file.Path;
 
 @Configuration
 public class VehicleConfig {
-
-    // Connects the scheduling interface to its vehicle implementation.
-    @Bean
-    public VehicleLookup vehicleLookup(
-            VehicleRepository vehicleRepository) {
-
-        return new VehicleLookupService(vehicleRepository);
-    }
 
     // Chooses the vehicle file inside the configured data directory.
     @Bean

@@ -13,6 +13,8 @@ CRUD     : See the labelled operations; model and view files support these opera
 <%-- BookingController supplies one owned request and its FIFO position for this card. --%>
 <%-- BookingController supplies this record card. --%>
 <article class="ds-feature-card"><div class="mb-4 flex flex-wrap items-start justify-between gap-3"><div><p class="ds-eyebrow"><c:out value="${booking.id}" /></p><h3 class="text-xl"><c:out value="${booking.startTime.toLocalDate()}" /></h3><p><c:out value="${booking.startTime.toLocalTime().withSecond(0).withNano(0)}" /> to <c:out value="${booking.endTime.toLocalTime().withSecond(0).withNano(0)}" /></p></div><span class="status-badge" data-status="${booking.status}"><c:out value="${booking.status}" /></span></div>
+<p class="my-3"><a class="ds-home-text-link" href="<c:url value='/bookings/${booking.id}/details' />">View booking details</a></p>
+<p>Package: <c:out value="${bookingPackages[booking.id].packageName}" /> &middot; Course type: <c:out value="${bookingPackages[booking.id].type}" /></p>
 <p>Enrollment <c:out value="${booking.enrollmentId}" /></p>
 <c:if test="${booking.status eq 'PENDING'}"><c:choose><c:when test="${booking.instructorId == null}"><p class="mt-3"><span class="ds-queue-position">FIFO position <c:out value="${queuePositions[booking.id]}" /></span></p><p class="mt-2">Your request is waiting for assignment.</p></c:when><c:otherwise><p class="mt-3 text-indigo-200">Assigned - waiting for instructor approval.</p></c:otherwise></c:choose></c:if>
 <c:if test="${not empty booking.instructorId}"><p>Instructor <c:out value="${booking.instructorId}" /> - Vehicle <c:out value="${booking.vehicleId}" /></p></c:if>

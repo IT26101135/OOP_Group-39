@@ -40,6 +40,7 @@ CRUD     : See CRUD labels on the record operations.
 <article class="ds-feature-card">
                         <%-- OOP: POLYMORPHISM - LearningRecord supplies the heading for this enrollment. --%>
                         <h2><c:out value="${enrollment.displayName}" /></h2>
+<c:set var="usage" value="${enrollmentUsage[enrollment.id]}" /><%@ include file="/WEB-INF/views/common/components/enrollment-usage.jspf" %>
                         <p class="mt-2">Reference: <strong><c:out value="${enrollment.referenceCode}" /></strong></p>
                         <p>Package <c:out value="${enrollment.packageId}" /> · Enrolled <c:out value="${enrollment.enrolledAt.toLocalDate()}" /></p>
                         <div class="my-4 flex flex-wrap gap-2">
@@ -49,19 +50,18 @@ CRUD     : See CRUD labels on the record operations.
                         <%-- This block shows the saved details. EnrollmentController supplies the page data. --%>
 <dl class="mb-5 grid gap-3 sm:grid-cols-2">
                             <div><dt class="text-sm text-slate-400">Package amount</dt><dd class="text-lg">LKR <c:out value="${enrollment.amount}" /></dd></div>
-                            <div><dt class="text-sm text-slate-400">Valid through</dt><dd><c:out value="${enrollment.validUntil}" default="Not recorded" /></dd></div>
+                            <div><dt class="text-sm text-slate-400">Valid through</dt><dd><c:out value="${enrollment.validUntil}" default="Validity not recorded" /></dd></div>
                         </dl>
                         <%-- EnrollmentController supplies the active receipt and balance; unpaid requests never unlock booking. --%>
                         <c:url value="/enrollments/${enrollment.id}/payment" var="paymentUrl" />
                         <div class="mb-6">
                             <c:choose>
                                 <c:when test="${enrollment.status eq 'AWAITING_PAYMENT'}">
-                                    <button class="ds-button ds-button-outline" type="button" disabled>Book lesson</button>
                                     <p class="mt-3">Available after payment is confirmed</p>
                                     <a class="ds-home-text-link mt-3" href="<c:out value='${paymentUrl}' />">Payment instructions</a>
                                 </c:when>
-                                <c:when test="${enrollment.status eq 'PAID' and enrollment.id eq activeEnrollmentId and lessonsRemaining gt 0}">
-                                    <a class="ds-button" href="<c:url value='/bookings' />">Book lesson</a>
+                                <c:when test="${enrollmentUsage[enrollment.id].bookable}">
+                                    <p>Use the package summary above to plan your next lesson.</p>
                                 </c:when>
                                 <c:when test="${enrollment.status eq 'CANCELLED'}"><p>This request is cancelled. You may choose a package again.</p><c:if test="${not empty enrollment.cancellationReason}"><p class="mt-3">Reason: <c:out value="${enrollment.cancellationReason}" /></p></c:if><a class="ds-home-text-link" href="<c:url value='/packages' />">View packages</a></c:when>
                                 <c:otherwise><p>No usable lessons remain on this enrollment.</p></c:otherwise>

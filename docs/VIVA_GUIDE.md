@@ -357,8 +357,6 @@ Sign in as student1 in temporary demo data. Prepare an instructor and a free dat
 **Java (16):**
 
 - [sample/DemoDataSeedRunner.java](../src/main/java/com/drivingschool/sample/DemoDataSeedRunner.java)
-- [vehicle/api/VehicleBookingInfo.java](../src/main/java/com/drivingschool/vehicle/api/VehicleBookingInfo.java)
-- [vehicle/api/VehicleLookup.java](../src/main/java/com/drivingschool/vehicle/api/VehicleLookup.java)
 - [vehicle/api/VehicleOperations.java](../src/main/java/com/drivingschool/vehicle/api/VehicleOperations.java)
 - [vehicle/api/VehicleStore.java](../src/main/java/com/drivingschool/vehicle/api/VehicleStore.java)
 - [vehicle/config/VehicleConfig.java](../src/main/java/com/drivingschool/vehicle/config/VehicleConfig.java)
@@ -370,7 +368,6 @@ Sign in as student1 in temporary demo data. Prepare an instructor and a free dat
 - [vehicle/model/VehicleCategory.java](../src/main/java/com/drivingschool/vehicle/model/VehicleCategory.java)
 - [vehicle/model/VehicleOperationalStatus.java](../src/main/java/com/drivingschool/vehicle/model/VehicleOperationalStatus.java)
 - [vehicle/repository/VehicleRepository.java](../src/main/java/com/drivingschool/vehicle/repository/VehicleRepository.java)
-- [vehicle/service/VehicleLookupService.java](../src/main/java/com/drivingschool/vehicle/service/VehicleLookupService.java)
 - [vehicle/service/VehicleService.java](../src/main/java/com/drivingschool/vehicle/service/VehicleService.java)
 
 **JSP / JSPF (3):**
@@ -414,7 +411,6 @@ The arrow starts at the filing drawer; an incoming browser request travels throu
 | S | [VehicleService.java](../src/main/java/com/drivingschool/vehicle/service/VehicleService.java) · `deleteVehicle` | The service checks lesson-history rules while VehicleRepository handles file deletion. |
 | O | [VehicleRepository.java](../src/main/java/com/drivingschool/vehicle/repository/VehicleRepository.java) · `VehicleRepository` | A new child repository can select a different file and record type without rewriting shared storage. |
 | L | [VehicleRepository.java](../src/main/java/com/drivingschool/vehicle/repository/VehicleRepository.java) · `update` | The child delegates to the same parent checks and preserves the shared update contract. |
-| I | [VehicleLookup.java](../src/main/java/com/drivingschool/vehicle/api/VehicleLookup.java) · `findBookingInfo` | Scheduling receives one narrow lookup rather than all fleet management operations. |
 | D | [VehicleController.java](../src/main/java/com/drivingschool/vehicle/controller/VehicleController.java) · `VehicleController` | The controller receives VehicleOperations through its constructor. |
 
 ### Five likely questions
@@ -471,13 +467,9 @@ Sign in as the demo administrator in temporary data. Prepare a unique plate such
 - [student/payment-instructions.jsp](../src/main/webapp/WEB-INF/views/student/payment-instructions.jsp)
 - [admin/enrollments.jsp](../src/main/webapp/WEB-INF/views/admin/enrollments.jsp)
 - [admin/packages.jsp](../src/main/webapp/WEB-INF/views/admin/packages.jsp)
-- [common/components/breadcrumbs.jspf](../src/main/webapp/WEB-INF/views/common/components/breadcrumbs.jspf)
 - [common/components/confirm-dialog.jspf](../src/main/webapp/WEB-INF/views/common/components/confirm-dialog.jspf)
 - [common/components/empty-state.jspf](../src/main/webapp/WEB-INF/views/common/components/empty-state.jspf)
 - [common/components/page-header.jspf](../src/main/webapp/WEB-INF/views/common/components/page-header.jspf)
-- [common/components/pagination.jspf](../src/main/webapp/WEB-INF/views/common/components/pagination.jspf)
-- [common/components/search-bar.jspf](../src/main/webapp/WEB-INF/views/common/components/search-bar.jspf)
-- [common/components/skeleton.jspf](../src/main/webapp/WEB-INF/views/common/components/skeleton.jspf)
 - [common/components/status-badge.jspf](../src/main/webapp/WEB-INF/views/common/components/status-badge.jspf)
 - [common/components/tabs.jspf](../src/main/webapp/WEB-INF/views/common/components/tabs.jspf)
 - [common/components/toasts.jspf](../src/main/webapp/WEB-INF/views/common/components/toasts.jspf)
@@ -656,14 +648,10 @@ Sign in as student6 in temporary demo data. This account owns seeded reviews; re
 
 | File | One owner |
 |---|---|
-| [src/main/webapp/WEB-INF/views/common/components/breadcrumbs.jspf](../src/main/webapp/WEB-INF/views/common/components/breadcrumbs.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/components/confirm-dialog.jspf](../src/main/webapp/WEB-INF/views/common/components/confirm-dialog.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/components/empty-state.jspf](../src/main/webapp/WEB-INF/views/common/components/empty-state.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/components/page-header.jspf](../src/main/webapp/WEB-INF/views/common/components/page-header.jspf) | IT26101136 |
-| [src/main/webapp/WEB-INF/views/common/components/pagination.jspf](../src/main/webapp/WEB-INF/views/common/components/pagination.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/components/review-tabs.jspf](../src/main/webapp/WEB-INF/views/common/components/review-tabs.jspf) | IT26101137 |
-| [src/main/webapp/WEB-INF/views/common/components/search-bar.jspf](../src/main/webapp/WEB-INF/views/common/components/search-bar.jspf) | IT26101136 |
-| [src/main/webapp/WEB-INF/views/common/components/skeleton.jspf](../src/main/webapp/WEB-INF/views/common/components/skeleton.jspf) | IT26101136 |
 | [src/main/webapp/WEB-INF/views/common/components/star-display.jspf](../src/main/webapp/WEB-INF/views/common/components/star-display.jspf) | IT26101137 |
 | [src/main/webapp/WEB-INF/views/common/components/star-input.jspf](../src/main/webapp/WEB-INF/views/common/components/star-input.jspf) | IT26101137 |
 | [src/main/webapp/WEB-INF/views/common/components/status-badge.jspf](../src/main/webapp/WEB-INF/views/common/components/status-badge.jspf) | IT26101136 |
@@ -727,3 +715,6 @@ Use a fresh temporary demo directory. The app does not send email or accept uplo
 - **Why one lock?** It acts like one cashier desk, so two administrators cannot both decide the same request or refill lessons twice. The lock protects this one running Java application, not several servers sharing files.
 - **What happens to cancelled requests?** Their reference and optional reason stay in history, and any linked Pending bookings are rejected. The student may request a package again.
 - **Why can an admin not confirm a Suspended student or inactive course?** The current account and course must permit learning before lesson tickets are issued. A Pending student also needs account approval first.
+
+
+Cleanup note (9 November 2026): unused pagination.jspf, skeleton.jspf, search-bar.jspf and breadcrumbs.jspf were removed after approval. They are no longer part of the current file inventory. Existing search/breadcrumb controls are implemented by their pages; no feature or Java class was removed.

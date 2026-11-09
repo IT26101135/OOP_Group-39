@@ -129,6 +129,23 @@ class BookingServiceCrudTest {
         assertTrue(service.filterBookings(request, null, null, "I002", null, null).isEmpty());
     }
 
+    // A cancelled request releases room; rejected and historical lessons are not commitments.
+    @Test
+    void capsRequestsAndCountsConfirmedLessons() {
+        for (int day = 4; day <= 8; day++) {
+            Booking booking = service.requestLesson(request, "P001", LocalDateTime.of(2030, 1, day, 10, 0));
+            if (day == 4) {
+                booking.confirm("I001", "V001");
+                bookings.update(booking);
+            }
+        }
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> service.requestLesson(request, "P001", LocalDateTime.of(2030, 1, 9, 10, 0)));
+        assertTrue(error.getMessage().contains("You have 5 lessons left and 5 already requested"));
+        service.cancelOwnBooking(request, "B001");
+        assertDoesNotThrow(() -> service.requestLesson(request, "P001", LocalDateTime.of(2030, 1, 9, 10, 0)));
+    }
+
     // Separates the submission date from the desired lesson date for FIFO checks.
     private Booking booking(String id, String studentId, int submittedDay, int lessonDay) {
         LocalDateTime start = LocalDateTime.of(2030, 1, lessonDay, 10, 0);

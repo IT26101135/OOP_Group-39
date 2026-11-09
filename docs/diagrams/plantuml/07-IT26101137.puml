@@ -1,0 +1,105 @@
+@startuml
+' Documentation owner: IT26101137
+' Names verified against Java source; method parameter lists intentionally hidden.
+title IT26101137 — reviews, moderation and reports
+left to right direction
+skinparam classAttributeIconSize 0
+class Review {
+  -String id
+  -String studentId
+  -String bookingId
+  -String instructorId
+  -int rating
+  -String comment
+  -ReviewStatus status
+  +boolean updateContent()
+  +boolean updateStatus()
+}
+note right of Review
+Encapsulation: validated content and moderation state.
+end note
+interface ReviewStore {
+  +void save()
+  +List<Review> readAllStrict()
+  +void update()
+  +void delete()
+}
+class ReviewRepository {
+  +void save()
+  +List<Review> readAllStrict()
+  +void update()
+  +void delete()
+}
+interface ReviewOperations {
+  +Review createReview()
+  +List<Review> getVisibleReviews()
+  +Review updateOwnReview()
+  +void deleteOwnReview()
+}
+interface ReviewModeration {
+  +Review approveReview()
+  +Review hideReview()
+  +void deleteReview()
+}
+class ReviewService {
+  -ReviewStore reviewRepository
+  -StudentLookup studentLookup
+  +Review createReview()
+  +List<Review> getVisibleReviews()
+  +Review updateOwnReview()
+  +void deleteOwnReview()
+  +Review approveReview()
+  +Review hideReview()
+}
+note right of ReviewService
+CRUD: createReview / getVisibleReviews / updateOwnReview / deleteOwnReview. Shared validation, duplicate, not-found errors.
+end note
+class ReviewController {
+  -ReviewOperations reviewService
+  +String create()
+  +String list()
+  +String update()
+  +String delete()
+}
+note right of ReviewController
+D: receives ReviewOperations. AdminReviewController receives ReviewModeration.
+end note
+interface ReportCatalog {
+  +List<ReportSection> all()
+}
+note right of ReportCatalog
+Small read contract shared by the screen and CSV export.
+end note
+class AdminReportService {
+  -EnrollmentRepository enrollments
+  -BookingRepository bookings
+  -ReviewRepository reviews
+  +Map<String,String> revenue()
+  +Map<String,Long> bookingsByStatus()
+  +List<ReportSection> all()
+}
+note right of AdminReportService
+READ totals from files; revenue() includes Paid enrollments only.
+end note
+class AdminReportController {
+  -ReportCatalog reports
+  +String show()
+  +void export()
+}
+note right of AdminReportController
+READ reports and export CSV. No new report-filter feature.
+end note
+abstract class FileRepository {
+}
+ReviewRepository --|> FileRepository : T = Review
+ReviewRepository ..|> ReviewStore
+ReviewRepository --> Review : stores
+ReviewService ..|> ReviewOperations
+ReviewService ..|> ReviewModeration
+ReviewService ..> ReviewStore
+ReviewController ..> ReviewOperations
+AdminReportService ..|> ReportCatalog
+AdminReportController ..> ReportCatalog
+AdminReportService ..> ReviewRepository
+@enduml
+

@@ -1,0 +1,1 @@
+{"id":"L001","instructorId":"I005","date":"2026-11-16","reason":"Synthetic planned leave day for viva scheduling."}

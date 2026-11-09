@@ -1,5 +1,7 @@
 # Git branch plan
 
+**Historical Phase A snapshot:** later approved cleanup removed the unused pagination.jspf, skeleton.jspf, search-bar.jspf and breadcrumbs.jspf fragments, plus redundant src placeholders. Paths in the old diff/ownership/copy recipes below describe that earlier snapshot; do not use them as a current file manifest. No Git commands in this historical plan were executed by the cleanup.
+
 Owner: **IT26101135**. Checked on **2026-11-09**. Phase A only. Names are not needed; this plan uses IDs.
 
 **Recommendation: ONE integration PR from `IT26101135-finalUI_changes` into `develop`.** Six separate whole-module PRs cannot currently be ordered so that every intermediate build works. There are cross-module dependency cycles. Exact member copy recipes are provided, but their build gates must not be bypassed.

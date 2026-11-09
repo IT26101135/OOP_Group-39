@@ -20,6 +20,7 @@ import com.drivingschool.vehicle.model.VehicleOperationalStatus;
 import java.util.ArrayList;
 import com.drivingschool.instructor.repository.InstructorRepository;
 import com.drivingschool.vehicle.repository.VehicleRepository;
+import com.drivingschool.learningpackage.service.EnrollmentPresentationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -47,11 +48,14 @@ public class AdminBookingController {
     private final VehicleRepository vehicles;
     private final CsrfTokenService csrf;
 
+    private final EnrollmentPresentationService presentation;
+
     // Receives the helpers or validates the details needed to create this object.
     public AdminBookingController(AdminBookingOperations bookingService,
                                   InstructorRepository instructors,
                                   VehicleRepository vehicles,
-                                  CsrfTokenService csrf) {
+                                  CsrfTokenService csrf, EnrollmentPresentationService presentation) {
+        this.presentation = presentation;
         this.bookingService = bookingService;
         this.instructors = instructors;
         this.vehicles = vehicles;
@@ -71,6 +75,7 @@ public class AdminBookingController {
         response.setHeader("Cache-Control", "no-store");
         List<Booking> bookingList = bookingService.filterBookings(request, from, to, instructorId, vehicleId, status);
         model.addAttribute("bookings", bookingList);
+        model.addAttribute("bookingPackages", presentation.forBookings(bookingList));
         List<Booking> pendingQueue = bookingService.getPendingQueue(request);
         model.addAttribute("pendingQueue", pendingQueue);
         Map<String, Integer> queuePositions = new HashMap<>();

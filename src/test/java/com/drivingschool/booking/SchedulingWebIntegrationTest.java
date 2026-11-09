@@ -66,6 +66,7 @@ class SchedulingWebIntegrationTest {
     @Autowired LearningPackageService packages;
     @Autowired EnrollmentService enrollments;
     @Autowired EnrollmentRepository receipts;
+    @Autowired com.drivingschool.learningpackage.repository.LearningPackageRepository packageRecords;
     @Autowired UserRepository users;
     @Autowired AvailabilityRepository hours;
     @Autowired BookingRepository bookings;
@@ -138,6 +139,115 @@ class SchedulingWebIntegrationTest {
         assertTrue(bookings.findByIdStrict(created.getId()).isEmpty());
     }
 
+    // The separate details UI is read-only and does not spend a lesson or alter the queue.
+    @Test
+    void ownerCanReadBookingDetailsWithoutChangingRecords() throws Exception {
+        Booking booking = requestLesson();
+        byte[] before = java.nio.file.Files.readAllBytes(directory.resolve("bookings.txt"));
+        int balance = ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining();
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
+                .andExpect(status().isOk()).andExpect(view().name("booking/details"))
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(model().attribute("booking", org.hamcrest.Matchers.hasProperty("id", org.hamcrest.Matchers.is(booking.getId()))))
+                .andExpect(model().attribute("queuePosition", org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(model().attribute("backUrl", "/bookings"))
+                .andExpect(model().attribute("packageDetails", org.hamcrest.Matchers.hasProperty("packageName", org.hamcrest.Matchers.is(course.getName()))));
+        assertArrayEquals(before, java.nio.file.Files.readAllBytes(directory.resolve("bookings.txt")));
+        assertEquals(balance, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+    }
+
+    // Administrator access does not depend on being the student named on the lesson.
+    @Test
+    void adminCanReadAnotherStudentsBookingDetails() throws Exception {
+        Booking booking = requestLesson();
+        MockHttpSession admin = (MockHttpSession) adminRequest().getSession(false);
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(admin))
+                .andExpect(status().isOk()).andExpect(view().name("booking/details"))
+                .andExpect(model().attribute("backUrl", "/admin/bookings"))
+                .andExpect(model().attribute("booking", org.hamcrest.Matchers.hasProperty("studentId", org.hamcrest.Matchers.is(student.getId()))));
+    }
+
+    // Changing a URL cannot reveal another student's record or package information.
+    @Test
+    void otherStudentCannotReadBookingDetails() throws Exception {
+        Booking booking = requestLesson();
+        Student other = authentication.registerStudent("Other Learner", "other-" + student.getId() + "@example.test", "0771234567", PASSWORD);
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(login(other.getEmail())))
+                .andExpect(status().isForbidden())
+                .andExpect(model().attributeDoesNotExist("booking", "packageDetails"));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> bookingService.getBookingDetails(instructorRequest(), booking.getId()));
+    }
+
+    // Login and role guards also protect direct navigation, including guesses of missing IDs.
+    @Test
+    void detailsRequireLoginAndRejectInstructorRole() throws Exception {
+        Booking booking = requestLesson();
+        mvc.perform(get("/bookings/" + booking.getId() + "/details"))
+                .andExpect(redirectedUrl("/login?required"));
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(instructorSession))
+                .andExpect(status().isForbidden())
+                .andExpect(model().attributeDoesNotExist("booking", "packageDetails"));
+        mvc.perform(get("/bookings/B999/details").session(instructorSession))
+                .andExpect(status().isForbidden());
+    }
+
+    // Invalid and unknown numbers must produce friendly errors without changing stored requests.
+    @Test
+    void detailsHandleInvalidAndMissingBookingIds() throws Exception {
+        mvc.perform(get("/bookings/B000/details").session(studentSession))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/bookings/B999/details").session(studentSession))
+                .andExpect(status().isNotFound());
+    }
+
+    // History remains readable when imported data contains a missing receipt or course.
+    @Test
+    void detailsHandleMissingEnrollmentAndPackage() throws Exception {
+        Booking booking = requestLesson();
+        Enrollment receipt = receipts.findByIdStrict(booking.getEnrollmentId()).orElseThrow();
+        receipts.delete(receipt.getId());
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("packageDetails", org.hamcrest.Matchers.hasProperty("packageName", org.hamcrest.Matchers.is("Package unavailable"))));
+        receipts.save(receipt);
+        packageRecords.delete(course.getId());
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("packageDetails", org.hamcrest.Matchers.hasProperty("packageName", org.hamcrest.Matchers.is("Package unavailable (" + course.getId() + ")"))));
+    }
+
+    // An assigned request and historical rejection have details, but no unassigned FIFO position.
+    @Test
+    void assignedAndHistoricalDetailsDoNotShowQueuePosition() throws Exception {
+        Booking booking = requestLesson();
+        booking.assignForInstructor(instructor.getId(), "V001");
+        bookings.update(booking);
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
+                .andExpect(status().isOk()).andExpect(model().attribute("queuePosition", 0));
+        booking.reject("The instructor cannot teach at this time.");
+        bookings.update(booking);
+        mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
+                .andExpect(status().isOk()).andExpect(model().attribute("queuePosition", 0))
+                .andExpect(model().attribute("booking", org.hamcrest.Matchers.hasProperty("rejectionReason", org.hamcrest.Matchers.is("The instructor cannot teach at this time."))));
+    }
+
+    // The new URL has no write handler; existing POST action routes remain separate.
+    @Test
+    void detailsUrlDoesNotAcceptPost() throws Exception {
+        Booking booking = requestLesson();
+        mvc.perform(post("/bookings/" + booking.getId() + "/details").session(studentSession)
+                .param("_csrf", token("/bookings", studentSession)))
+                .andExpect(status().isMethodNotAllowed());
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+    }
+
+    private MockHttpServletRequest instructorRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(instructorSession);
+        return request;
+    }
+
     // Rescheduling must cancel the old request only after a new pending request is saved.
     @Test
     void rescheduleCreatesNewPendingRequest() throws Exception {
@@ -149,6 +259,84 @@ class SchedulingWebIntegrationTest {
         Booking replacement = ownPendingBooking();
         assertNotEquals(old.getId(), replacement.getId());
         assertEquals(lessonTime.plusHours(1), replacement.getStartTime());
+    }
+
+    // Both attendance routes must preserve status and balance when a future lesson is blocked.
+    @Test
+    void futureAttendanceIsRefusedForAdminAndInstructor() throws Exception {
+        Booking booking = requestLesson();
+        booking.confirm(instructor.getId(), "V001");
+        bookings.update(booking);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> bookingService.completeAssignedLesson(teacher, booking.getId()));
+        assertTrue(error.getMessage().contains("Completion becomes available at"));
+        assertThrows(ValidationException.class, () -> bookingService.complete(adminRequest(), booking.getId()));
+        assertThrows(ValidationException.class, () -> bookingService.markNoShowAssignedLesson(teacher, booking.getId()));
+        assertEquals(BookingStatus.CONFIRMED, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+        assertEquals(5, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+    }
+
+    // A delivered lesson can be completed once and spends exactly one ticket.
+    @Test
+    void endedLessonCanBeCompleted() {
+        LocalDateTime end = LocalDateTime.now(clock).minusMinutes(1);
+        Booking booking = new Booking(bookings.nextId("B"), student.getId(), student.getActiveEnrollmentId(),
+                end.minusHours(1), end, instructor.getId(), "V001", BookingStatus.CONFIRMED, end.minusDays(1));
+        bookings.save(booking);
+        bookingService.complete(adminRequest(), booking.getId());
+        assertEquals(BookingStatus.COMPLETED, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+        assertEquals(4, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+        assertThrows(ValidationException.class, () -> bookingService.complete(adminRequest(), booking.getId()));
+    }
+
+    // Only this test opts into the explicit demo switch; normal tests keep the default gate.
+    @Test
+    void demoSettingAllowsInstructorToCompleteFutureLesson() throws Exception {
+        Booking booking = requestLesson();
+        booking.confirm(instructor.getId(), "V001");
+        bookings.update(booking);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "requireLessonEnded", false);
+        try {
+            bookingService.completeAssignedLesson(teacher, booking.getId());
+            assertEquals(BookingStatus.COMPLETED, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+            assertEquals(4, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "requireLessonEnded", true);
+        }
+    }
+
+    // The slot-based request path uses the same cap as the simpler service overload.
+    @Test
+    void requestCapAllowsReplacementButRefusesExtraRequest() throws Exception {
+        Student saved = (Student) users.findByIdStrict(student.getId()).orElseThrow();
+        saved.setLessonsRemaining(1);
+        users.update(saved);
+        Booking old = requestLesson();
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> bookingService.requestLesson(studentRequest(), course.getId(), instructor.getId(), lessonTime.plusHours(1)));
+        assertTrue(error.getMessage().contains("You have 1 lessons left and 1 already requested"));
+        Booking replacement = bookingService.rescheduleOwnBooking(studentRequest(), old.getId(), lessonTime.plusHours(1));
+        assertEquals(BookingStatus.CANCELLED, bookings.findByIdStrict(old.getId()).orElseThrow().getStatus());
+        assertEquals(BookingStatus.PENDING, replacement.getStatus());
+    }
+
+    // Legacy over-cap data cannot gain assignments or replacements; the original is preserved.
+    @Test
+    void overCapAssignmentAndRescheduleAreRefused() throws Exception {
+        clearTemporaryBookings();
+        Booking first = requestLesson();
+        bookingService.requestLesson(studentRequest(), course.getId(), instructor.getId(), lessonTime.plusHours(1));
+        Student saved = (Student) users.findByIdStrict(student.getId()).orElseThrow();
+        saved.setLessonsRemaining(1);
+        users.update(saved);
+        assertThrows(ValidationException.class, () -> bookingService.assign(adminRequest(), first.getId(), instructor.getId(), "V001"));
+        assertThrows(ValidationException.class, () -> bookingService.rescheduleOwnBooking(studentRequest(), first.getId(), lessonTime.minusHours(1)));
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(first.getId()).orElseThrow().getStatus());
+        assertNull(bookings.findByIdStrict(first.getId()).orElseThrow().getInstructorId());
     }
 
     // Wrong-role requests and missing tokens must be stopped before any schedule change.

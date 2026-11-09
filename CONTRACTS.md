@@ -1,5 +1,7 @@
 # DriveSpark Academy — Shared Contracts
 
+> 2026-11-09 cleanup update: the unused instructor interval/lookup family, vehicle lookup family and enrollment lookup/summary were removed with member approval. Earlier descriptions of those contracts are historical, not current APIs. See [Java simplification record](docs/JAVA_SIMPLIFICATION.md) for retained OOP evidence and verification.
+
 ## Status
 
 The Phase 1 common foundation and Phase 2A–2G authentication backend

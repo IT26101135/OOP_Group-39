@@ -183,9 +183,37 @@ class BookingTest {
     void shouldCompleteConfirmedBooking() {
         Booking booking = createConfirmedBooking();
 
-        booking.complete();
+        booking.complete(end, true);
 
         assertEquals(BookingStatus.COMPLETED, booking.getStatus());
+    }
+
+    // Attendance boundaries are checked with an explicit school time, not the computer date.
+    @Test
+    void refusesFutureCompletionWithoutChangingState() {
+        Booking booking = createConfirmedBooking();
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> booking.complete(end.minusSeconds(1), true));
+        assertTrue(error.getMessage().contains("2026-11-01 11:00"));
+        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+    }
+
+    @Test
+    void demoSettingAllowsFutureCompletion() {
+        Booking booking = createConfirmedBooking();
+        booking.complete(start.minusDays(1), false);
+        assertEquals(BookingStatus.COMPLETED, booking.getStatus());
+    }
+
+    @Test
+    void noShowStartsAtLessonStartAndDemoCanBypassTime() {
+        Booking booking = createConfirmedBooking();
+        assertThrows(ValidationException.class, () -> booking.markNoShow(start.minusSeconds(1), true));
+        booking.markNoShow(start, true);
+        assertEquals(BookingStatus.NO_SHOW, booking.getStatus());
+        Booking demo = createConfirmedBooking();
+        demo.markNoShow(start.minusDays(1), false);
+        assertEquals(BookingStatus.NO_SHOW, demo.getStatus());
     }
 
     @Test
@@ -234,7 +262,7 @@ class BookingTest {
     @Test
     void shouldRejectCancellingCompletedBooking() {
         Booking booking = createConfirmedBooking();
-        booking.complete();
+        booking.complete(end, true);
 
         assertThrows(ValidationException.class, booking::cancel);
 
@@ -289,7 +317,7 @@ class BookingTest {
     void shouldPreserveCompletedBookingAfterJsonRoundTrip()
             throws Exception {
         Booking original = createConfirmedBooking();
-        original.complete();
+        original.complete(end, true);
         ObjectMapper mapper = createMapper();
 
         String json = mapper.writeValueAsString(original);

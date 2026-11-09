@@ -1,0 +1,81 @@
+@startuml
+' Documentation owner: IT26101132
+' Names verified against Java source; method parameter lists intentionally hidden.
+title IT26101132 — vehicles and sample data
+left to right direction
+skinparam classAttributeIconSize 0
+class Vehicle {
+  -String id
+  -String registrationNumber
+  -TransmissionType transmissionType
+  -VehicleCategory vehicleCategory
+  -VehicleOperationalStatus operationalStatus
+  -LocalDate insuranceExpiry
+  -LocalDate nextServiceDate
+  +boolean isInsuranceExpired()
+  +boolean isServiceOverdue()
+  +boolean isInsuranceWarning()
+  +boolean isServiceWarning()
+}
+note right of Vehicle
+Encapsulation: validated vehicle details; warning methods report approaching dates.
+end note
+interface VehicleStore {
+  +void save()
+  +List<Vehicle> readAllStrict()
+  +void update()
+  +void delete()
+}
+class VehicleRepository {
+  +void save()
+  +List<Vehicle> readAllStrict()
+  +void update()
+  +void delete()
+}
+abstract class FileRepository {
+}
+interface VehicleOperations {
+  +Vehicle createVehicle()
+  +List<Vehicle> getAllVehicles()
+  +Vehicle updateVehicle()
+  +void deleteVehicle()
+}
+class VehicleService {
+  -VehicleStore vehicleRepository
+  -BookingRepository bookingRepository
+  +Vehicle createVehicle()
+  +List<Vehicle> getAllVehicles()
+  +Vehicle getVehicleByIdStrict()
+  +Vehicle updateVehicle()
+  +void deleteVehicle()
+}
+note right of VehicleService
+CRUD methods validate plates and reject unsafe deletion. Shared ValidationException, DuplicateRecordException and RecordNotFoundException.
+end note
+class VehicleController {
+  -VehicleOperations vehicleService
+  +String listVehicles()
+  +String createVehicle()
+  +String updateVehicle()
+  +String deleteVehicle()
+}
+note right of VehicleController
+D: constructor uses VehicleOperations. Form field validation stays in place.
+end note
+class DemoDataSeedRunner {
+  -VehicleRepository vehicles
+  -BookingRepository bookings
+  +void run()
+}
+note right of DemoDataSeedRunner
+Optional, repeat-safe seed loader. Spring CommandLineRunner implementation (external interface omitted).
+end note
+VehicleRepository --|> FileRepository : T = Vehicle
+VehicleRepository ..|> VehicleStore
+VehicleRepository --> Vehicle : stores
+VehicleService ..|> VehicleOperations
+VehicleController ..> VehicleOperations
+VehicleService ..> VehicleStore
+DemoDataSeedRunner ..> VehicleRepository : seeds examples
+@enduml
+

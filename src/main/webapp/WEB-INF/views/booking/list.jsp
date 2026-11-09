@@ -20,6 +20,7 @@ CRUD     : See the labelled operations; model and view files support these opera
 <%-- BookingController supplies only the student's active package and the available instructor list. --%>
 <%-- BookingController supplies this page section. --%>
 <section class="ds-booking-panel mb-8" aria-labelledby="request-lesson"><h2 id="request-lesson">Request a lesson</h2>
+<c:set var="usage" value="${currentUsage}" /><%@ include file="/WEB-INF/views/common/components/enrollment-usage.jspf" %>
 <c:choose><c:when test="${not canBook or empty packages}"><div class="ds-empty-state mt-5"><h3>A learning package is your first step</h3><p><c:out value="${bookingProblem}" default="A Paid enrollment with lessons remaining is required." /></p><a class="ds-button mt-4" href="<c:url value='/enrollments' />">My enrollments</a></div></c:when><c:otherwise>
 <p class="mb-5 mt-3 text-slate-400">1. Choose an instructor and date. 2. Select a free hour. 3. Send your request. Availability is checked again when submitted.</p>
 <%-- BookingController supplies this form and its original field names. --%>

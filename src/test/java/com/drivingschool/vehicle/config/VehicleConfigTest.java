@@ -1,8 +1,6 @@
 // Module owner: IT26101132
 package com.drivingschool.vehicle.config;
 
-import com.drivingschool.vehicle.api.VehicleBookingInfo;
-import com.drivingschool.vehicle.api.VehicleLookup;
 import com.drivingschool.vehicle.model.TransmissionType;
 import com.drivingschool.vehicle.model.Vehicle;
 import com.drivingschool.vehicle.model.VehicleCategory;
@@ -77,18 +75,6 @@ class VehicleConfigTest {
                     context.getBean(VehicleService.class)
             );
 
-            assertEquals(
-                    1,
-                    context.getBeansOfType(VehicleLookup.class).size()
-            );
-
-            VehicleLookup lookup = context.getBean(VehicleLookup.class);
-
-            assertSame(
-                    lookup,
-                    context.getBean(VehicleLookup.class)
-            );
-
             Vehicle createdVehicle = service.createVehicle(
                     "CAB-1234",
                     "Toyota",
@@ -97,17 +83,6 @@ class VehicleConfigTest {
                     VehicleCategory.CAR,
                     VehicleOperationalStatus.IN_SERVICE
             );
-
-            VehicleBookingInfo bookingInfo =
-                    lookup.findBookingInfo(createdVehicle.getId()).orElseThrow();
-
-            assertEquals(createdVehicle.getId(), bookingInfo.id());
-            assertEquals(VehicleCategory.CAR, bookingInfo.vehicleCategory());
-            assertEquals(
-                    TransmissionType.AUTOMATIC,
-                    bookingInfo.transmissionType()
-            );
-            assertTrue(bookingInfo.operationallyEligible());
 
             VehicleRepository freshRepository =
                     new VehicleRepository(

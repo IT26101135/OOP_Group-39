@@ -18,7 +18,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AdminSeedRunner implements ApplicationRunner {
+public class       AdminSeedRunner implements ApplicationRunner {
 
     private final AdminSeedService seedService;
     private final boolean enabled;

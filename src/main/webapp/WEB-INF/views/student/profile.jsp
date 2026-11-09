@@ -38,7 +38,7 @@ CRUD     : See CRUD labels on the record operations.
         <%-- This block shows one saved record. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
 <article class="ds-card"><p class="ds-eyebrow">LESSONS REMAINING</p><strong class="ds-workspace-number" data-counter="<c:out value='${profile.lessonsRemaining}' />"><c:out value="${profile.lessonsRemaining}" /></strong><p><a href="<c:url value='/bookings' />">Plan a lesson</a></p></article>
         <%-- This block shows one saved record. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
-<article class="ds-card"><p class="ds-eyebrow">CURRENT PACKAGE</p><strong class="ds-workspace-package"><c:out value="${profile.activePackageId}" default="No active package" /></strong><p><a href="<c:url value='/enrollments' />">View my enrollments</a></p></article>
+<c:set var="usage" value="${currentUsage}" /><%@ include file="/WEB-INF/views/common/components/enrollment-usage.jspf" %>
     </section>
     <c:if test="${passwordChanged eq true}"><p role="status">Password changed.</p></c:if>
     <c:set var="tabsLabel" value="Profile sections" />

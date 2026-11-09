@@ -76,6 +76,27 @@ All seeded users use `DriveSpark123!`:
 
 The fixtures contain 6 packages, 6 vehicles, 9 enrollments (7 Paid, 1 Awaiting payment, 1 Cancelled), 15 bookings and 10 reviews. The seed idempotency test repeats the loader, checks stable record counts and ensures handled receipts and exhausted balances stay unchanged. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo. The first seed expects a fresh isolated data directory; do not seed over real coursework records. Names such as `DemoMake` and placeholder contact/social links are demonstration content, not real businesses or destinations.
 
+### Attendance and booking commitments (Batch 1)
+
+`app.attendance.require-lesson-ended` defaults to `true`. Administrators and assigned instructors can complete a Confirmed lesson only at or after its end. No-show is available at or after its start. A blocked action explains the available date/time in Asia/Colombo and leaves status and lesson balance unchanged. Completion deducts one lesson; no-show still does not deduct one.
+
+For a fast isolated demonstration only, set `$env:DRIVESPARK_ATTENDANCE_REQUIRE_LESSON_ENDED = "false"` alongside the demo variables **in a fresh shell just for that app run**. This bypasses both attendance time gates; payment, ownership, status and commitment checks remain in force. Remove all four demo variables in `finally` after stopping the app:
+
+```powershell
+# Run in a fresh PowerShell process; use a new empty temporary data folder.
+$env:DRIVESPARK_DEMO_SEED_ENABLED = "true"
+$env:DRIVESPARK_ADMIN_SEED_ENABLED = "false"
+$env:APP_DATA_DIRECTORY = Join-Path $env:TEMP ("drivespark-demo-" + [guid]::NewGuid())
+$env:DRIVESPARK_ATTENDANCE_REQUIRE_LESSON_ENDED = "false"
+try { .\mvnw.cmd spring-boot:run }
+finally {
+    Remove-Item Env:DRIVESPARK_DEMO_SEED_ENABLED, Env:DRIVESPARK_ADMIN_SEED_ENABLED,
+        Env:APP_DATA_DIRECTORY, Env:DRIVESPARK_ATTENDANCE_REQUIRE_LESSON_ENDED -ErrorAction SilentlyContinue
+}
+```
+
+A student's total Pending and Confirmed bookings cannot exceed their remaining lessons. Both request paths, rescheduling and admin assignment check the stored balance under the existing shared lock. Rescheduling replaces one commitment, so the old request is excluded; assignment counts its existing request once. Over-cap historical data is refused without silently rejecting or removing requests. Cancel an open request to free room. FIFO ordering and payment confirmation are unchanged.
+
 ### Module folders and owners
 
 | Source folder | Owner | Main responsibility |
@@ -190,7 +211,7 @@ Fragments are static JSP includes. Set their expected variables immediately befo
 <%@ include file="/WEB-INF/views/common/components/empty-state.jspf" %>
 ```
 
-`confirm-dialog.jspf` is included by the shared footer; mark the existing POST form with `data-confirm="Delete this record?"` to request confirmation. The native dialog supports keyboard dismissal and then submits that same form. `toasts.jspf` renders the existing `success`, `message`, `formError`, and `error` model attributes. `review-tabs.jspf` supplies admin moderation filter links. `star-display.jspf` uses `ratingValue` (including decimal averages); `skeleton.jspf`, `search-bar.jspf`, `pagination.jspf`, and `breadcrumbs.jspf` provide shared structures for pages that support those interactions.
+`confirm-dialog.jspf` is included by the shared footer; mark the existing POST form with `data-confirm="Delete this record?"` to request confirmation. The native dialog supports keyboard dismissal and then submits that same form. `toasts.jspf` renders the existing `success`, `message`, `formError`, and `error` model attributes. `review-tabs.jspf` supplies admin moderation filter links. `star-display.jspf` uses `ratingValue` (including decimal averages).
 
 ### Credits and licenses
 
@@ -342,3 +363,40 @@ The following credits are supplied for the intended photographs. As checked on 2
 | vehicle-manual.webp | PRESENT | 29378 | 1200 × 800 | Photo by FBO Media on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-blue-sport-hatchback-in-minimalist-setting-35549144/ |
 | vehicle-automatic.webp | PRESENT | 29674 | 1200 × 675 | Photo by Oli Liao on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-black-sedan-parked-in-urban-setting-35628774/ |
 | vehicle-motorcycle.webp | PRESENT | 42800 | 1200 × 800 | Photo by Raj Pillay on Pexels (Pexels License) - https://www.pexels.com/photo/triumph-street-triple-765-r-27704082/ |
+
+
+### Package and lesson information in role pages
+
+The student dashboard, booking header and enrollment cards now connect the package name/type to lesson usage, validity and a status badge. Requested counts Pending bookings (including assigned requests awaiting instructor approval); Confirmed is counted separately. Completed counts saved Completed bookings for that exact enrollment. Cancelling and no-show do not count as completed lessons. Instructor and admin booking rows resolve the package through the booking's own enrollment, including history.
+
+`EnrollmentPresentationService` is read-only. It loads enrollments and packages once per presentation request into ID maps, and uses only authorized booking lists for displayed rows. `EnrollmentUsageView` is a display DTO, separate from the existing `learningpackage/api/EnrollmentSummary` contract. No persistence format or payment/booking transition was changed.
+
+Balances are stored on the student account, not on every receipt. Older receipts say **Historical enrollment — remaining balance not recorded**; current catalog lesson counts are labelled **Current package offering**, because original purchased lesson counts are not captured in receipts. Setting the account balance to zero clears its active package/enrollment IDs; with no active IDs and zero balance, the latest Paid receipt represents the exhausted package. Older Paid receipts still do not borrow its balance. Null validity says **Validity not recorded**. Missing packages say **Package unavailable (P001)** with their actual ID; a missing enrollment shows **Package unavailable** and type **Not recorded**.
+
+Display statuses are Active, Used up, Expired, Awaiting payment, Cancelled, Historical and Unavailable. Payment status remains visible separately. Unusable receipts do not offer a Book link. A fully requested Active package links to existing bookings instead of offering another lesson. Renewal wording is deliberately explicit: **Contact the school to renew. Buying another package is not available yet.** This display work does not implement renewal.
+
+
+Step 1 verification (9 November 2026): CSS build passed; `clean verify` completed **684 tests, 0 failures, 0 errors, 0 skipped**, BUILD SUCCESS. Student, instructor and admin display areas were inspected in Chrome at 1536 x 864; 25 HTTP assertions for normal and fallback states passed. See [the Step 1 verification and owner/file inventory](docs/VIVA_QA.md#step-1-verification-evidence--9-november-2026). The isolated demo was stopped and run-only demo variables cleared.
+
+
+### Read-only booking details — IT26101134
+
+Students and administrators can choose **View booking details** on their existing booking cards. The new GET `/bookings/{bookingId}/details` page shows the lesson time, status, booking-linked package/type/validity, enrollment, requested/assigned instructor, vehicle, queue position (only while unassigned Pending), and any rejection/cancellation reason. It links back to the correct role's booking list; changes remain on the existing pages.
+
+The owning student and administrators may read the page. Another student or an instructor gets403; signed-out visitors are sent to login. The service checks access as well as the controller's login annotation. Missing package/enrollment references retain safe display fallbacks. The new page is READ only and does not change the FIFO queue, booking status or lesson balance. Existing routes/form fields are unchanged.
+
+Verification: `clean verify` on9 November2026 completed **692 tests, 0 failures, 0 errors, 0 skipped**, BUILD SUCCESS. Eleven isolated-demo HTTP assertions passed, including unchanged record/counter files. Details and file ownership are recorded in docs/VIVA_QA.md. The demo was stopped and its run-only variables cleared.
+
+
+### Approved file cleanup
+
+Removed the unused shared fragments pagination.jspf, skeleton.jspf, search-bar.jspf and breadcrumbs.jspf. Existing page-specific search/breadcrumb controls remain. Removed the obsolete root build.log and 44 .gitkeep files in populated src directories. Kept data/.gitkeep and the placeholder in the otherwise empty student/repository directory. All Java classes, tests, routes, security, required algorithms and sample data remain unchanged by this cleanup.
+
+
+Cleanup verification (9 November 2026): `.\mvnw.cmd clean verify` completed **692 tests, 0 failures, 0 errors, 0 skipped — BUILD SUCCESS**, including WAR packaging. All 241 Java files matched their pre-cleanup SHA-256 hashes. No tests were changed. See the dated cleanup evidence in docs/VIVA_QA.md.
+
+## Java cleanup (2026-11-09)
+
+Unused instructor interval/lookup, vehicle lookup and enrollment lookup classes were removed. Working CRUD pages, file storage, OOP interfaces, the manual instructor bubble sort and manual booking queue remain. The empty legacy `instructor-availability.txt` sample and its counter are retained for compatibility and are not read by the application. See the [removal and verification record](docs/JAVA_SIMPLIFICATION.md).
+
+Cleanup verification: `clean verify` passed **646 tests, 0 failures, 0 errors, 0 skipped**. The 46-test decrease is exclusively tests of removed unused code. All **45 isolated HTTP checks passed**. No visual change was made; browser appearance was not rechecked.

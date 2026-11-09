@@ -32,6 +32,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import com.drivingschool.learningpackage.service.EnrollmentPresentationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -60,6 +61,8 @@ public class InstructorDashboardController {
     private final Clock clock;
     private final ReviewService reviews;
 
+    private final EnrollmentPresentationService presentation;
+
     // Receives the helpers or validates the details needed to create this object.
     public InstructorDashboardController(AuthSessionService auth,
                                           BookingService bookings,
@@ -68,7 +71,8 @@ public class InstructorDashboardController {
                                           InstructorCatalog instructors,
                                           StudentLookup students,
                                           Clock clock,
-                                          ReviewService reviews) {
+                                          ReviewService reviews, EnrollmentPresentationService presentation) {
+        this.presentation = presentation;
         this.auth = auth;
         this.bookings = bookings;
         this.csrf = csrf;
@@ -90,6 +94,7 @@ public class InstructorDashboardController {
         Instructor profile = instructors.getInstructorById(instructorId);
         List<Review> ownReviews = reviews.reviewsForInstructor(instructorId);
         model.addAttribute("bookings", assigned);
+        model.addAttribute("bookingPackages", presentation.forBookings(assigned));
         model.addAttribute("instructor", profile);
         model.addAttribute("averageRating", profile.getAverageRating());
         model.addAttribute("ownReviews", ownReviews);
