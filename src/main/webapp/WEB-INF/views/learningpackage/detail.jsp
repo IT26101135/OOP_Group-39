@@ -19,13 +19,14 @@ CRUD     : READ (displays page information); existing forms keep their original 
 <title><c:out value='${learningPackage.displayName}' /> | DriveSpark Academy</title>
 <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
 <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body>
+</head><body class="ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-public ds-detail ds-container">
     <%-- LearningPackageController supplies this package and the navigation role. --%>
     <nav class="ds-breadcrumbs" aria-label="Breadcrumb"><a href="<c:url value='/packages' />">Packages</a><span aria-hidden="true">/</span><span aria-current="page"><c:out value="${learningPackage.displayName}" /></span></nav>
-    <header class="ds-public-heading ds-detail-heading"><p class="ds-eyebrow"><c:out value="${learningPackage.type}" /> / YOUR NEXT CHAPTER</p><h1><c:out value="${learningPackage.displayName}" /></h1><p><c:out value="${learningPackage.description}" /></p></header>
+    <%-- The shared edge shade stays behind the heading and keeps the next content block in place. --%>
+    <header class="ds-public-heading ds-detail-heading ds-photo-surface ds-page-photo ds-edge-vignette"><c:set var="photoVehicleType" value="${learningPackage.type}" /><c:choose><c:when test="${photoVehicleType eq 'AUTOMATIC'}"><c:set var="photoKey" value="vehicle-automatic" /></c:when><c:when test="${photoVehicleType eq 'MOTORCYCLE'}"><c:set var="photoKey" value="vehicle-motorcycle" /></c:when><c:otherwise><c:set var="photoKey" value="vehicle-manual" /></c:otherwise></c:choose><c:set var="photoAlt" value="Vehicle illustrating ${photoVehicleType} driving lessons" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %><p class="ds-eyebrow"><c:out value="${learningPackage.type}" /> / YOUR NEXT CHAPTER</p><h1><c:out value="${learningPackage.displayName}" /></h1><p><c:out value="${learningPackage.description}" /></p></header>
     <div class="ds-detail-grid">
         <%-- LearningPackageController provides the saved duration and validity used in these details. --%>
         <div class="ds-detail-story"><section><p class="ds-eyebrow">PURPOSEFUL PRACTICE</p><h2>One lesson closer<br>to confidence.</h2><p>A structured learning path with instructor-guided practice and feedback after your lessons.</p><ul class="ds-detail-inclusions"><li>Individual driving lessons</li><li>Instructor feedback and skill notes</li><li>Lesson balance in your student account after payment confirmation</li></ul></section><section><p class="ds-eyebrow">MAKE TIME TO LEARN</p><h2>Room to build<br>good habits.</h2><p>This package is valid for <c:out value="${learningPackage.validityDays}" /> days from payment confirmation. Plan your lessons within that period and request available times through your account.</p><a class="ds-home-text-link" href="<c:url value='/faq' />">Questions before you start? <span aria-hidden="true">↗</span></a></section></div>

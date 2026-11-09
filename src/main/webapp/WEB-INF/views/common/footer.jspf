@@ -28,6 +28,8 @@ CRUD     : Displays existing data; does not save records
     <%-- Placeholders and sample figures are explained here rather than presented as verified claims. --%>
     <div class="ds-container ds-footer-notes">
         <p>Coursework demonstration. Package prices and sample figures are illustrative. Address, opening hours and social profiles must be confirmed by the academy.</p>
+        <%-- HomeController keeps every home disclaimer here; other pages retain their usual fine print. --%>
+        <c:if test="${requestScope.homePageNotes}"><div id="home-notes"><p>1. DriveSpark Academy is a university project. Safety descriptions illustrate the proposed school service; confirm vehicle equipment and inspection details with the academy.</p><p>Package prices and lesson counts come from the current project data. The monthly spotlight is an editorial selection, with no discount implied. Reviews may include labelled demo records.</p><p>Location and opening hours are placeholders. No real address, directions or operating hours have been verified. Photo fallback: Original abstract scenery is used in place of photography.</p></div></c:if>
         <div class="ds-footer-bottom"><span>&copy; 2026 DriveSpark Academy</span><span>English &nbsp;/&nbsp; Colombo, Sri Lanka</span></div>
     </div>
 </footer>

@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : AuthorizationErrorHandlerTest.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,14 +28,17 @@ class AuthorizationErrorHandlerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    // Check this request or supply the small test-only page it needs.
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TestController())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.drivingschool.common.exception.ErrorPageSupport(
+                        org.mockito.Mockito.mock(com.drivingschool.auth.service.AuthSessionService.class))))
                 .build();
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void unauthorizedRedirectsToLogin()
             throws Exception {
 
@@ -35,6 +48,7 @@ class AuthorizationErrorHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void forbiddenUsesSharedErrorPageWithoutExposingInternalReason()
             throws Exception {
 
@@ -51,6 +65,7 @@ class AuthorizationErrorHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void otherResponseStatusErrorsKeepTheirOriginalStatus()
             throws Exception {
 

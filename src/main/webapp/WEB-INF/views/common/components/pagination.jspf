@@ -10,4 +10,4 @@ CRUD     : Displays existing data; does not save records
 ============================================================
 --%>
 <%-- This block shows pagination. The including page controller supplies this block through model attributes. --%>
-<nav class="ds-pagination" aria-label="Pagination"><button type="button" disabled aria-label="Previous page">← Previous</button><span>Page 1</span><button type="button" aria-label="Next page">Next →</button></nav>
+<nav class="ds-pagination" aria-label="Pagination"><button type="button" disabled aria-label="Previous page">&#8592; Previous</button><span>Page 1</span><button type="button" aria-label="Next page">Next &#8594;</button></nav>

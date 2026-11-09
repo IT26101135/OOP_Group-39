@@ -11,6 +11,7 @@
  */
 package com.drivingschool.common.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,23 +24,32 @@ import org.springframework.web.server.ResponseStatusException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final ErrorPageSupport pages;
+
+    // Receive the same page helper used for Spring's own HTTP errors.
+    public GlobalExceptionHandler(ErrorPageSupport pages) {
+        this.pages = pages;
+    }
+
     private static final Logger LOG =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ValidationException.class)
     // Explains which information needs correcting.
-    public ModelAndView handleValidation(ValidationException exception) {
+    public ModelAndView handleValidation(ValidationException exception, HttpServletRequest request) {
         return errorPage(
+                request,
                 HttpStatus.BAD_REQUEST,
-                "Invalid information",
+                "Please check your input",
                 exception.getMessage()
         );
     }
 
     @ExceptionHandler(RecordNotFoundException.class)
     // Explains that the requested record could not be found.
-    public ModelAndView handleNotFound(RecordNotFoundException exception) {
+    public ModelAndView handleNotFound(RecordNotFoundException exception, HttpServletRequest request) {
         return errorPage(
+                request,
                 HttpStatus.NOT_FOUND,
                 "Record not found",
                 exception.getMessage()
@@ -48,8 +58,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateRecordException.class)
     // Explains that a record with those details already exists.
-    public ModelAndView handleDuplicate(DuplicateRecordException exception) {
+    public ModelAndView handleDuplicate(DuplicateRecordException exception, HttpServletRequest request) {
         return errorPage(
+                request,
                 HttpStatus.CONFLICT,
                 "Record already exists",
                 exception.getMessage()
@@ -58,7 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(StorageException.class)
     // Logs the failure type and shows a safe message without private details.
-    public ModelAndView handleStorage(StorageException exception) {
+    public ModelAndView handleStorage(StorageException exception, HttpServletRequest request) {
         // Log the failure type without exposing records or internal paths.
         Throwable cause = exception.getCause();
 
@@ -70,6 +81,7 @@ public class GlobalExceptionHandler {
         );
 
         return errorPage(
+                request,
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Storage operation failed",
                 "We could not complete the operation. "
@@ -80,7 +92,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     // Sends visitors to login or explains why access is refused.
     public ModelAndView handleResponseStatus(
-            ResponseStatusException exception) {
+            ResponseStatusException exception, HttpServletRequest request) {
 
         int status = exception.getStatusCode().value();
 
@@ -90,6 +102,7 @@ public class GlobalExceptionHandler {
 
         if (status == HttpStatus.FORBIDDEN.value()) {
             return errorPage(
+                request,
                     HttpStatus.FORBIDDEN,
                     "Access denied",
                     "You do not have permission to access this resource."
@@ -101,18 +114,8 @@ public class GlobalExceptionHandler {
     }
 
     // Builds the shared error page with its correct HTTP status.
-    private ModelAndView errorPage(
-            HttpStatus status,
-            String title,
-            String message) {
-
-        ModelAndView page = new ModelAndView("common/error");
-
-        page.setStatus(status);
-        page.addObject("statusCode", status.value());
-        page.addObject("title", title);
-        page.addObject("message", message);
-
-        return page;
+    private ModelAndView errorPage(HttpServletRequest request, HttpStatus status,
+                                   String title, String message) {
+        return pages.prepare(request, status, title, message);
     }
 }

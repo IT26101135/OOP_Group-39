@@ -28,10 +28,12 @@ CRUD     : See CRUD labels on the record operations.
     <title>Register | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body>
+<body class="ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-container ds-section ds-auth-page ds-public-auth">
+    <%-- LocalPhotoAdvice supplies this scene; the shared edge fade leaves the form unchanged. --%>
+    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="The road ahead"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
     <%-- AuthController supplies the introduction and account messages below. --%>
     <header class="ds-auth-heading"><p class="ds-eyebrow">START SOMETHING GOOD</p><h1>Your first step.</h1>
     <p>Create your student account and log in immediately. Lessons become available after your package payment is confirmed.</p></header>

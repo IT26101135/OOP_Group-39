@@ -32,7 +32,7 @@ CRUD     : Displays existing data; does not save records
                     <div id="package-panel" class="ds-package-panel" hidden aria-label="Learning packages">
                         <c:forEach items="${packageNavigation}" var="choice">
                             <article class="ds-package-choice">
-                                <div class="ds-package-thumbnail" data-type="${choice.type}" role="img" aria-label="${choice.title} driving course illustration"></div>
+                                <div class="ds-package-thumbnail" data-type="${choice.type}" role="img" aria-label="${choice.title} driving course vehicle"><c:set var="photoVehicleType" value="${choice.type}" /><c:choose><c:when test="${photoVehicleType eq 'AUTOMATIC'}"><c:set var="photoKey" value="vehicle-automatic" /></c:when><c:when test="${photoVehicleType eq 'MOTORCYCLE'}"><c:set var="photoKey" value="vehicle-motorcycle" /></c:when><c:otherwise><c:set var="photoKey" value="vehicle-manual" /></c:otherwise></c:choose><c:set var="photoAlt" value="Vehicle illustrating ${photoVehicleType} driving lessons" /><c:set var="photoEager" value="false" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></div>
                                 <h2><c:out value="${choice.title}" /></h2>
                                 <p><c:out value="${choice.tagline}" /></p>
                                 <c:choose><c:when test="${choice.available}">

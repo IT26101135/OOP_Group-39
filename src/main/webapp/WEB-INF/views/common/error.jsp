@@ -9,7 +9,7 @@ OOP USED : Displays the result of shared exception handling
 CRUD     : Supports error messages for CREATE, READ, UPDATE and DELETE
 ============================================================
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:url value="/css/tailwind.css" var="appCssUrl" />
 <c:url value="/" var="homeUrl" />
@@ -40,16 +40,10 @@ CRUD     : Supports error messages for CREATE, READ, UPDATE and DELETE
     </p>
 
     <p><c:out value="${message}"/></p>
-    <%-- Booking rules explain payment problems here; this link gives students a useful next step. --%>
-    <p><a class="ds-home-text-link" href="<c:url value='/enrollments' />">My enrollments and payment instructions</a></p>
-
-    <p>The page could not be opened. Return home and continue from there.</p>
-    <c:choose>
-        <c:when test="${statusCode eq 403 and navRole eq 'ADMIN'}"><a class="ds-button" href="<c:url value='/admin/dashboard' />">Go to my dashboard</a></c:when>
-        <c:when test="${statusCode eq 403 and navRole eq 'INSTRUCTOR'}"><a class="ds-button" href="<c:url value='/instructor/dashboard' />">Go to my dashboard</a></c:when>
-        <c:when test="${statusCode eq 403 and navRole eq 'STUDENT'}"><a class="ds-button" href="<c:url value='/student/profile' />">Go to my dashboard</a></c:when>
-        <c:otherwise><a class="ds-button" href="<c:out value='${homeUrl}' />">Back to home</a></c:otherwise>
-    </c:choose>
+    <%-- ErrorPageSupport supplies only known local form and role destinations. --%>
+    <c:if test="${not empty retryUrl}"><p><a class="ds-button" href="<c:url value='${retryUrl}' />">Back to the form</a></p></c:if>
+    <p><a class="ds-button ds-button-outline" href="<c:url value='${recoveryUrl}' />"><c:choose><c:when test="${navRole eq 'PUBLIC'}">Log in</c:when><c:otherwise>Go to my dashboard</c:otherwise></c:choose></a></p>
+    <p><a class="ds-home-text-link" href="<c:out value='${homeUrl}' />">Back to home</a></p>
 </main>
 </body>
 </html>

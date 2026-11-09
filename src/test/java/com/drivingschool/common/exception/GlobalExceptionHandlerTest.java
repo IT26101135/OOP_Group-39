@@ -1,4 +1,14 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : GlobalExceptionHandlerTest.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +29,7 @@ class GlobalExceptionHandlerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    // Check this request or supply the small test-only page it needs.
     void setUp() {
         InternalResourceViewResolver resolver =
                 new InternalResourceViewResolver();
@@ -28,12 +39,14 @@ class GlobalExceptionHandlerTest {
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ErrorTestController())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.drivingschool.common.exception.ErrorPageSupport(
+                        org.mockito.Mockito.mock(com.drivingschool.auth.service.AuthSessionService.class))))
                 .setViewResolvers(resolver)
                 .build();
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void validationReturns400() throws Exception {
         mockMvc.perform(get("/test-errors/validation"))
                 .andExpect(status().isBadRequest())
@@ -45,6 +58,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void missingRecordReturns404() throws Exception {
         mockMvc.perform(get("/test-errors/missing"))
                 .andExpect(status().isNotFound())
@@ -53,6 +67,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void duplicateReturns409() throws Exception {
         mockMvc.perform(get("/test-errors/duplicate"))
                 .andExpect(status().isConflict())
@@ -61,6 +76,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void storageReturns500WithoutInternalDetails() throws Exception {
         mockMvc.perform(get("/test-errors/storage"))
                 .andExpect(status().isInternalServerError())

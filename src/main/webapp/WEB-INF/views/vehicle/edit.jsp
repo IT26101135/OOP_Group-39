@@ -31,7 +31,7 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
-<main id="main-content" class="ds-container ds-section ds-dashboard-shell"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
+<main id="main-content" class="ds-container ds-section ds-dashboard-shell ds-vehicle-editor"><%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
 
     <div class="ds-vehicle-form-heading mb-8">
         <p class="ds-eyebrow">VEHICLE MANAGEMENT</p>
@@ -119,12 +119,12 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
                        value="<c:out value='${vehicleEditForm.model}' />">
             </div>
 
-            <label>Transmission <select name="transmissionType"><c:forEach items="${transmissionTypes}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.transmissionType eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
-            <label>Category <select name="vehicleCategory"><c:forEach items="${vehicleCategories}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.vehicleCategory eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
-            <label>Status <select name="operationalStatus"><c:forEach items="${operationalStatuses}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.operationalStatus eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
-            <label>Insurance expiry <input type="date" name="insuranceExpiry" value="<c:out value='${vehicleEditForm.insuranceExpiry}' />"></label>
-            <label>Last service <input type="date" name="lastServiceDate" value="<c:out value='${vehicleEditForm.lastServiceDate}' />"></label>
-            <label>Next service <input type="date" name="nextServiceDate" value="<c:out value='${vehicleEditForm.nextServiceDate}' />"></label>
+            <label class="ds-vehicle-field">Transmission <select name="transmissionType"><c:forEach items="${transmissionTypes}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.transmissionType eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Category <select name="vehicleCategory"><c:forEach items="${vehicleCategories}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.vehicleCategory eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Status <select name="operationalStatus"><c:forEach items="${operationalStatuses}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.operationalStatus eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Insurance expiry <input type="date" name="insuranceExpiry" value="<c:out value='${vehicleEditForm.insuranceExpiry}' />"></label>
+            <label class="ds-vehicle-field">Last service <input type="date" name="lastServiceDate" value="<c:out value='${vehicleEditForm.lastServiceDate}' />"></label>
+            <label class="ds-vehicle-field">Next service <input type="date" name="nextServiceDate" value="<c:out value='${vehicleEditForm.nextServiceDate}' />"></label>
             <div class="ds-vehicle-form-actions flex flex-wrap items-center gap-4 sm:col-span-2">
                 <button class="ds-button" type="submit">
                     Save changes

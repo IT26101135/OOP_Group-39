@@ -19,13 +19,14 @@ CRUD     : READ (displays page information); existing forms keep their original 
 <title>About us | DriveSpark Academy</title>
 <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
 <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body>
+</head><body class="ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-public ds-about-public">
-    <%-- PublicPagesController opens the academy story; all illustrations are original CSS. --%>
+    <%-- PublicPagesController opens the academy story; LocalPhotoAdvice supplies the optional landscape photo. --%>
     <header class="ds-public-heading ds-container ds-about-intro"><p class="ds-eyebrow">OUR REASON TO DRIVE</p><h1>Good habits.<br>Open possibilities.</h1><p>Learning to drive is about more than getting somewhere. It is about how you choose to get there.</p><a class="ds-button" href="<c:url value='/packages' />">Explore learning packages</a></header>
-    <div class="ds-about-landscape" role="img" aria-label="Original abstract road stretching toward a mountain horizon"><div class="ds-scene-road"><div class="ds-road-lines"></div></div></div>
+    <%-- PublicPagesController keeps this landscape between the same two sections; only its edges fade. --%>
+    <div class="ds-about-landscape ds-page-photo ds-edge-vignette" role="img" aria-label="Mountain road landscape"><c:set var="photoKey" value="mission" /><c:set var="photoAlt" value="A road through the mountains" /><c:set var="photoEager" value="false" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %><div class="ds-scene-road"><div class="ds-road-lines"></div></div></div>
     <%-- PublicPagesController provides this static story and mission section. --%>
     <section class="ds-container ds-editorial-split"><p class="ds-eyebrow">THE DRIVESPARK APPROACH</p><div><h2>Thoughtful teaching.<br>Purposeful practice.</h2><p>DriveSpark Academy brings your learning journey into one place: choose a course, meet an instructor, request a lesson and review your progress.</p><p>Our mission is to help learners build awareness, patience and respect for everyone sharing the road.</p></div></section>
     <%-- PublicPagesController opens these values; no invented performance statistics are shown. --%>

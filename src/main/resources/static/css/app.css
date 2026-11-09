@@ -25,6 +25,7 @@ CRUD     : Displays existing data; does not save records
 @layer base {
   :root {
     color-scheme: dark;
+    --ds-header-height: 88px;
     --ds-page: #050505;
     --ds-surface: #0A0A0A;
     --ds-raised: #171717;
@@ -35,12 +36,12 @@ CRUD     : Displays existing data; does not save records
     --ds-muted: #A3A3A3;
     --ds-border: rgba(255,255,255,.09);
   }
-  html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+  html { scroll-behavior: smooth; scroll-padding-top: var(--ds-header-height); }
   body { @apply min-h-screen bg-ink text-white font-sans antialiased; font-size: 17px; line-height: 1.7; }
   h1,h2,h3,h4 { @apply font-display text-white; font-weight: 400; letter-spacing: -.035em; line-height: 1.08; }
   a { @apply transition-colors duration-200; }
   :focus-visible { @apply outline-none ring-2 ring-primary-hover ring-offset-2 ring-offset-ink; }
-  ::selection { background: #F59E0B; color: #fff; }
+  ::selection { background: #F59E0B; color: #000; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 }
 
@@ -289,7 +290,7 @@ CRUD     : Displays existing data; does not save records
 .ds-header::before { content: ''; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / .94); backdrop-filter: blur(14px); transition: opacity .3s ease; }
 body:has([data-cinematic]) .ds-header { position: fixed; }
 body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
-.ds-navbar { position: static; display: grid; min-height: 88px; grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
+.ds-navbar { position: static; display: grid; min-height: var(--ds-header-height); grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
 .ds-wordmark { display: flex; flex-direction: column; gap: 2px; color: #FFFFFF; font-size: 24px; font-weight: 500; letter-spacing: -.055em; line-height: 1.1; }
 .ds-wordmark > span { font-size: 9px; font-weight: 400; letter-spacing: .32em; text-transform: uppercase; }
 .ds-nav { position: static; display: flex; align-items: center; gap: 1.6rem; border: 0; background: transparent; padding: 0; overflow: visible; }
@@ -320,14 +321,17 @@ body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
 .ds-footer-notes { padding-block: 2rem; border-top: 1px solid #262626; color: #A3A3A3; font-size: 11px; line-height: 1.8; }
 .ds-footer-notes > p { max-width: 54rem; }
 .ds-footer-bottom { padding-top: 2rem; padding-bottom: 0; border: 0; font-size: 11px; }
+/* Keep anchor landing positions aligned with the smaller navigation bar. */
 @media (max-width: 1023px) {
-  .ds-navbar { grid-template-columns: 1fr auto; gap: 1rem; min-height: 80px; }
+  :root { --ds-header-height: 80px; }
+  .ds-navbar { grid-template-columns: 1fr auto; gap: 1rem; min-height: var(--ds-header-height); }
   .ds-nav-toggle { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; padding: .5rem 0; border: 0; background: transparent; color: #FFFFFF; font-size: 12px; }
   .ds-js .ds-nav { position: fixed; inset: 0; z-index: 80; display: none; height: 100svh; max-height: none; padding: 6rem 1.5rem 3rem; overflow-y: auto; background: #050505; }
   .ds-js .ds-nav.is-open { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; }
   .ds-nav.is-open .ds-nav-link, .ds-nav.is-open .ds-nav-group > summary { font-size: clamp(24px,4vw,36px); line-height: 1.4; white-space: normal; }
   .ds-nav.is-open .ds-nav-submenu .ds-nav-link { font-size: 18px; }
-  .ds-nav-close { position: absolute; top: 1rem; right: 1.5rem; display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; border: 0; background: transparent; color: #FFFFFF; font-size: 13px; cursor: pointer; }
+  /* The sticky inset subtracts the menu's 6rem padding, keeping Close 1rem from the screen top. */
+  .ds-nav-close { position: sticky; top: -5rem; align-self: flex-end; z-index: 100; flex-shrink: 0; margin-top: -5rem; margin-bottom: 1rem; box-shadow: 0 0 0 12px #050505; display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; border: 0; background: #050505; color: #FFFFFF; font-size: 13px; cursor: pointer; }
   .ds-nav-close span { font-size: 26px; font-weight: 300; }
   .ds-nav-submenu { position: static; min-width: 0; margin-top: .5rem; padding: .2rem 0 1rem 1.5rem; border: 0; border-left: 1px solid #262626; }
   .ds-menu-open { overflow: hidden; }
@@ -394,8 +398,8 @@ body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
 .ds-home sup a { padding: .2rem; color: #FFFFFF; }
 .ds-home-location { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
 .ds-home .ds-location-note, .ds-home .ds-home-small { color: #A3A3A3; font-size: 13px; }
-.ds-location-art { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 560px; padding: 2rem; overflow: hidden; background: repeating-linear-gradient(40deg,transparent 0 70px,#D4D4D41A 71px 73px,transparent 74px 140px),repeating-linear-gradient(130deg,#171717 0 75px,#D4D4D422 76px 78px,#171717 79px 150px); }
-.ds-location-art > span:not(.ds-location-marker) { position: relative; z-index: 1; width: fit-content; background: #0A0A0A; padding: .4rem .6rem; font-size: 9px; letter-spacing: .14em; color: #D4D4D4; }
+.ds-location-art { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 560px; padding: 2rem; overflow: hidden; --ds-fallback-scene: repeating-linear-gradient(40deg,transparent 0 70px,#D4D4D41A 71px 73px,transparent 74px 140px),repeating-linear-gradient(130deg,#171717 0 75px,#D4D4D422 76px 78px,#171717 79px 150px); background: var(--ds-fallback-scene); }
+.ds-location-art > span:not(.ds-location-marker):not(.ds-local-photo-shade) { position: relative; z-index: 1; width: fit-content; background: #0A0A0A; padding: .4rem .6rem; font-size: 9px; letter-spacing: .14em; color: #D4D4D4; }
 .ds-location-marker { position: absolute; top: 47%; left: 49%; display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; border: 1px solid #D4D4D4; color: #FFFFFF; background: #050505; font-size: 18px; }
 .ds-home-cta { text-align: center; }
 .ds-home-cta .ds-home-copy, .ds-home-cta p { margin-inline: auto; }
@@ -418,7 +422,7 @@ body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
 .ds-home-tiles h3 { margin-block: 3rem; font-size: clamp(24px,2.5vw,36px); letter-spacing: -.04em; }
 .ds-home-tiles span:first-child { color: #A3A3A3; font-size: 9px; letter-spacing: .12em; }
 .ds-home-tiles span:last-child { align-self: end; font-size: 24px; }
-.ds-home-mission { background: radial-gradient(ellipse at 65% 10%,#262626,transparent 65%),#050505; }
+.ds-home-mission { --ds-fallback-scene: radial-gradient(ellipse at 65% 10%,#262626,transparent 65%),#050505; background: var(--ds-fallback-scene); }
 .ds-home-mission-copy { max-width: 1050px; }
 .ds-home-mission-copy > p:last-child { max-width: 36rem; }
 .ds-home-reviews { max-width: 850px; margin-top: 6rem; padding-top: 2rem; border-top: 1px solid #525252; }
@@ -798,8 +802,13 @@ html body :focus-visible { outline: 2px solid #FFFFFF !important; outline-offset
 }
 
 /* PackageNavigationAdvice supplies the content; these local gradients stand in for future photos. */
+/* The transparent bridge keeps slow pointer movement inside the package menu. */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .ds-package-menu { position: relative; }
+  .ds-package-menu:has(.ds-package-trigger[aria-expanded="true"])::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 32px; }
+}
 .ds-package-panel[hidden] { display: none !important; }
-.ds-package-panel { position: fixed; top: 88px; left: 3vw; right: 3vw; max-height: calc(100svh - 104px); overflow: auto; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; padding: 24px; border-radius: 18px; background: #FFFFFF; color: #171717; box-shadow: 0 16px 40px #0005; z-index: 90; }
+.ds-package-panel { position: fixed; top: var(--ds-header-height); left: 3vw; right: 3vw; max-height: calc(100svh - 104px); overflow: auto; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; padding: 24px; border-radius: 18px; background: #FFFFFF; color: #171717; box-shadow: 0 16px 40px #0005; z-index: 90; }
 .ds-package-choice { min-width: 0; }
 .ds-package-choice h2 { font-size: 26px; line-height: 1.2; margin: 18px 0 10px; color: #171717; }
 .ds-package-choice p { color: #525252; font-size: 14px; margin: 10px 0; }
@@ -817,3 +826,122 @@ html body :focus-visible { outline: 2px solid #FFFFFF !important; outline-offset
   .ds-package-choice { padding-block: 8px; border-bottom: 1px solid #D4D4D4; }
   .ds-package-choice h2 { font-size: 24px; margin-top: 0; }
 }
+
+/* LocalPhotoAdvice omits absent files; original artwork stays beneath available photographs. */
+.ds-photo-surface, .ds-package-thumbnail, .ds-location-art, .ds-about-landscape { position: relative; overflow: hidden; }
+.ds-local-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+/* One 64% black shade leaves the photo visible and keeps light copy readable, even over white. */
+.ds-local-photo-shade { position: absolute; inset: 0; background: rgb(0 0 0 / .64); z-index: 2; pointer-events: none; }
+/* Photo sections already have a shade; the painted fallback keeps its original extra gradient. */
+.ds-cinematic-section:has(.ds-local-photo)::after { background: none; }
+.ds-scene-road-close:has(.ds-local-photo) { filter: none; }
+/* Small captions need the same contrast protection as the body copy on a photograph. */
+.ds-photo-surface .ds-eyebrow, .ds-photo-surface .ds-review-attribution, .ds-photo-surface .ds-review-controls span, .ds-cinematic-section .ds-home-three-points span { color: #D4D4D4; }
+.ds-photo-surface:has(> .ds-local-photo) > :not(.ds-local-photo):not(.ds-local-photo-shade) { position: relative; z-index: 3; }
+.ds-package-thumbnail .ds-local-photo-shade, .ds-catalog-photo .ds-local-photo-shade { background: linear-gradient(180deg,transparent,#0004); }
+.ds-cinematic-background > .ds-local-photo { z-index: 2; }
+.ds-cinematic-background > .ds-local-photo-shade { z-index: 3; }
+.ds-location-art > span:not(.ds-local-photo-shade):not(.ds-location-marker) { position: relative; z-index: 3; }
+.ds-location-marker { z-index: 3; }
+.ds-public-auth { position: relative; }
+.ds-auth-photo { display: none; }
+.ds-auth-photo:has(.ds-local-photo) { display: block; height: 300px; margin-bottom: 2rem; background: linear-gradient(130deg,#262626,#050505); }
+.ds-catalog-photo:has(.ds-local-photo) { height: 200px; margin-bottom: 1.5rem; }
+.ds-public-heading:has(> .ds-local-photo) { padding: 3rem; background: #0A0A0A; }
+@media(min-width:1280px) { .ds-auth-photo:has(.ds-local-photo) { position: absolute; left: calc(-23vw - 20px); top: 32px; width: 23vw; height: calc(100% - 64px); margin-bottom: 0; } }
+@media print { .ds-local-photo, .ds-local-photo-shade, .ds-auth-photo { display: none !important; } }
+
+/* These standalone photos carry no text, so a lighter shade keeps their detail visible. */
+.ds-auth-photo .ds-local-photo-shade, .ds-about-landscape .ds-local-photo-shade { background: linear-gradient(180deg,#0002,#0006); }
+
+/* Shared dropdown timing: change these four tokens to tune presentation motion. */
+:root { --ds-open-time: 280ms; --ds-close-time: 180ms; --ds-open-ease: cubic-bezier(.16,1,.3,1); --ds-close-ease: cubic-bezier(.4,0,1,1); }
+.ds-js .ds-animated-panel { opacity: 0; transform: translateY(-10px) scale(.98); transform-origin: top center; visibility: hidden; pointer-events: none; transition: opacity var(--ds-close-time) var(--ds-close-ease), transform var(--ds-close-time) var(--ds-close-ease), visibility 0s var(--ds-close-time); }
+.ds-js .ds-animated-panel.is-visible { opacity: 1; transform: translateY(0) scale(1); visibility: visible; pointer-events: auto; transition: opacity var(--ds-open-time) var(--ds-open-ease), transform var(--ds-open-time) var(--ds-open-ease), visibility 0s; }
+.ds-confirm-dialog[open], .ds-toast { animation: ds-panel-in var(--ds-open-time) var(--ds-open-ease) both; }
+.ds-confirm-dialog.is-leaving, .ds-toast-leaving { animation: none; opacity: 0; transform: translateY(-10px) scale(.98); pointer-events: none; transition: opacity var(--ds-close-time) var(--ds-close-ease), transform var(--ds-close-time) var(--ds-close-ease); }
+@keyframes ds-panel-in { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+/* Reset uses the same field styles as login, with two columns for laptop presentations. */
+.ds-auth-recovery { width: min(1040px,calc(100% - 4rem)); max-width: 1040px; padding-block: 2rem 3rem; }
+.ds-auth-recovery .ds-auth-heading { margin-bottom: 1.5rem; }
+.ds-auth-recovery .ds-auth-heading h1 { font-size: clamp(40px,4vw,56px); margin-top: 1rem; }
+.ds-auth-recovery .ds-wordmark { text-decoration: none; }
+.ds-auth-forms { display: grid; grid-template-columns: 1fr 1.3fr; gap: 3rem; }
+.ds-auth-forms form { display: grid; align-content: start; gap: 1rem; padding: 0; border: 0; background: transparent; }
+.ds-auth-forms h2 { font-size: 26px; }
+.ds-auth-forms button[type='submit'] { margin-top: .5rem; }
+/* Vehicle create/edit controls share a stacked label and full-width input. */
+.ds-vehicle-field { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.ds-vehicle-field input, .ds-vehicle-field select { width: 100%; }
+@media (min-width: 1024px) {
+  .ds-vehicle-editor { padding-block: 2rem; }
+  .ds-vehicle-editor .ds-vehicle-form-heading { margin-bottom: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-form-heading h1 { font-size: 48px; }
+  .ds-vehicle-editor .ds-card { padding-block: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-readonly { margin-bottom: 1rem; padding-bottom: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-details { grid-template-columns: repeat(4,minmax(0,1fr)); margin-block: .5rem; }
+  .ds-vehicle-editor .ds-vehicle-form { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-form-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 1023px) { .ds-auth-forms { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-js .ds-animated-panel, .ds-js .ds-animated-panel.is-visible, .ds-confirm-dialog.is-leaving, .ds-toast-leaving { transform: none; transition-duration: 20ms; }
+  .ds-confirm-dialog[open], .ds-toast { animation: none; }
+}
+/* Keep error recovery actions visible at laptop and projector heights. */
+.ds-error-shell { padding-block: 2rem; gap: .75rem; }
+.ds-error-shell h1 { font-size: clamp(40px,4vw,56px); }
+.ds-error-art { max-width: 240px; margin-bottom: .25rem; }
+@media (min-width: 1024px) and (max-height: 800px) {
+  .ds-auth-recovery { padding-block: 1rem 2rem; }
+  .ds-auth-recovery .ds-auth-heading { margin-bottom: 1rem; }
+  .ds-auth-recovery .ds-auth-heading h1 { font-size: 44px; margin-top: .5rem; }
+  .ds-auth-forms form { gap: .6rem; }
+  .ds-auth-recovery input:not([type='hidden']) { min-height: 44px; padding-block: .5rem; margin-top: .35rem; }
+}
+
+/* Home alternates plain reading space with vivid photos. Only horizontal photo edges fade. */
+:root { --ds-photo-page: #0A0A0A; --ds-vignette-height: 120px; --ds-vignette-strength: 1; }
+.ds-home-rhythm, .ds-home-rhythm > .ds-home-section, .ds-home-rhythm + .ds-footer { background: var(--ds-photo-page); }
+.ds-home-rhythm + .ds-footer { border-top: 0; }
+.ds-home-rhythm .ds-home-photo { padding-block: 0; text-align: left; }
+.ds-home-picture { position: relative; isolation: isolate; overflow: hidden; aspect-ratio: 3/2; min-height: 0; background: var(--ds-fallback-scene,linear-gradient(145deg,#262626,#0A0A0A)); }
+.ds-home-photo .ds-location-art { min-height: 0; }
+.ds-home-photo .ds-local-photo-shade { background: none; }
+.ds-photo-copy { padding-block: 4rem; min-width: 0; overflow-wrap: anywhere; }
+.ds-home-photo h2 { font-size: clamp(40px,4vw,64px); }
+.ds-home-photo .ds-home-copy, .ds-home-photo p { margin-inline: 0; }
+.ds-photo-right .ds-home-picture { order: 2; }
+.ds-home-photo .ds-home-three-points { gap: 1rem; margin-top: 2rem; }
+.ds-home-photo .ds-home-three-points h3 { margin-top: .75rem; font-size: 18px; }
+.ds-home-photo .ds-home-three-points p { font-size: 14px; line-height: 1.6; }
+.ds-home-stories .ds-home-reviews { max-width: 1100px; margin: 0; padding: 0; border: 0; }
+.ds-home-stories .ds-home-reviews h2 { font-size: clamp(40px,6.5vw,88px); }
+/* The hero keeps its scenery, copy and zoom animation; the edge layer does not move. */
+.ds-home-hero > .ds-blend-layer { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.ds-home-hero { --ds-vignette-top: 0px; }
+.ds-edge-vignette { --ds-vignette-top: var(--ds-vignette-height); --ds-vignette-bottom: var(--ds-vignette-height); }
+.ds-home-hero > .ds-edge-vignette { --ds-vignette-top: 0px; }
+.ds-edge-vignette::after { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: var(--ds-vignette-strength); background: linear-gradient(to bottom,var(--ds-photo-page),transparent) top / 100% var(--ds-vignette-top) no-repeat,linear-gradient(to top,var(--ds-photo-page),transparent) bottom / 100% var(--ds-vignette-bottom) no-repeat; }
+/* Location labels sit above the edge shade on their original opaque backgrounds. */
+.ds-home-photo .ds-location-art > span:not(.ds-local-photo-shade):not(.ds-location-marker), .ds-home-photo .ds-location-marker { z-index: 5; }
+@media (max-width: 1000px) { .ds-home-photo > .ds-container { grid-template-columns: 1fr; } .ds-photo-right .ds-home-picture { order: 0; } .ds-home-picture { min-height: 60svh; } }
+@media print { .ds-home-picture, .ds-home-hero > .ds-blend-layer { display: none; } }
+
+/* Public photo edges use the same page tone; card and menu thumbnails keep their own styles. */
+.ds-vignette-page, .ds-vignette-page > .ds-footer { background: var(--ds-photo-page); }
+.ds-page-photo { --ds-vignette-top: 0px; }
+/* Missing header photos keep the same reading space instead of moving the next section. */
+header.ds-page-photo { padding: 3rem; }
+.ds-about-landscape.ds-page-photo { --ds-vignette-top: var(--ds-vignette-height); }
+/* Keep words above the edge shade. The existing photo shade still protects text in the middle. */
+.ds-page-photo.ds-photo-surface > :not(.ds-local-photo):not(.ds-local-photo-shade) { position: relative; z-index: 5; }
+.ds-page-photo.ds-auth-photo .ds-local-photo-shade, .ds-page-photo.ds-about-landscape .ds-local-photo-shade { background: none; }
+/* Painted road markings are a fallback, so they stay behind the real landscape. */
+.ds-page-photo > .ds-scene-road { z-index: 0; }
+/* An absent photo keeps the same side-panel footprint and its dark gradient backdrop. */
+.ds-auth-photo.ds-page-photo { display: block; height: 300px; margin-bottom: 2rem; }
+@media (min-width: 1280px) { .ds-auth-photo.ds-page-photo { position: absolute; left: calc(-23vw - 20px); top: 32px; width: 23vw; height: calc(100% - 64px); margin-bottom: 0; } }
+
+/* Auth side photos end just above this footer, so no thin rule interrupts their fade. */
+.ds-vignette-page:has(.ds-auth-photo) > .ds-footer { border-top: 0; }

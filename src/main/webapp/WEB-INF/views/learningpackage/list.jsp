@@ -39,6 +39,7 @@ CRUD     : READ (displays page information); existing forms keep their original 
             <c:forEach items="${packages}" var="learningPackage">
                 <%-- LearningPackageController provides each package; c:out keeps saved text safe. --%>
                 <article class="ds-catalog-panel" data-package-card data-package-type="<c:out value='${learningPackage.type}' />" data-reveal>
+                    <div class="ds-catalog-photo ds-photo-surface"><c:set var="photoVehicleType" value="${learningPackage.type}" /><c:choose><c:when test="${photoVehicleType eq 'AUTOMATIC'}"><c:set var="photoKey" value="vehicle-automatic" /></c:when><c:when test="${photoVehicleType eq 'MOTORCYCLE'}"><c:set var="photoKey" value="vehicle-motorcycle" /></c:when><c:otherwise><c:set var="photoKey" value="vehicle-manual" /></c:otherwise></c:choose><c:set var="photoAlt" value="Vehicle illustrating ${photoVehicleType} driving lessons" /><c:set var="photoEager" value="false" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></div>
                     <p class="ds-eyebrow"><c:out value="${learningPackage.type}" /> / LEARNING PACKAGE</p>
                     <h2><c:out value="${learningPackage.displayName}" /></h2>
                     <p class="ds-catalog-description"><c:out value="${learningPackage.description}" /></p>

@@ -1,39 +1,49 @@
-// Module owner: IT26101135
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : CustomErrorViewResolver.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.common.config;
 
-import com.drivingschool.auth.service.AuthSessionService;
+import com.drivingschool.common.exception.ErrorPageSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
-
 import java.util.Map;
-import java.util.HashMap;
 
-/** Resolves browser error dispatches to JSPs; JSON stays with Boot's JSON handler. */
 @Component
+// SOLID: S - This adapter turns Spring HTTP errors into the shared friendly page.
 public class CustomErrorViewResolver implements ErrorViewResolver {
+    private final ErrorPageSupport pages;
 
-    private final AuthSessionService authSessionService;
-
-    public CustomErrorViewResolver(AuthSessionService authSessionService) {
-        this.authSessionService = authSessionService;
+    // SOLID: D - Receive the shared helper through the constructor.
+    public CustomErrorViewResolver(ErrorPageSupport pages) {
+        this.pages = pages;
     }
 
     @Override
-    public ModelAndView resolveErrorView(
-            HttpServletRequest request,
-            HttpStatus status,
-            Map<String, Object> model) {
-        Map<String, Object> viewModel = new HashMap<>(model);
-        viewModel.put("navRole", authSessionService.getCurrentUser(request)
-                .map(user -> user.getRole().name()).orElse("PUBLIC"));
-        String view = switch (status) {
-            case NOT_FOUND -> "common/error-404";
-            case FORBIDDEN -> "common/error-403";
-            default -> "common/error-500";
-        };
-        return new ModelAndView(view, viewModel, status);
+    // Select a safe explanation without exposing Spring's internal exception details.
+    public ModelAndView resolveErrorView(HttpServletRequest request, HttpStatus status, Map<String, Object> model) {
+        String title = "We hit a bump in the road";
+        String message = "Please try again or contact the academy.";
+        if (status == HttpStatus.BAD_REQUEST) {
+            title = "Please check your input";
+            message = "Some details are missing or invalid. Return to the form and check them.";
+        } else if (status == HttpStatus.FORBIDDEN) {
+            title = "Access denied";
+            message = "You do not have permission to access this resource.";
+        } else if (status == HttpStatus.NOT_FOUND) {
+            title = "We could not find that page";
+            message = "Check the address or continue from your own dashboard.";
+        }
+        return pages.prepare(request, status, title, message);
     }
 }

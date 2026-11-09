@@ -28,10 +28,12 @@ CRUD     : See CRUD labels on the record operations.
     <title>Login | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body>
+<body class="ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-container ds-section ds-auth-page ds-public-auth">
+    <%-- LocalPhotoAdvice supplies this scene; the shared edge fade leaves the form unchanged. --%>
+    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="The road ahead"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
     <%-- AuthController supplies the introduction and account messages below. --%>
     <header class="ds-auth-heading"><p class="ds-eyebrow">YOUR ROAD AHEAD</p><h1>Welcome back.</h1>
     <p>Log in to continue your journey to confident driving.</p></header>

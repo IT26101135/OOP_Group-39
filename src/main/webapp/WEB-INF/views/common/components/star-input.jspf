@@ -11,14 +11,14 @@ CRUD     : CREATE, READ, UPDATE, DELETE for reviews; reports READ saved data
 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
-  Star rating input — radio-based, accessible, keeps value on validation error.
-  DOM order is 5→1 (flex-row-reverse shows them visually as 1→5).
+  Star rating input &#8212; radio-based, accessible, keeps value on validation error.
+  DOM order is 5&#8594;1 (flex-row-reverse shows them visually as 1&#8594;5).
   The CSS `input:checked ~ label` trick highlights lower-value stars via reverse
   sibling selection, which only works with DOM in descending order.
   Parameters:
-    ratingFieldName  — name attr for the radio inputs (e.g. "rating")
-    ratingLabel      — legend text (defaults to "Rating")
-    ratingValue      — currently selected value (re-checked after validation error)
+    ratingFieldName  &#8212; name attr for the radio inputs (e.g. "rating")
+    ratingLabel      &#8212; legend text (defaults to "Rating")
+    ratingValue      &#8212; currently selected value (re-checked after validation error)
 --%>
 <fieldset class="ds-star-input">
   <legend><c:out value="${ratingLabel}" default="Rating"/></legend>

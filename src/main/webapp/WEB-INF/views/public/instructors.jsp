@@ -19,11 +19,12 @@ CRUD     : READ (shows active instructor profiles in the requested order)
 <meta name="theme-color" content="#050505"><title>Our instructors | DriveSpark Academy</title>
 <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
 <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body>
+</head><body class="ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-public ds-container ds-instructors-public">
     <%-- PublicInstructorController supplies active instructor profiles and the chosen sort settings. --%>
-    <header class="ds-public-heading"><p class="ds-eyebrow">THE PEOPLE BESIDE YOU</p><h1>Good guidance.<br>Growing confidence.</h1><p>Meet your instructors. Explore their experience, vehicle types and approved learner ratings.</p></header>
+    <%-- The shared edge shade stays behind the heading and keeps the next content block in place. --%>
+    <header class="ds-public-heading ds-photo-surface ds-page-photo ds-edge-vignette"><c:set var="photoKey" value="promo-lesson" /><c:set var="photoAlt" value="An instructor guiding a learner during a driving lesson" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %><p class="ds-eyebrow">THE PEOPLE BESIDE YOU</p><h1>Good guidance.<br>Growing confidence.</h1><p>Meet your instructors. Explore their experience, vehicle types and approved learner ratings.</p></header>
     <%-- PublicInstructorController passes these original parameters to the hand-written bubble sort. --%>
     <form class="ds-instructor-sort" method="get" action="<c:url value='/instructors' />">
         <label for="instructor-sort">Sort by<select id="instructor-sort" name="sortBy"><option value="name" <c:if test="${sortBy eq 'name'}">selected</c:if>>Name</option><option value="experience" <c:if test="${sortBy eq 'experience'}">selected</c:if>>Experience</option><option value="rating" <c:if test="${sortBy eq 'rating'}">selected</c:if>>Average rating</option></select></label>

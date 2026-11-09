@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const nav = document.querySelector('#primary-navigation');
   prepareNavigation(nav);
+  prepareDropdownMotion();
+  prepareDialogMotion();
   prepareCinematicScroll();
   prepareSkipLink();
 
@@ -165,8 +167,10 @@ function dismissToast(toast) {
     toast.remove();
     return;
   }
+  toast.inert = true;
+  toast.setAttribute('aria-hidden', 'true');
   toast.classList.add('ds-toast-leaving');
-  window.setTimeout(() => toast.remove(), 220);
+  window.setTimeout(() => toast.remove(), motionCloseTime());
 }
 
 // Restores buttons when Back returns to a page cached during form submission.
@@ -326,7 +330,7 @@ function prepareNavigation(nav) {
   window.matchMedia('(max-width: 1023px)').addEventListener('change', () => setNavigationOpen(nav, false));
   document.addEventListener('click', (event) => {
     nav.querySelectorAll('.ds-nav-group[open]').forEach((group) => {
-      if (!group.contains(event.target)) group.open = false;
+      if (!group.contains(event.target)) closeAnimatedDropdown(group);
     });
   });
 }
@@ -486,13 +490,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const panel = document.querySelector('#package-panel');
   if (!trigger || !panel) return;
   const group = trigger.closest('.ds-package-menu');
+  prepareAnimatedPanel(panel);
   const desktopMouse = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)');
   let restoring = false;
+  let closeTimer;
+  let previousWidth = window.innerWidth;
   // Keeps expanded state and visible content together without loading any extra data.
   function change(open, restore) {
-    panel.hidden = !open;
+    clearTimeout(closeTimer);
+    setAnimatedPanel(panel, open);
     trigger.setAttribute('aria-expanded', String(open));
-    if (open) document.querySelectorAll('.ds-nav-group[open]').forEach(item => { item.open = false; });
+    if (open) document.querySelectorAll('.ds-nav-group[open]').forEach(item => closeAnimatedDropdown(item));
     if (restore) { restoring = true; trigger.focus(); restoring = false; }
   }
   trigger.addEventListener('click', event => { event.preventDefault(); change(true, false); });
@@ -501,13 +509,126 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   trigger.addEventListener('focus', () => { if (desktopMouse.matches && !restoring) change(true, false); });
   group.addEventListener('mouseenter', () => { if (desktopMouse.matches && !restoring) change(true, false); });
-  group.addEventListener('mouseleave', () => { if (desktopMouse.matches) change(false, false); });
+  // Give the pointer time to cross the small space between the link and its panel.
+  function scheduleClose() {
+    if (!desktopMouse.matches) return;
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      if (!group.matches(':hover') && !panel.matches(':focus-within') && !trigger.matches(':focus-visible')) change(false, false);
+    }, 220);
+  }
+  group.addEventListener('mouseleave', scheduleClose);
+  panel.addEventListener('mouseenter', () => clearTimeout(closeTimer));
+  panel.addEventListener('mouseleave', scheduleClose);
+  // A fading panel cannot receive clicks, but moving back into its visible area cancels closing.
+  document.addEventListener('pointermove', event => {
+    if (!desktopMouse.matches || panel.hidden || trigger.getAttribute('aria-expanded') === 'true') return;
+    const bounds = panel.getBoundingClientRect();
+    if (event.clientX >= bounds.left && event.clientX <= bounds.right && event.clientY >= bounds.top && event.clientY <= bounds.bottom) change(true, false);
+  });
   group.addEventListener('focusout', event => { if (!group.contains(event.relatedTarget)) change(false, false); });
   document.addEventListener('click', event => { if (!group.contains(event.target)) change(false, false); });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); event.stopImmediatePropagation(); change(false, true); }
+    if (event.key === 'Escape' && trigger.getAttribute('aria-expanded') === 'true') { event.preventDefault(); event.stopImmediatePropagation(); change(false, true); }
   }, true);
   document.querySelectorAll('.ds-nav-group').forEach(item => item.addEventListener('toggle', () => { if (item.open) change(false, false); }));
   document.querySelectorAll('.ds-nav-toggle, .ds-nav-close').forEach(button => button.addEventListener('click', () => change(false, false)));
-  window.addEventListener('resize', () => change(false, false));
+  // A phone's browser bar changes height while scrolling; only width changes alter this layout.
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== previousWidth) change(false, false);
+    previousWidth = window.innerWidth;
+  });
 })();
+
+// Reveal the backdrop if a photo disappears after the server checked its existence.
+document.addEventListener('error', function hideUnavailablePhoto(event) {
+  if (event.target instanceof HTMLImageElement && event.target.hasAttribute('data-local-photo')) {
+    const shade = event.target.nextElementSibling;
+    if (shade && shade.classList.contains('ds-local-photo-shade')) shade.remove();
+    event.target.remove();
+  }
+}, true);
+
+// Keep closed content out of the keyboard order and accessibility tree during its fade.
+function prepareAnimatedPanel(panel) {
+  panel.classList.add('ds-animated-panel');
+  panel.hidden = true;
+  panel.inert = true;
+  panel.setAttribute('aria-hidden', 'true');
+}
+
+// CSS reverses an interrupted transition from its current position, avoiding flicker.
+function setAnimatedPanel(panel, open) {
+  clearTimeout(panel.hideTimer);
+  if (open && panel.hidden) {
+    panel.hidden = false;
+    panel.getBoundingClientRect();
+  }
+  panel.inert = !open;
+  panel.setAttribute('aria-hidden', String(!open));
+  panel.classList.toggle('is-visible', open);
+  if (!open) panel.hideTimer = setTimeout(() => { panel.hidden = true; }, motionCloseTime());
+}
+
+// Keep native details open until the submenu has finished fading away.
+function prepareDropdownMotion() {
+  document.querySelectorAll('.ds-nav-group').forEach(group => {
+    const summary = group.querySelector('summary');
+    const panel = group.querySelector('.ds-nav-submenu');
+    if (!summary || !panel) return;
+    prepareAnimatedPanel(panel);
+    summary.setAttribute('aria-expanded', 'false');
+    summary.addEventListener('click', event => {
+      event.preventDefault();
+      clearTimeout(group.closeTimer);
+      const open = summary.getAttribute('aria-expanded') !== 'true';
+      if (open) group.open = true;
+      summary.setAttribute('aria-expanded', String(open));
+      setAnimatedPanel(panel, open);
+      if (!open) group.closeTimer = setTimeout(() => { group.open = false; }, motionCloseTime());
+    });
+    group.addEventListener('toggle', () => {
+      if (!group.open) { summary.setAttribute('aria-expanded', 'false'); setAnimatedPanel(panel, false); }
+    });
+    group.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); summary.setAttribute('aria-expanded', 'false'); setAnimatedPanel(panel, false); group.closeTimer = setTimeout(() => { group.open = false; summary.focus(); }, motionCloseTime()); }
+    });
+  });
+}
+
+// Delay native dismissal so the modal can fade out while retaining its focus trap.
+function prepareDialogMotion() {
+  const dialog = document.querySelector('#ds-confirm-dialog');
+  if (!dialog) return;
+  let closing = false;
+  function dismiss(value) {
+    if (closing) return;
+    closing = true;
+    dialog.classList.add('is-leaving');
+    setTimeout(() => { dialog.close(value); dialog.classList.remove('is-leaving'); closing = false; }, motionCloseTime());
+  }
+  dialog.addEventListener('cancel', event => { event.preventDefault(); dismiss('cancel'); });
+  dialog.querySelector('form[method="dialog"]').addEventListener('submit', event => {
+    event.preventDefault();
+    dismiss(event.submitter?.value || 'cancel');
+  });
+}
+
+// Close native dropdowns only after their shared fade, including outside clicks.
+function closeAnimatedDropdown(group) {
+  const panel = group.querySelector('.ds-nav-submenu');
+  if (!panel) { group.open = false; return; }
+  clearTimeout(group.closeTimer);
+  group.querySelector('summary').setAttribute('aria-expanded', 'false');
+  setAnimatedPanel(panel, false);
+  group.closeTimer = setTimeout(() => { group.open = false; }, motionCloseTime());
+}
+
+// The CSS token is in milliseconds, so changing it also changes when faded content is hidden.
+function motionCloseTime() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 20;
+  const token = getComputedStyle(document.documentElement).getPropertyValue('--ds-close-time');
+  const milliseconds = parseFloat(token);
+  if (Number.isNaN(milliseconds)) return 180;
+  return milliseconds;
+}

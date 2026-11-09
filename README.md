@@ -167,7 +167,7 @@ Headings use a light-to-medium weight and responsive sizes up to 88px. Shared fo
 
 The current header and footer use our HTML text wordmark. Home and About use original CSS road scenery and gradients; `images/favicon.svg` is our own monochrome car icon. The remaining local `logo.svg` is used by password reset, and `error-road.svg` illustrates error pages. No Rivian logo, media, font file, icon or code is included.
 
-The [image guide](src/main/resources/static/images/README.md) lists eight optional photo filenames and the current fallback credit for each. No photo is shipped or requested by default, so absent optional photos do not create 404 requests. Download and credit any future photo locally before adding its CSS reference.
+The [image guide](src/main/resources/static/images/README.md) lists the ten supplied local WebP photographs, measured sizes and exact user-provided credits. Missing optional files retain original fallbacks without an image request.
 
 The home spotlight displays the first active package from existing data; it implies no discount. Its review carousel reads only the approved public review page, copies text safely, and has manual Previous/Next controls plus a normal-link fallback. Location and opening hours are clearly marked placeholders.
 
@@ -201,7 +201,7 @@ Fragments are static JSP includes. Set their expected variables immediately befo
 | DriveSpark JSP layouts, `ds-*` CSS, vanilla JS, CSS landscapes and local SVG assets | Coursework-specific components, text and original artwork | File headers identify the team owner. No third-party template or photo is claimed as project-authored. |
 | [Rivian](https://rivian.com/) | Visual inspiration for restrained typography, open spacing and cinematic section proportions | Inspiration only. No Rivian assets, text, font files, icons, media or code were copied or bundled. |
 
-No paid Tailwind UI code, CDN scripts or hot-linked media are bundled. No Unsplash/Pexels photo is currently shipped; future downloads need a photographer, original page URL, license URL, download date and edit credit in both READMEs. No Flowbite, HyperUI, Preline, daisyUI or Meraki UI package was installed. Dependencies already declared in `pom.xml` retain their upstream licenses.
+No paid Tailwind UI code, CDN scripts or hot-linked media are bundled. The supplied local photographs and their Pexels/Unsplash credits are listed in the local photography Credits section below; additional photographs require attribution before use. No Flowbite, HyperUI, Preline, daisyUI or Meraki UI package was installed. Dependencies already declared in `pom.xml` retain their upstream licenses.
 
 ### Current UI coverage notes
 
@@ -321,3 +321,24 @@ vehicle-motorcycle: Photo by Raj Pillay on Pexels (Pexels License) - https://www
 
 promo-lesson: Photo by Bas Peperzak on Unsplash (Unsplash License) -
  https://unsplash.com/photos/driving-test-instructor-and-student-tyhpK_QelPo
+
+## Credits — local photography
+
+No Rivian assets are used; the design is only inspired by premium automotive websites.
+
+Photos are used under the Pexels and Unsplash licences. Brands and people shown do not endorse this project.
+
+The following credits are supplied for the intended photographs. As checked on 2026-11-09, all ten supplied WebP files exist directly in static/images (the photos subfolder is absent). They are used in place, with original gradients/SVGs retained underneath. mission.webp exceeds 250 KB and is left unchanged. No photos were generated or resized. File status, delivery sizes, conditional placement and missing-file behavior are documented in [the local image guide](src/main/resources/static/images/README.md).
+
+| Photo basename | File status | Bytes | Dimensions | Supplied credit |
+|---|---|---|---|---|
+| hero-road.webp | PRESENT | 122852 | 1920 × 1280 | Photo by Marcelo Mora on Pexels (Pexels License) - https://www.pexels.com/photo/scenic-mountain-road-at-sunset-32540808/ |
+| promo-lesson.webp | PRESENT | 131188 | 1600 × 1066 | Photo by Bas Peperzak on Unsplash (Unsplash License) - https://unsplash.com/photos/driving-test-instructor-and-student-tyhpK_QelPo |
+| safety-bg.webp | PRESENT | 55860 | 1600 × 1066 | Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/photo-of-a-car-s-dashboard-9661322/ |
+| location.webp | PRESENT | 84334 | 1600 × 1066 | Photo by Erik Mclean on Pexels (Pexels License) - https://www.pexels.com/photo/cars-parked-near-building-on-street-in-daylight-7442030/ |
+| cta-drive.webp | PRESENT | 245918 | 1600 × 1066 | Photo by Mustafa Ödemiş on Pexels (Pexels License) - https://www.pexels.com/photo/rainy-road-trip-view-through-windshield-34730119/ |
+| flexible-bg.webp | PRESENT | 110698 | 1600 × 1066 | Photo by Anna Hinckel on Pexels (Pexels License) - https://www.pexels.com/photo/a-time-lapse-photography-of-a-highway-at-night-4599217/ |
+| mission.webp | PRESENT | 303206 | 1600 × 1067 | Photo by Mitchell Henderson on Pexels (Pexels License) - https://www.pexels.com/photo/road-in-mountains-15993667/ |
+| vehicle-manual.webp | PRESENT | 29378 | 1200 × 800 | Photo by FBO Media on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-blue-sport-hatchback-in-minimalist-setting-35549144/ |
+| vehicle-automatic.webp | PRESENT | 29674 | 1200 × 675 | Photo by Oli Liao on Pexels (Pexels License) - https://www.pexels.com/photo/sleek-black-sedan-parked-in-urban-setting-35628774/ |
+| vehicle-motorcycle.webp | PRESENT | 42800 | 1200 × 800 | Photo by Raj Pillay on Pexels (Pexels License) - https://www.pexels.com/photo/triumph-street-triple-765-r-27704082/ |
