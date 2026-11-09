@@ -1,7 +1,12 @@
 // Module owner: IT26101133
 package com.drivingschool.instructor.config;
 
+import com.drivingschool.auth.service.AuthSessionService;
+import com.drivingschool.instructor.api.InstructorLookup;
 import com.drivingschool.instructor.model.Instructor;
+import com.drivingschool.instructor.repository.InstructorAvailabilityRepository;
+import com.drivingschool.instructor.service.InstructorAvailabilityService;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.drivingschool.instructor.repository.InstructorRepository;
 import com.drivingschool.instructor.service.InstructorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +19,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class InstructorConfigTest {
 
@@ -32,7 +38,10 @@ class InstructorConfigTest {
                     )
             );
 
-            context.registerBean(ObjectMapper.class, () -> new ObjectMapper());
+            context.registerBean(ObjectMapper.class,
+                    () -> new ObjectMapper().registerModule(new JavaTimeModule()));
+            context.registerBean(AuthSessionService.class,
+                    () -> mock(AuthSessionService.class));
             context.register(InstructorConfig.class);
             context.refresh();
 
@@ -44,6 +53,28 @@ class InstructorConfigTest {
 
             assertNotNull(repository);
             assertNotNull(service);
+
+            InstructorAvailabilityRepository availabilityRepository =
+                    context.getBean(InstructorAvailabilityRepository.class);
+
+            InstructorLookup lookup =
+                    context.getBean(InstructorLookup.class);
+
+            InstructorAvailabilityService availabilityService =
+                    context.getBean(InstructorAvailabilityService.class);
+
+            assertNotNull(availabilityRepository);
+            assertNotNull(lookup);
+            assertNotNull(availabilityService);
+
+            assertSame(availabilityRepository,
+                    context.getBean(InstructorAvailabilityRepository.class));
+            assertSame(lookup, context.getBean(InstructorLookup.class));
+            assertSame(availabilityService,
+                    context.getBean(InstructorAvailabilityService.class));
+
+            assertEquals(1,
+                    context.getBeansOfType(InstructorLookup.class).size());
 
             assertSame(repository, context.getBean(InstructorRepository.class));
             assertSame(service, context.getBean(InstructorService.class));
