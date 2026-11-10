@@ -1,0 +1,117 @@
+@startuml
+' Documentation owner: IT26101135
+' Names verified against Java source; method parameter lists intentionally hidden.
+title IT26101135 — authentication and students
+left to right direction
+skinparam classAttributeIconSize 0
+abstract class User {
+  -String id
+  -String name
+  -String email
+  -String passwordHash
+  -AccountStatus status
+  +Role getRole()
+  +String getDashboardPath()
+  +void setEmail()
+}
+note right of User
+Encapsulation: private account fields and validating setters. Abstract role/dashboard methods are overridden.
+end note
+class Student {
+  -String phone
+  -String activePackageId
+  -String activeEnrollmentId
+  -int lessonsRemaining
+  +Role getRole()
+  +String getDashboardPath()
+}
+note right of Student
+Inheritance: Student extends User. Polymorphism: its own role and dashboard.
+end note
+class AuthController {
+  -AuthService authService
+  -AuthSessionService authSessionService
+  +String register()
+  +String login()
+  +String logout()
+}
+note right of AuthController
+CREATE register; READ/login uses account credentials. Password is not returned to the page.
+end note
+class AuthService {
+  -UserRepository userRepository
+  -PasswordHasher passwordHasher
+  +Student registerStudent()
+  +Optional<User> authenticate()
+}
+note right of AuthService
+CREATE registerStudent: new students are ACTIVE. READ authenticate: compares a hash.
+end note
+class AuthSessionService {
+  -AuthService authService
+  -UserRepository userRepository
+  +LoginResult loginWithResult()
+  +Optional<User> getCurrentUser()
+  +User requireLogin()
+  +User requireAdmin()
+  +void logout()
+}
+class UserRepository {
+  -EnrollmentRepository enrollments
+  +void save()
+  +List<User> readAllStrict()
+  +Optional<User> findByIdStrict()
+  +void update()
+  +void delete()
+}
+note right of UserRepository
+Extends FileRepository<User> (shared figure). Storage CRUD; unpaid lesson balances are cleared on reads.
+end note
+interface StudentProfiles {
+  +StudentProfile getOwnProfile()
+  +StudentProfile updateOwnProfile()
+}
+note right of StudentProfiles
+Abstraction / I: a small profile contract.
+end note
+class StudentProfileService {
+  -UserRepository userRepository
+  -AuthSessionService authSessionService
+  +StudentProfile getOwnProfile()
+  +StudentProfile updateOwnProfile()
+}
+note right of StudentProfileService
+READ/UPDATE own profile only. Duplicate/storage errors and HTTP ownership errors are shared; model setters validate details.
+end note
+class StudentProfileController {
+  -StudentProfiles profileService
+  +String showProfile()
+  +String showEdit()
+  +String updateProfile()
+}
+note right of StudentProfileController
+D: constructor receives StudentProfiles, not its concrete implementation.
+end note
+class StudentAccountService {
+  -AuthSessionService auth
+  -UserRepository users
+  +void deleteOwnAccount()
+}
+note right of StudentAccountService
+DELETE account after linked-record checks. Controller is in the omission index.
+end note
+Student --|> User
+AuthController ..> AuthService
+AuthController ..> AuthSessionService
+AuthSessionService ..> AuthService
+AuthService ..> UserRepository
+AuthSessionService ..> UserRepository
+UserRepository --> User : stores
+AuthService ..> Student : creates
+StudentProfileService ..|> StudentProfiles
+StudentProfileController ..> StudentProfiles
+StudentProfileService ..> UserRepository
+StudentProfileService ..> AuthSessionService
+StudentAccountService ..> UserRepository
+@enduml
+

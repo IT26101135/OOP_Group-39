@@ -1,0 +1,44 @@
+classDiagram
+direction TB
+class VehicleController {
+  +listVehicles()
+}
+class VehicleOperations {
+  <<interface>>
+  +createVehicle()
+  +updateVehicle()
+  +deleteVehicle()
+}
+class VehicleService {
+  +getAllVehicles()
+  +updateVehicle()
+}
+class VehicleStore {
+  <<interface>>
+  +readAllStrict()
+  +save()
+}
+class VehicleRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class Vehicle {
+  +isInsuranceWarning()
+  +isServiceWarning()
+}
+class DemoDataSeedRunner {
+  +run()
+  -syncInstructorRatings()
+}
+VehicleService ..|> VehicleOperations
+VehicleRepository ..|> VehicleStore
+VehicleRepository --|> FileRepository
+VehicleController --> VehicleOperations : uses
+VehicleService --> VehicleStore : uses
+DemoDataSeedRunner --> VehicleRepository : uses

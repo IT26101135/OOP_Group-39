@@ -1,0 +1,8 @@
+<%--
+MEMBER: IT26101134 - Attendance display. CRUD: READ only.
+The controller supplies an authorized booking; the existing service still checks every POST.
+--%>
+<c:set var="attendanceReady" value="${attendanceDisplay.isAvailable(booking)}" />
+<c:if test="${not attendanceReady}">
+    <p class="w-full text-sm" id="attendance-${booking.id}">Attendance is available after <c:out value="${attendanceDisplay.availableAt(booking)}" />. Refresh this page when the lesson has ended.</p>
+</c:if>

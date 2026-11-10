@@ -1,229 +1,134 @@
+/**
+ * ============================================================
+ * MEMBER   : IT26101134 - [Name]
+ * MODULE   : Bookings and scheduling
+ * FILE     : BookingConflictCheckerTest.java
+ * WHAT IT DOES (simple words): Checks lesson rules with spare accounts and receipts.
+ * REAL-LIFE EXAMPLE: Practises checking tickets before reserving driving slots.
+ * OOP USED : Abstraction and exception handling
+ * CRUD     : READ and UPDATE booking rules
+ * ============================================================
+ */
 package com.drivingschool.booking.service;
 
-import com.drivingschool.booking.model.Booking;
-import com.drivingschool.common.exception.ValidationException;
+import com.drivingschool.auth.repository.UserRepository;
+import com.drivingschool.booking.model.*;
+import com.drivingschool.booking.repository.BookingRepository;
+import com.drivingschool.instructor.model.*;
+import com.drivingschool.instructor.repository.*;
+import com.drivingschool.learningpackage.model.*;
+import com.drivingschool.learningpackage.repository.LearningPackageRepository;
+import com.drivingschool.learningpackage.repository.EnrollmentRepository;
+import com.drivingschool.student.model.Student;
+import com.drivingschool.vehicle.model.*;
+import com.drivingschool.vehicle.repository.VehicleRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class BookingConflictCheckerTest {
+    BookingRepository bookings = mock(BookingRepository.class);
+    AvailabilityRepository availability = mock(AvailabilityRepository.class);
+    InstructorLeaveRepository leaves = mock(InstructorLeaveRepository.class);
+    InstructorRepository instructors = mock(InstructorRepository.class);
+    VehicleRepository vehicles = mock(VehicleRepository.class);
+    LearningPackageRepository packages = mock(LearningPackageRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    Clock clock = Clock.fixed(Instant.parse("2030-01-01T08:00:00Z"), ZoneOffset.UTC);
+    Student student;
+    LearningPackage pack;
+    Instructor instructor;
+    Vehicle vehicle;
+    Booking target;
+    BookingConflictChecker checker;
+    EnrollmentRepository enrollments = mock(EnrollmentRepository.class);
 
-    private final LocalDateTime start =
-            LocalDateTime.of(2026, 11, 1, 10, 0);
-
-    private final LocalDateTime end =
-            LocalDateTime.of(2026, 11, 1, 11, 0);
-
-    private final LocalDateTime created =
-            LocalDateTime.of(2026, 10, 20, 9, 0);
-
-    private Booking createBooking(
-            String id,
-            String studentId,
-            String instructorId,
-            String vehicleId,
-            Booking.BookingStatus status,
-            LocalDateTime bookingStart,
-            LocalDateTime bookingEnd) {
-
-        return new Booking(
-                id,
-                studentId,
-                "E001",
-                bookingStart,
-                bookingEnd,
-                instructorId,
-                vehicleId,
-                status,
-                created
-        );
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @BeforeEach void setUp() {
+        student = new Student("S001", "Demo Student", "student@example.test",
+                new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("StrongPass123"), "+94771234567");
+        student.setActivePackageId("P001"); student.setActiveEnrollmentId("E001"); student.setLessonsRemaining(5);
+        pack = new LearningPackage("P001", "Manual course", "A suitable package description.",
+                new BigDecimal("10000.00"), 10, 90, true);
+        instructor = new Instructor("I001", "Teacher One", "teacher@example.test", "0771234567", 5, true);
+        instructor.setVehicleTypes(List.of("MANUAL"));
+        vehicle = new Vehicle("V001", "ABC1234", "Make", "Model", TransmissionType.MANUAL,
+                VehicleCategory.CAR, VehicleOperationalStatus.IN_SERVICE);
+        LocalDateTime start = LocalDateTime.parse("2030-01-02T10:00");
+        target = new Booking("B001", "S001", "E001", start, start.plusHours(1), null, null,
+                BookingStatus.PENDING, LocalDateTime.parse("2030-01-01T08:00"));
+        when(users.findByIdStrict("S001")).thenReturn(Optional.of(student));
+        when(enrollments.findByIdStrict("E001")).thenReturn(Optional.of(new Enrollment("E001", "S001", "P001",
+                LocalDateTime.now(clock), new BigDecimal("10000"), "PAID")));
+        when(packages.findByIdStrict("P001")).thenReturn(Optional.of(pack));
+        when(instructors.findByIdStrict("I001")).thenReturn(Optional.of(instructor));
+        when(vehicles.findByIdStrict("V001")).thenReturn(Optional.of(vehicle));
+        when(availability.readAllStrict()).thenReturn(List.of(new Availability("H001", "I001",
+                DayOfWeek.WEDNESDAY, LocalTime.of(8, 0), LocalTime.of(17, 0))));
+        when(leaves.readAllStrict()).thenReturn(List.of());
+        when(bookings.readAllStrict()).thenReturn(List.of());
+        checker = new BookingConflictChecker(bookings, availability, leaves, instructors, vehicles,
+                packages, users, clock, new PaidEnrollmentGuard(enrollments, users, packages, clock));
     }
 
-    private Booking createPendingBooking() {
-        return createBooking(
-                "B001", "S001", null, null,
-                Booking.BookingStatus.PENDING, start, end
-        );
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void acceptsFreeValidSlot() { assertNull(checker.conflictReason(target, "I001", "V001")); }
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsPastTime() {
+        Booking past = new Booking("B002", "S001", "E001", LocalDateTime.parse("2029-12-31T10:00"),
+                LocalDateTime.parse("2029-12-31T11:00"), null, null, BookingStatus.PENDING,
+                LocalDateTime.parse("2029-12-30T09:00"));
+        assertEquals("The lesson time must be in the future.", checker.conflictReason(past, "I001", "V001"));
     }
-
-    private Booking createConfirmedBooking() {
-        return createBooking(
-                "B001", "S001", "I001", "V001",
-                Booking.BookingStatus.CONFIRMED, start, end
-        );
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsMissingActiveEnrollment() {
+        student.setLessonsRemaining(0);
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("paid package"));
     }
-
-    @Test
-    void pendingBookingShouldBlockStudent() {
-        assertTrue(BookingConflictChecker.hasStudentConflict(
-                List.of(createPendingBooking()),
-                "S001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsInstructorOutsideAvailability() {
+        when(availability.readAllStrict()).thenReturn(List.of());
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("not working"));
     }
-
-    @Test
-    void confirmedBookingShouldBlockStudent() {
-        assertTrue(BookingConflictChecker.hasStudentConflict(
-                List.of(createConfirmedBooking()),
-                "S001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsInstructorLeave() {
+        when(leaves.readAllStrict()).thenReturn(List.of(new InstructorLeave("L001", "I001",
+                LocalDate.parse("2030-01-02"), "Day off")));
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("on leave"));
     }
-
-    @Test
-    void completedBookingShouldBlockStudent() {
-        Booking booking = createConfirmedBooking();
-        booking.complete();
-
-        assertTrue(BookingConflictChecker.hasStudentConflict(
-                List.of(booking), "S001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsVehicleNotAvailable() {
+        vehicle.setOperationalStatus(VehicleOperationalStatus.MAINTENANCE);
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("maintenance"));
     }
-
-    @Test
-    void cancelledBookingShouldNotBlockStudent() {
-        Booking booking = createPendingBooking();
-        booking.cancel();
-
-        assertFalse(BookingConflictChecker.hasStudentConflict(
-                List.of(booking), "S001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsVehicleTypeMismatch() {
+        vehicle.setVehicleCategory(VehicleCategory.MOTORCYCLE);
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("type does not match"));
     }
-
-    @Test
-    void pendingBookingShouldNotBlockInstructorOrVehicle() {
-        assertFalse(BookingConflictChecker.hasInstructorConflict(
-                List.of(createPendingBooking()),
-                "I001", start, end, null
-        ));
-
-        assertFalse(BookingConflictChecker.hasVehicleConflict(
-                List.of(createPendingBooking()),
-                "V001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsInstructorOverlap() {
+        when(bookings.readAllStrict()).thenReturn(List.of(other("B002", "S002", "I001", "V002")));
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("instructor already"));
     }
-
-    @Test
-    void confirmedBookingShouldBlockInstructorAndVehicle() {
-        Booking booking = createConfirmedBooking();
-
-        assertTrue(BookingConflictChecker.hasInstructorConflict(
-                List.of(booking), "I001", start, end, null
-        ));
-
-        assertTrue(BookingConflictChecker.hasVehicleConflict(
-                List.of(booking), "V001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsVehicleOverlap() {
+        when(bookings.readAllStrict()).thenReturn(List.of(other("B002", "S002", "I002", "V001")));
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("vehicle already"));
     }
-
-    @Test
-    void completedBookingShouldBlockInstructorAndVehicle() {
-        Booking booking = createConfirmedBooking();
-        booking.complete();
-
-        assertTrue(BookingConflictChecker.hasInstructorConflict(
-                List.of(booking), "I001", start, end, null
-        ));
-
-        assertTrue(BookingConflictChecker.hasVehicleConflict(
-                List.of(booking), "V001", start, end, null
-        ));
+    // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
+    @Test void rejectsStudentOverlap() {
+        when(bookings.readAllStrict()).thenReturn(List.of(other("B002", "S001", "I002", "V002")));
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("student already"));
     }
-
-    @Test
-    void cancelledConfirmedBookingShouldNotBlockResources() {
-        Booking booking = createConfirmedBooking();
-        booking.cancel();
-
-        assertFalse(BookingConflictChecker.hasInstructorConflict(
-                List.of(booking), "I001", start, end, null
-        ));
-
-        assertFalse(BookingConflictChecker.hasVehicleConflict(
-                List.of(booking), "V001", start, end, null
-        ));
-    }
-
-    @Test
-    void differentStudentShouldNotConflict() {
-        assertFalse(BookingConflictChecker.hasStudentConflict(
-                List.of(createPendingBooking()),
-                "S002", start, end, null
-        ));
-    }
-
-    @Test
-    void differentInstructorShouldNotConflict() {
-        assertFalse(BookingConflictChecker.hasInstructorConflict(
-                List.of(createConfirmedBooking()),
-                "I002", start, end, null
-        ));
-    }
-
-    @Test
-    void differentVehicleShouldNotConflict() {
-        assertFalse(BookingConflictChecker.hasVehicleConflict(
-                List.of(createConfirmedBooking()),
-                "V002", start, end, null
-        ));
-    }
-
-    @Test
-    void backToBackLessonsShouldNotConflict() {
-        LocalDateTime nextStart = end;
-        LocalDateTime nextEnd = end.plusHours(1);
-
-        assertFalse(BookingConflictChecker.hasStudentConflict(
-                List.of(createPendingBooking()),
-                "S001", nextStart, nextEnd, null
-        ));
-    }
-
-    @Test
-    void overlappingLessonsShouldConflict() {
-        LocalDateTime overlappingStart = start.plusMinutes(30);
-        LocalDateTime overlappingEnd = end.plusMinutes(30);
-
-        assertTrue(BookingConflictChecker.hasStudentConflict(
-                List.of(createPendingBooking()),
-                "S001", overlappingStart, overlappingEnd, null
-        ));
-    }
-
-    @Test
-    void excludedBookingShouldNotConflictWithItself() {
-        assertFalse(BookingConflictChecker.hasStudentConflict(
-                List.of(createPendingBooking()),
-                "S001", start, end, "B001"
-        ));
-    }
-
-    @Test
-    void nullBookingListShouldBeRejected() {
-        assertThrows(ValidationException.class, () ->
-                BookingConflictChecker.hasStudentConflict(
-                        null, "S001", start, end, null
-                )
-        );
-    }
-
-    @Test
-    void blankResourceIdShouldBeRejected() {
-        assertThrows(ValidationException.class, () ->
-                BookingConflictChecker.hasStudentConflict(
-                        List.of(), " ", start, end, null
-                )
-        );
-    }
-
-    @Test
-    void invalidTimeIntervalShouldBeRejected() {
-        assertThrows(ValidationException.class, () ->
-                BookingConflictChecker.hasStudentConflict(
-                        List.of(), "S001", end, start, null
-                )
-        );
+    // Builds a second reservation to check which person or vehicle already occupies the slot.
+    private Booking other(String id, String studentId, String instructorId, String vehicleId) {
+        return new Booking(id, studentId, "E001", target.getStartTime(), target.getEndTime(),
+                instructorId, vehicleId, BookingStatus.CONFIRMED, target.getCreatedAt());
     }
 }

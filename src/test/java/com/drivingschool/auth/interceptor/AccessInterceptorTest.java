@@ -1,3 +1,14 @@
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : AccessInterceptorTest.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.auth.interceptor;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
@@ -28,6 +39,7 @@ class AccessInterceptorTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    // Check this request or supply the small test-only page it needs.
     void setUp() {
         sessionService = mock(AuthSessionService.class);
         protectedCalls = new AtomicInteger();
@@ -37,11 +49,13 @@ class AccessInterceptorTest {
                         new AdminController(protectedCalls)
                 )
                 .addInterceptors(new AccessInterceptor(sessionService))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.drivingschool.common.exception.ErrorPageSupport(
+                        org.mockito.Mockito.mock(com.drivingschool.auth.service.AuthSessionService.class))))
                 .build();
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void publicEndpointDoesNotRequireAuthentication() throws Exception {
         mockMvc.perform(get("/test-access/public"))
                 .andExpect(status().isOk())
@@ -51,6 +65,7 @@ class AccessInterceptorTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void anonymousUserCannotExecuteLoginProtectedEndpoint()
             throws Exception {
 
@@ -60,13 +75,14 @@ class AccessInterceptorTest {
                 ));
 
         mockMvc.perform(get("/test-access/account"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         assertEquals(0, protectedCalls.get());
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void successfulLoginCheckAllowsControllerExecution()
             throws Exception {
 
@@ -80,6 +96,7 @@ class AccessInterceptorTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void anonymousUserCannotExecuteAdminEndpoint() throws Exception {
         when(sessionService.requireAdmin(any()))
                 .thenThrow(new ResponseStatusException(
@@ -87,13 +104,14 @@ class AccessInterceptorTest {
                 ));
 
         mockMvc.perform(get("/test-access/admin"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         assertEquals(0, protectedCalls.get());
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void studentCannotExecuteAdminEndpoint() throws Exception {
         when(sessionService.requireAdmin(any()))
                 .thenThrow(new ResponseStatusException(
@@ -108,6 +126,7 @@ class AccessInterceptorTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void successfulAdminCheckAllowsControllerExecution()
             throws Exception {
 
@@ -119,6 +138,7 @@ class AccessInterceptorTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void loginAnnotationCannotWeakenAdminOnlyClass() throws Exception {
         when(sessionService.requireAdmin(any()))
                 .thenThrow(new ResponseStatusException(

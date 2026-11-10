@@ -1,0 +1,115 @@
+@startuml
+' Documentation owner: IT26101136
+' Names verified against Java source; method parameter lists intentionally hidden.
+title IT26101136 — packages and payment confirmation
+left to right direction
+skinparam classAttributeIconSize 0
+interface LearningRecord {
+  +String getDisplayName()
+}
+note right of LearningRecord
+Extends Identifiable. Abstraction and polymorphism: course and receipt each supply their own title.
+end note
+class LearningPackage {
+  -String id
+  -String name
+  -BigDecimal price
+  -int lessonCount
+  -int validityDays
+  -boolean active
+  -PackageType type
+  +String getDisplayName()
+  +void setPrice()
+}
+class Enrollment {
+  -String id
+  -String studentId
+  -String packageId
+  -BigDecimal amount
+  -String status
+  -LocalDate validUntil
+  +String getPaymentStatus()
+  +String getReferenceCode()
+  +void setStatus()
+  +boolean isPaid()
+  +String getDisplayName()
+}
+note right of Enrollment
+Encapsulation: AWAITING_PAYMENT / PAID / CANCELLED. paymentStatus is computed from status, not another saved field.
+end note
+interface LearningPackageCatalog {
+  +List<LearningPackage> listPackages()
+  +Optional<LearningPackage> findPackageById()
+}
+class LearningPackageService {
+  -LearningPackageRepository repository
+  -BookingRepository bookings
+  -EnrollmentRepository enrollments
+  +LearningPackage createPackage()
+  +List<LearningPackage> listPackages()
+  +LearningPackage updatePackage()
+  +void deletePackage()
+}
+note right of LearningPackageService
+Package CRUD; shared validation, duplicate and not-found errors.
+end note
+class LearningPackageRepository {
+  +void save()
+  +List<LearningPackage> readAllStrict()
+  +void update()
+  +void delete()
+}
+class EnrollmentRepository {
+  +void save()
+  +List<Enrollment> readAllStrict()
+  +void update()
+  +void delete()
+}
+interface EnrollmentOperations {
+  +Enrollment enroll()
+  +List<Enrollment> ownEnrollments()
+  +Enrollment updateLearningGoal()
+  +void deleteOwnEnrollment()
+}
+class EnrollmentService {
+  -EnrollmentRepository enrollments
+  -LearningPackageRepository packages
+  -UserRepository users
+  +Enrollment enroll()
+  +List<Enrollment> ownEnrollments()
+  +Enrollment updateLearningGoal()
+  +void deleteOwnEnrollment()
+  +Enrollment markPaid()
+  +Enrollment cancelRequest()
+}
+note right of EnrollmentService
+Enrollment CRUD. Also implements EnrollmentAdministration, shown in the flow text. markPaid unlocks lessons under the shared account lock.
+end note
+class EnrollmentController {
+  -EnrollmentOperations enrollmentService
+  +String enroll()
+  +String list()
+  +String payment()
+  +String update()
+  +String delete()
+}
+note right of EnrollmentController
+CREATE / READ / UPDATE / DELETE use the student interface; payment() only shows instructions.
+end note
+abstract class FileRepository {
+}
+LearningPackage ..|> LearningRecord
+Enrollment ..|> LearningRecord
+LearningPackageService ..|> LearningPackageCatalog
+LearningPackageService ..> LearningPackageRepository
+LearningPackageRepository --|> FileRepository : T = LearningPackage
+EnrollmentRepository --|> FileRepository : T = Enrollment
+LearningPackageRepository --> LearningPackage : stores
+EnrollmentRepository --> Enrollment : stores
+EnrollmentService ..|> EnrollmentOperations
+EnrollmentController ..> EnrollmentOperations
+EnrollmentService ..> EnrollmentRepository
+EnrollmentService ..> LearningPackageRepository
+EnrollmentService ..> Enrollment : creates unpaid receipt
+@enduml
+

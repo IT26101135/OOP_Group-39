@@ -1,6 +1,8 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.Admin;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.common.exception.StorageException;
@@ -93,6 +95,22 @@ class AuthSessionServiceTest {
                 java.util.List.of(USER_ID_ATTRIBUTE),
                 Collections.list(session.getAttributeNames())
         );
+    }
+
+    @Test void pendingAndSuspendedAccountsCannotStartSessions() {
+        Student pending = student(); pending.setStatus(AccountStatus.PENDING);
+        when(authService.authenticate("nimal@example.com", "password"))
+                .thenReturn(Optional.of(pending));
+        assertEquals(LoginResult.PENDING_APPROVAL,
+                service.loginWithResult(request, "nimal@example.com", "password"));
+        assertNull(request.getSession(false));
+
+        Student suspended = student(); suspended.setStatus(AccountStatus.SUSPENDED);
+        when(authService.authenticate("nimal@example.com", "password"))
+                .thenReturn(Optional.of(suspended));
+        assertEquals(LoginResult.SUSPENDED,
+                service.loginWithResult(request, "nimal@example.com", "password"));
+        assertNull(request.getSession(false));
     }
 
     @Test
@@ -254,7 +272,7 @@ class AuthSessionServiceTest {
     @Test
     void malformedSessionIdentityIsRejectedWithoutRepositoryLookup() {
         for (Object invalid : new Object[]{
-                123, "S000", "S1000", "I001", "", " S001"
+                123, "S000", "S1000", "X001", "", " S001"
         }) {
             request = new MockHttpServletRequest();
             MockHttpSession session = sessionWithId(invalid);

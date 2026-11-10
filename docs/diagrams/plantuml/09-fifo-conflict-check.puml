@@ -1,0 +1,53 @@
+@startuml
+' Documentation owner: IT26101135
+title Sequence B — FIFO processing and conflict checking
+actor "Admin browser" as Admin
+participant "AdminBookingController" as C
+participant "BookingService" as S
+participant "AuthSessionService" as A
+participant "BookingRepository" as R
+participant "BookingRequestQueue" as Q
+participant "PaidEnrollmentGuard" as G
+participant "BookingConflictChecker" as K
+participant "Booking" as B
+Admin -> C : POST /admin/bookings/process-next: processNext(...)
+C -> S : processNext(request, instructorId, vehicleId)
+S -> A : requireAdmin(request)
+note over S,R: BOOKING_LOCK uses AccountWriteCoordinator.class; it coordinates with payment/account writes in this JVM.
+S -> R : readAllStrict()
+S -> Q : new BookingRequestQueue(saved bookings)
+note over Q: Filter PENDING with no instructor; stable insertion sort by createdAt; enqueue linked nodes.
+S -> Q : dequeue()
+Q --> S : oldest booking, or null
+alt queue empty
+S --> C : Throw ValidationException: no pending requests
+else head found
+S -> S : assign(request, head.id, instructorId, vehicleId)
+S -> A : requireAdmin(request)
+S -> R : findByIdStrict(bookingId)
+S -> R : readAllStrict()
+S -> Q : new BookingRequestQueue(saved bookings)
+S -> Q : peek()
+note over S,Q: assign rebuilds another queue and verifies the target is still its head; an out-of-order ID throws ValidationException.
+S -> G : problemFor(studentId, enrollmentId)
+alt unpaid, cancelled, expired or unusable enrollment
+S -> B : reject(paymentProblem)
+S -> R : update(rejected booking)
+else payment permits booking
+note over S,K: Load InstructorRepository and VehicleRepository; missing/inactive/out-of-service resources raise an exception before the conflict call.
+S -> K : conflictReason(target, instructorId, vehicleId)
+note over K: Checks current payment, availability, leave, overlap, qualifications and vehicle/course compatibility.
+alt conflict reason returned
+S -> B : reject(conflict)
+S -> R : update(rejected booking)
+else no conflict
+S -> B : assignForInstructor(instructorId, vehicleId)
+S -> R : update(assigned PENDING booking)
+end
+end
+S --> C : Assigned or rejected booking
+C --> Admin : Flash result and redirect /admin/bookings
+end
+note over S,R: dequeue changes only an in-memory queue. Saving the changed booking makes the result survive restart; unexpected storage failures are not swallowed.
+@enduml
+

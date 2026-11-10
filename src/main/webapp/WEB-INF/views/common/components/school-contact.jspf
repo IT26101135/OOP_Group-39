@@ -1,0 +1,5 @@
+<%-- IT26101135: Contact values come only from application.properties; unset lines stay hidden. --%>
+<c:if test="${not empty schoolContact.email}"><p>Email: <c:out value="${schoolContact.email}" /></p></c:if>
+<c:if test="${not empty schoolContact.phone}"><p>Phone: <c:out value="${schoolContact.phone}" /></p></c:if>
+<c:if test="${not empty schoolContact.address}"><p>Address: <c:out value="${schoolContact.address}" /></p></c:if>
+<c:if test="${not empty schoolContact.hours}"><p>Opening hours: <c:out value="${schoolContact.hours}" /></p></c:if>

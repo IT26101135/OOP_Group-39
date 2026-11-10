@@ -1,0 +1,13 @@
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : page-header.jspf
+WHAT IT DOES (simple words): Shows the shared page header block.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- This block shows page header. The including page controller supplies this block through model attributes. --%>
+<header class="ds-page-header"><c:if test="${not empty pageEyebrow}"><p class="ds-eyebrow"><c:out value="${pageEyebrow}" /></p></c:if><h1><c:out value="${pageTitle}" /></h1><c:if test="${not empty pageIntro}"><p><c:out value="${pageIntro}" /></p></c:if></header>

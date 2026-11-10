@@ -1,6 +1,8 @@
+// Module owner: IT26101135
 package com.drivingschool.student;
 
 import com.drivingschool.auth.model.Role;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.service.AdminSeedService;
@@ -54,12 +56,12 @@ class StudentProfileWebIntegrationTest {
 
     @Test
     void anonymousGetAndValidCsrfPostAreUnauthorized() throws Exception {
-        mvc.perform(get(PROFILE)).andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
-        mvc.perform(get(EDIT)).andExpect(status().isUnauthorized());
+        mvc.perform(get(PROFILE)).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
+        mvc.perform(get(EDIT)).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
         MvcResult anonymous = mvc.perform(get("/login")).andReturn();
         mvc.perform(edit(sessionOf(anonymous), tokenOf(anonymous), "Anonymous User", email(), "0771234567"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
         mvc.perform(post(EDIT)).andExpect(status().isForbidden());
     }
 
@@ -90,7 +92,7 @@ class StudentProfileWebIntegrationTest {
         StudentProfile profile = (StudentProfile) page.getModelAndView().getModel().get("profile");
         assertEquals(student.getId(), profile.getId());
         assertEquals(student.getEmail(), profile.getEmail());
-        assertEquals(4, mapper.valueToTree(profile).size());
+        assertEquals(11, mapper.valueToTree(profile).size());
         assertFalse(mapper.valueToTree(profile).has("passwordHash"));
         MvcResult formPage = editPage(session);
         StudentProfileForm form = (StudentProfileForm) formPage.getModelAndView().getModel().get("profileForm");
@@ -212,7 +214,7 @@ class StudentProfileWebIntegrationTest {
                 .andExpect(status().isOk());
         assertArrayEquals(before, Files.readAllBytes(dataDirectory.resolve("users.txt")));
         repository.delete(student.getId()); // Test fixture only; not a deletion feature.
-        mvc.perform(get(PROFILE).session(session)).andExpect(status().isUnauthorized());
+        mvc.perform(get(PROFILE).session(session)).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
         assertTrue(session.isInvalid());
     }
 
@@ -228,7 +230,7 @@ class StudentProfileWebIntegrationTest {
             MvcResult failed = mvc.perform(edit(session, token, "New Name", student.getEmail(), "0771234567"))
                     .andExpect(status().isInternalServerError()).andExpect(view().name("common/error"))
                     .andReturn();
-            assertEquals("We could not complete the operation. Please contact the administrator.",
+            assertEquals("Please try again. If the problem continues, contact us.",
                     failed.getModelAndView().getModel().get("message"));
         } finally {
             Files.write(file, before);
@@ -236,7 +238,9 @@ class StudentProfileWebIntegrationTest {
     }
 
     private Student createStudent() {
-        return authService.registerStudent("Profile Learner", email(), "0771234567", PASSWORD);
+        Student student = authService.registerStudent("Profile Learner", email(), "0771234567", PASSWORD);
+        student.setStatus(AccountStatus.ACTIVE); repository.update(student);
+        return student;
     }
     private String email() { return "profile-" + UUID.randomUUID() + "@example.com"; }
     private MvcResult editPage(MockHttpSession session) throws Exception {
@@ -252,7 +256,8 @@ class StudentProfileWebIntegrationTest {
         MvcResult page = mvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
         MvcResult result = mvc.perform(post("/login").session(sessionOf(page))
                         .param("_csrf", tokenOf(page)).param("email", email).param("password", PASSWORD))
-                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/")).andReturn();
+                 .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(repository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath())).andReturn();
         return sessionOf(result);
     }
     private MockHttpSession sessionOf(MvcResult result) {

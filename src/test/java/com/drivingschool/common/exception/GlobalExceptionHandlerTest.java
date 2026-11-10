@@ -1,3 +1,14 @@
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : GlobalExceptionHandlerTest.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +29,7 @@ class GlobalExceptionHandlerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    // Check this request or supply the small test-only page it needs.
     void setUp() {
         InternalResourceViewResolver resolver =
                 new InternalResourceViewResolver();
@@ -27,12 +39,14 @@ class GlobalExceptionHandlerTest {
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ErrorTestController())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.drivingschool.common.exception.ErrorPageSupport(
+                        org.mockito.Mockito.mock(com.drivingschool.auth.service.AuthSessionService.class))))
                 .setViewResolvers(resolver)
                 .build();
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void validationReturns400() throws Exception {
         mockMvc.perform(get("/test-errors/validation"))
                 .andExpect(status().isBadRequest())
@@ -44,6 +58,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void missingRecordReturns404() throws Exception {
         mockMvc.perform(get("/test-errors/missing"))
                 .andExpect(status().isNotFound())
@@ -52,6 +67,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void duplicateReturns409() throws Exception {
         mockMvc.perform(get("/test-errors/duplicate"))
                 .andExpect(status().isConflict())
@@ -60,6 +76,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void storageReturns500WithoutInternalDetails() throws Exception {
         mockMvc.perform(get("/test-errors/storage"))
                 .andExpect(status().isInternalServerError())
@@ -67,14 +84,37 @@ class GlobalExceptionHandlerTest {
                 .andExpect(model().attribute("statusCode", 500))
                 .andExpect(model().attribute(
                         "message",
-                        "We could not complete the operation. "
-                                + "Please contact the administrator."
+                        "Please try again. If the problem continues, contact us."
                 ));
+    }
+
+    @Test
+    void missingFieldUsesHelpfulHtmlViewEvenWithJsonAccept() throws Exception {
+        mockMvc.perform(get("/test-errors/form").accept("application/json"))
+                .andExpect(status().isBadRequest()).andExpect(view().name("common/error"))
+                .andExpect(model().attribute("statusCode", 400));
+    }
+
+    @Test
+    void invalidNumberUsesHelpfulHtmlView() throws Exception {
+        mockMvc.perform(get("/test-errors/form").param("lessons", "abc"))
+                .andExpect(status().isBadRequest()).andExpect(view().name("common/error"));
+    }
+
+    @Test
+    void wrongMethodKeeps405WithRecoveryView() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/test-errors/form"))
+                .andExpect(status().isMethodNotAllowed()).andExpect(view().name("common/error"));
     }
 
     // Only used by tests; these routes are not part of the running app.
     @Controller
     static class ErrorTestController {
+
+        @GetMapping("/test-errors/form")
+        public String form(@org.springframework.web.bind.annotation.RequestParam int lessons) {
+            return "unused-test-view";
+        }
 
         @GetMapping("/test-errors/validation")
         public String validation() {

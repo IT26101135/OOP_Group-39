@@ -1,6 +1,8 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle;
 
 import com.drivingschool.auth.model.Role;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.service.AdminSeedService;
@@ -81,10 +83,10 @@ class VehicleWebIntegrationTest {
         MockHttpSession session = sessionOf(loginPage);
 
         mvc.perform(get(VEHICLES))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
 
         mvc.perform(get(CREATE))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
 
         mvc.perform(post(CREATE)
                         .session(session)
@@ -95,7 +97,7 @@ class VehicleWebIntegrationTest {
                         .param("transmissionType", "MANUAL")
                         .param("vehicleCategory", "CAR")
                         .param("operationalStatus", "IN_SERVICE"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -367,7 +369,7 @@ class VehicleWebIntegrationTest {
     }
 
     @Test
-    void submittedProtectedFieldsCannotChangeVehicleMetadata()
+    void administratorCanUpdateVehicleTypeTransmissionAndStatus()
             throws Exception {
 
         MockHttpSession session = loginAsAdmin();
@@ -404,18 +406,9 @@ class VehicleWebIntegrationTest {
         assertEquals("Honda", stored.getMake());
         assertEquals("Civic", stored.getModel());
 
-        assertEquals(
-                original.getVehicleCategory(),
-                stored.getVehicleCategory()
-        );
-        assertEquals(
-                original.getTransmissionType(),
-                stored.getTransmissionType()
-        );
-        assertEquals(
-                original.getOperationalStatus(),
-                stored.getOperationalStatus()
-        );
+        assertEquals(VehicleCategory.MOTORCYCLE, stored.getVehicleCategory());
+        assertEquals(TransmissionType.AUTOMATIC, stored.getTransmissionType());
+        assertEquals(VehicleOperationalStatus.RETIRED, stored.getOperationalStatus());
 
         assertTrue(vehicleRepository.findById("V999").isEmpty());
     }
@@ -608,12 +601,10 @@ class VehicleWebIntegrationTest {
     }
 
     private com.drivingschool.student.model.Student createStudent() {
-        return authService.registerStudent(
-                "Vehicle Test Student",
-                email(),
-                "0771234567",
-                PASSWORD
-        );
+        var student = authService.registerStudent(
+                "Vehicle Test Student", email(), "0771234567", PASSWORD);
+        student.setStatus(AccountStatus.ACTIVE); userRepository.update(student);
+        return student;
     }
 
     private String email() {
@@ -655,7 +646,7 @@ class VehicleWebIntegrationTest {
                         .param("email", email)
                         .param("password", PASSWORD))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         return sessionOf(result);

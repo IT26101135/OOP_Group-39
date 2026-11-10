@@ -1,3 +1,14 @@
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Shared foundation
+FILE     : AuthorizationErrorHandlerTest.java
+WHAT IT DOES (simple words): Explains errors and gives each user a safe next step.
+REAL-LIFE EXAMPLE: A receptionist directs a visitor back to the right desk.
+OOP USED : Encapsulation and exception handling
+CRUD     : Supports errors during CREATE, READ, UPDATE and DELETE
+============================================================
+*/
 package com.drivingschool.common.exception;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,28 +28,27 @@ class AuthorizationErrorHandlerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    // Check this request or supply the small test-only page it needs.
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TestController())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.drivingschool.common.exception.ErrorPageSupport(
+                        org.mockito.Mockito.mock(com.drivingschool.auth.service.AuthSessionService.class))))
                 .build();
     }
 
     @Test
-    void unauthorizedUsesSharedErrorPageAndPreserves401()
+    // Check this request or supply the small test-only page it needs.
+    void unauthorizedRedirectsToLogin()
             throws Exception {
 
         mockMvc.perform(get("/test-errors/unauthorized"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"))
-                .andExpect(model().attribute("statusCode", 401))
-                .andExpect(model().attribute(
-                        "title", "Login required"))
-                .andExpect(model().attribute(
-                        "message", "Please log in to continue."));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void forbiddenUsesSharedErrorPageWithoutExposingInternalReason()
             throws Exception {
 
@@ -50,16 +60,17 @@ class AuthorizationErrorHandlerTest {
                         "title", "Access denied"))
                 .andExpect(model().attribute(
                         "message",
-                        "You do not have permission to access this resource."
+                        "You don't have access to this page. Return to your account to continue."
                 ));
     }
 
     @Test
+    // Check this request or supply the small test-only page it needs.
     void otherResponseStatusErrorsKeepTheirOriginalStatus()
             throws Exception {
 
         mockMvc.perform(get("/test-errors/not-found"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound()).andExpect(view().name("common/error"));
     }
 
     @Controller

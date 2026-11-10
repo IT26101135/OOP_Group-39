@@ -1,8 +1,20 @@
+/**
+ * ============================================================
+ * MEMBER   : IT26101135 - [Name]
+ * MODULE   : Authentication and Students
+ * FILE     : AuthWebIntegrationTest.java
+ * WHAT IT DOES (simple words): Checks account forms, sessions and role access together.
+ * REAL-LIFE EXAMPLE: Rehearses entering and leaving the school through reception.
+ * OOP USED : Abstraction and exception handling
+ * CRUD     : CREATE and READ student accounts
+ * ============================================================
+ */
 package com.drivingschool.auth;
 
 import com.drivingschool.auth.annotation.RequireAdmin;
 import com.drivingschool.auth.annotation.RequireLogin;
 import com.drivingschool.auth.repository.UserRepository;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.service.AdminSeedService;
 import com.drivingschool.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -40,6 +52,7 @@ class AuthWebIntegrationTest {
     static Path dataDirectory;
 
     @DynamicPropertySource
+    // Prepares the account details needed by these practice checks: configure properties.
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add(
                 "app.data-directory",
@@ -61,6 +74,7 @@ class AuthWebIntegrationTest {
     private UserRepository userRepository;
 
     @Test
+    // Checks the account rule using temporary data: registration login navigation and logout work together.
     void registrationLoginNavigationAndLogoutWorkTogether()
             throws Exception {
 
@@ -123,8 +137,8 @@ class AuthWebIntegrationTest {
         assertTrue(authenticatedSession.isInvalid());
 
         mockMvc.perform(get("/integration-probe/account"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         mockMvc.perform(get("/"))
                 .andExpect(model().attribute("navLoggedIn", false))
@@ -135,6 +149,7 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: registration without csrf cannot create an account.
     void registrationWithoutCsrfCannotCreateAnAccount()
             throws Exception {
 
@@ -156,12 +171,13 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: admin endpoint rejects anonymous and student but allows admin.
     void adminEndpointRejectsAnonymousAndStudentButAllowsAdmin()
             throws Exception {
 
         mockMvc.perform(get("/integration-probe/admin"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
 
         String studentEmail = uniqueEmail();
         String password = "IntegrationPass123!";
@@ -203,6 +219,7 @@ class AuthWebIntegrationTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: failed login refreshes session and allows correct retry.
     void failedLoginRefreshesSessionAndAllowsCorrectRetry()
             throws Exception {
 
@@ -215,6 +232,8 @@ class AuthWebIntegrationTest {
                 "0771234567",
                 password
         );
+        var retryUser = userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow();
+        retryUser.setStatus(AccountStatus.ACTIVE); userRepository.update(retryUser);
 
         MvcResult page = mockMvc.perform(get("/login")).andReturn();
         MockHttpSession oldSession = sessionOf(page);
@@ -244,7 +263,7 @@ class AuthWebIntegrationTest {
                         .param("email", email)
                         .param("password", password))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         assertTrue(retrySession.isInvalid());
@@ -254,9 +273,9 @@ class AuthWebIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // Prepares the account details needed by these practice checks: login.
     private MockHttpSession login(String email, String password)
             throws Exception {
-
         MvcResult page = mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -269,7 +288,7 @@ class AuthWebIntegrationTest {
                         .param("email", email)
                         .param("password", password))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(userRepository.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         assertTrue(anonymousSession.isInvalid());
@@ -281,14 +300,17 @@ class AuthWebIntegrationTest {
         return authenticatedSession;
     }
 
+    // Prepares the account details needed by these practice checks: unique email.
     private String uniqueEmail() {
         return "test-" + UUID.randomUUID() + "@example.com";
     }
 
+    // Prepares the account details needed by these practice checks: session of.
     private MockHttpSession sessionOf(MvcResult result) {
         return (MockHttpSession) result.getRequest().getSession(false);
     }
 
+    // Prepares the account details needed by these practice checks: token of.
     private String tokenOf(MvcResult result) {
         return (String) result.getModelAndView()
                 .getModel().get("csrfToken");
@@ -298,6 +320,7 @@ class AuthWebIntegrationTest {
     static class ProbeConfiguration {
 
         @Bean
+        // Registers two harmless test pages so the real role guards can be exercised.
         AccessProbeController accessProbeController() {
             return new AccessProbeController();
         }
@@ -309,6 +332,7 @@ class AuthWebIntegrationTest {
         @RequireLogin
         @ResponseBody
         @GetMapping("/integration-probe/account")
+        // Checks the account rule using temporary data: account.
         public String account() {
             return "account-access";
         }
@@ -316,6 +340,7 @@ class AuthWebIntegrationTest {
         @RequireAdmin
         @ResponseBody
         @GetMapping("/integration-probe/admin")
+        // Checks the account rule using temporary data: admin.
         public String admin() {
             return "admin-access";
         }

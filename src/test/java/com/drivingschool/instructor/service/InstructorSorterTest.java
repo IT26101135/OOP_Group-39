@@ -1,3 +1,4 @@
+// Module owner: IT26101133
 
 package com.drivingschool.instructor.service;
 
@@ -91,5 +92,31 @@ class InstructorSorterTest {
         assertEquals(List.of(a, b), original);
         assertEquals(List.of(b, a), sorted);
         assertNotSame(original, sorted);
+    }
+
+    @Test void manuallySortsNamesBothDirectionsWithDuplicates() {
+        Instructor a = instructor("I001", 4); a.setName("Zara");
+        Instructor b = instructor("I002", 4); b.setName("Ali");
+        Instructor c = instructor("I003", 4); c.setName("Ali");
+        assertEquals(List.of(b,c,a), sorter.sort(List.of(a,b,c), "name", true));
+        assertEquals(List.of(a,b,c), sorter.sort(List.of(a,b,c), "name", false));
+    }
+
+    @Test void sortsExperienceAndRatingInBothDirections() {
+        Instructor a = instructor("I001", 2); a.setAverageRating(4.5);
+        Instructor b = instructor("I002", 9); b.setAverageRating(2.0);
+        Instructor c = instructor("I003", 9); c.setAverageRating(4.5);
+        assertEquals(List.of(b,c,a), sorter.sort(List.of(a,b,c), "experience", false));
+        assertEquals(List.of(a,b,c), sorter.sort(List.of(a,b,c), "experience", true));
+        assertEquals(List.of(a,c,b), sorter.sort(List.of(a,b,c), "rating", false));
+        assertEquals(List.of(b,a,c), sorter.sort(List.of(a,b,c), "rating", true));
+    }
+
+    @Test void handlesEmptyAndSingleForAllKeys() {
+        Instructor one = instructor("I001", 1);
+        for (String key : List.of("name", "experience", "rating")) {
+            assertTrue(sorter.sort(List.of(), key, true).isEmpty());
+            assertEquals(List.of(one), sorter.sort(List.of(one), key, false));
+        }
     }
 }

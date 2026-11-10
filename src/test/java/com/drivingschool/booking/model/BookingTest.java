@@ -1,3 +1,4 @@
+// Module owner: IT26101134
 package com.drivingschool.booking.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -136,8 +137,8 @@ class BookingTest {
     }
 
     @Test
-    void shouldRejectPendingBookingWithAssignments() {
-        assertThrows(ValidationException.class, () ->
+    void pendingInstructorApprovalMayHoldAssignments() {
+        assertDoesNotThrow(() ->
                 new Booking("B001", "S001", "E001",
                         start, end, "I001", "V001",
                         Booking.BookingStatus.PENDING, created));
@@ -182,9 +183,40 @@ class BookingTest {
     void shouldCompleteConfirmedBooking() {
         Booking booking = createConfirmedBooking();
 
-        booking.complete();
+        booking.complete(end, true);
 
         assertEquals(Booking.BookingStatus.COMPLETED, booking.getStatus());
+    }
+
+    // Attendance boundaries are checked with an explicit school time, not the computer date.
+    @Test
+    void refusesFutureCompletionWithoutChangingState() {
+        Booking booking = createConfirmedBooking();
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> booking.complete(end.minusSeconds(1), true));
+        assertTrue(error.getMessage().contains("1 Nov 2026, 11:00 am"));
+        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+    }
+
+    @Test
+    void demoSettingAllowsFutureCompletion() {
+        Booking booking = createConfirmedBooking();
+        booking.complete(start.minusDays(1), false);
+        assertEquals(BookingStatus.COMPLETED, booking.getStatus());
+    }
+
+    @Test
+    void noShowWaitsUntilLessonEndAndDemoCanBypassTime() {
+        Booking booking = createConfirmedBooking();
+        assertThrows(ValidationException.class, () -> booking.markNoShow(start.minusSeconds(1), true));
+        assertThrows(ValidationException.class, () -> booking.markNoShow(start, true));
+        assertThrows(ValidationException.class, () -> booking.markNoShow(end.minusSeconds(1), true));
+        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+        booking.markNoShow(end, true);
+        assertEquals(BookingStatus.NO_SHOW, booking.getStatus());
+        Booking demo = createConfirmedBooking();
+        demo.markNoShow(start.minusDays(1), false);
+        assertEquals(BookingStatus.NO_SHOW, demo.getStatus());
     }
 
     @Test
@@ -233,7 +265,7 @@ class BookingTest {
     @Test
     void shouldRejectCancellingCompletedBooking() {
         Booking booking = createConfirmedBooking();
-        booking.complete();
+        booking.complete(end, true);
 
         assertThrows(ValidationException.class, booking::cancel);
 
@@ -288,7 +320,7 @@ class BookingTest {
     void shouldPreserveCompletedBookingAfterJsonRoundTrip()
             throws Exception {
         Booking original = createConfirmedBooking();
-        original.complete();
+        original.complete(end, true);
         ObjectMapper mapper = createMapper();
 
         String json = mapper.writeValueAsString(original);

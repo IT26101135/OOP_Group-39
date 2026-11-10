@@ -1,3 +1,4 @@
+// Module owner: IT26101132
 package com.drivingschool.vehicle.model;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;

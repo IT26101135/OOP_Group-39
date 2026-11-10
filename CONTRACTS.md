@@ -1,5 +1,7 @@
 # DriveSpark Academy — Shared Contracts
 
+> 2026-11-09 cleanup update: the unused instructor interval/lookup family, vehicle lookup family and enrollment lookup/summary were removed with member approval. Earlier descriptions of those contracts are historical, not current APIs. See [Java simplification record](docs/JAVA_SIMPLIFICATION.md) for retained OOP evidence and verification.
+
 ## Status
 
 The Phase 1 common foundation and Phase 2A–2G authentication backend
@@ -60,6 +62,39 @@ Runtime data:
 ./data, relative to the application's working directory
 
 Run the application from the project root.
+
+## Added web workflows (local implementation)
+
+The current application also includes these MVC flows:
+
+- `GET /packages`: browse active learning packages.
+- `GET/POST /bookings`: student lesson requests, one hour each, associated
+  with a selected package ID; students may cancel their own pending or
+  confirmed requests.
+- `GET /admin/bookings`: admins assign an active instructor and an in-service
+  vehicle, then mark confirmed lessons complete.
+- `GET /instructor/dashboard`: an instructor sees bookings assigned to their
+  `I###` ID and may mark their own lessons complete.
+- `GET /reviews`: signed-in users can see approved reviews; students can
+  create, edit, and delete their own reviews.
+- `GET /admin/reviews`: admins approve or hide reviews.
+- `GET /admin/instructors` and `/admin/packages`: admins manage these records.
+
+Instructor login identities are `InstructorAccount` subtypes persisted in
+`users.txt`, with the same `I###` ID as their profile in `instructors.txt`.
+Create them through `InstructorAccountService` so the two records stay paired.
+Instructor IDs are now accepted by `AuthSessionService` alongside student
+and administrator IDs. Existing instructor profile records without matching
+user accounts cannot log in until an account is created for them.
+
+Lesson requests require a matching Paid enrollment with remaining lessons.
+Completing a lesson decrements its active enrollment balance. Lesson length
+is fixed at 60 minutes. Enrollment itself creates an Awaiting payment request;
+`GET /enrollments/{id}/payment` shows its amount, reference and manual instructions.
+Administrators use `GET /admin/enrollments`, `POST /admin/enrollments/mark-paid`
+and `POST /admin/enrollments/cancel-request`. Only Awaiting payment requests can
+be decided; Paid and Cancelled receipts stay in history. The shared account
+lock serializes these decisions and booking writes within one application JVM.
 
 ## Implemented: Identifiable
 
@@ -976,7 +1011,7 @@ Views:
 
 Both views use c:url and escape dynamic output with c:out. The edit form
 includes the existing CSRF parameter/token and never binds the persisted User.
-A new /css/profile.css adds scoped styles while retaining app.css branding.
+Current profile styling comes from shared app.css components built into /css/tailwind.css.
 The shared navbar adds My profile only for authenticated STUDENT navigation.
 Visibility is not authorization; service checks apply to direct requests too.
 Login continues redirecting to /; AuthController is unchanged.
@@ -1025,7 +1060,7 @@ Behaviour:
 
 Files:
 - src/main/webapp/WEB-INF/views/admin/dashboard.jsp
-- src/main/resources/static/css/admin-dashboard.css
+- src/main/resources/static/css/tailwind.css (generated shared styles; source is app.css)
 - src/test/java/com/drivingschool/admin/AdminDashboardWebIntegrationTest.java
 
 Verification:
@@ -1392,8 +1427,8 @@ Listing policy:
 
 CSS:
 
-- `static/css/vehicle.css`
-- Styles are scoped to vehicle administration pages.
+- `static/css/tailwind.css` (generated from shared `static/css/app.css`)
+- Vehicle administration uses the shared workspace styles.
 
 ### Other pending cross-module contracts
 
@@ -1476,77 +1511,3 @@ historical booking retention and instructor/package deletion eligibility.
 When the foundation is merged, each member must update their feature
 branch from develop and provide this document plus relevant shared source
 files to their AI assistant.
-
-## Instructor Administration Web — Group 39
-
-Status: PR #39 open; review pending; not merged into `develop`.
-
-Verification (2026-11-07):
-- InstructorControllerTest: 28 tests passed.
-- InstructorWebIntegrationTest: 11 tests passed.
-- InstructorConfigTest: 1 test passed.
-- Combined instructor web verification: 40 tests passed.
-- Full Maven clean verify: 560 tests, 0 failures, 0 errors, 0 skipped.
-- WAR packaging: BUILD SUCCESS.
-- Invalid instructor ID request (abc/edit): HTTP 400.
-- Authenticated administrator browser verification remains pending.
-
-Implementation branch:
-`feature/IT26101133-instructor-web`
-
-### Access control
-
-- All instructor administration routes require `@RequireAdmin`.
-- Anonymous requests return HTTP 401.
-- Non-admin authenticated requests return HTTP 403.
-- POST requests require a valid CSRF token.
-- Controllers use existing services rather than repositories.
-
-### Routes
-
-- `GET /admin/instructors` — list instructors.
-- `GET /admin/instructors/create` — show creation form.
-- `POST /admin/instructors/create` — create instructor.
-- `GET /admin/instructors/{id}/edit` — show edit form.
-- `POST /admin/instructors/{id}/edit` — update instructor.
-- `GET /admin/instructors/{id}/availability/create` — show availability form.
-- `POST /admin/instructors/{id}/availability/create` — add availability.
-
-### Instructor management
-
-- Instructor creation uses `InstructorService.createInstructor()`.
-- Instructor updates use `InstructorService.updateInstructor()`.
-- Instructor IDs are generated by the existing repository.
-- Instructor ID and active status cannot be changed through forms.
-- Form binding uses explicit allowed fields.
-- Instructor listing uses the existing Bubble Sort implementation.
-- Experience sorting is descending: High to Low.
-- No instructor deletion, activation or deactivation routes are exposed.
-
-### Availability management
-
-- Availability creation uses
-  `InstructorAvailabilityService.addAvailability()`.
-- Only active instructors can receive availability intervals.
-- Start and end values represent Asia/Colombo local date-times.
-- Start must be strictly earlier than end.
-- Invalid form submissions redisplay the form with an error message.
-- Existing availability edit and delete operations are not exposed.
-
-### Booking integration
-
-- Existing `InstructorLookup` signatures remain unchanged.
-- Immutable `InstructorBookingInfo` remains unchanged.
-- Strict storage reads and storage failure propagation are preserved.
-- Missing and inactive instructor behaviour remains unchanged.
-- Full-interval availability coverage and adjacent/gap semantics remain unchanged.
-
-### Verification
-
-- Instructor controller automated tests passed.
-- Full Maven `clean verify` passed with admin seeding disabled.
-- Login JSP rendered successfully using the packaged WAR.
-- Anonymous instructor administration access returned HTTP 401.
-- Authenticated admin browser testing remains pending because
-  no existing admin account was available in the test environment.
-- Do not merge this branch without the required review and approval.

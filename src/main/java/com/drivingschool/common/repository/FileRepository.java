@@ -1,3 +1,14 @@
+/**
+ * ============================================================
+ * MEMBER   : IT26101135 - [Name]
+ * MODULE   : Shared foundation
+ * FILE     : FileRepository.java
+ * WHAT IT DOES (simple words): Reads and safely saves the records used by each module.
+ * REAL-LIFE EXAMPLE: A shared filing cabinet with one drawer for each kind of record.
+ * OOP USED : Abstraction and inheritance (module repositories reuse this parent)
+ * CRUD     : CREATE, READ, UPDATE, DELETE
+ * ============================================================
+ */
 package com.drivingschool.common.repository;
 
 import com.drivingschool.common.exception.*;
@@ -12,6 +23,9 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+// SOLID: S - This class only handles file storage.
+// SOLID: O - A new module can extend this class to reuse safe storage.
+// OOP: ABSTRACTION - Children use this parent without repeating file handling.
 public abstract class FileRepository<T extends Identifiable> {
 
     // Shared by all repository instances in this running application.
@@ -26,6 +40,7 @@ public abstract class FileRepository<T extends Identifiable> {
     private final ObjectReader reader;
     private final ObjectWriter writer;
 
+    // Opens the filing drawer and prepares its saved ID counter.
     protected FileRepository(
             Path dataDirectory,
             String fileName,
@@ -90,19 +105,27 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Lists readable records so a damaged row does not hide the other records.
+    // CRUD: READ   - finds or lists records
     public List<T> readAll() {
         synchronized (STORAGE_LOCK) {
             return readRecords(false);
         }
     }
 
+    // Looks for one record by the number on its file.
+    // CRUD: READ   - finds or lists records
     public Optional<T> findById(String id) {
         validateId(id);
 
         synchronized (STORAGE_LOCK) {
-            return readRecords(false).stream()
-                    .filter(record -> id.equals(record.getId()))
-                    .findFirst();
+            // Look through the filing drawer until the matching ID is found.
+            for (T record : readRecords(false)) {
+                if (id.equals(record.getId())) {
+                    return Optional.of(record);
+                }
+            }
+            return Optional.empty();
         }
     }
 
@@ -110,6 +133,8 @@ public abstract class FileRepository<T extends Identifiable> {
      * Reads all records, but fails if any non-blank record is invalid.
      * Use for safety checks that require complete information.
      */
+    // Checks every row before returning records used in safety decisions.
+    // CRUD: READ   - finds or lists records
     public List<T> readAllStrict() {
         synchronized (STORAGE_LOCK) {
             return readRecords(true);
@@ -120,20 +145,30 @@ public abstract class FileRepository<T extends Identifiable> {
      * Finds a record only after verifying that the entire file is readable
      * without invalid records.
      */
+    // Looks for one record only after checking the whole drawer is readable.
+    // CRUD: READ   - finds or lists records
     public Optional<T> findByIdStrict(String id) {
         validateId(id);
 
         synchronized (STORAGE_LOCK) {
-            return readRecords(true).stream()
-                    .filter(record -> id.equals(record.getId()))
-                    .findFirst();
+            // Look through the filing drawer until the matching ID is found.
+            for (T record : readRecords(true)) {
+                if (id.equals(record.getId())) {
+                    return Optional.of(record);
+                }
+            }
+            return Optional.empty();
         }
     }
 
+    // Adds a new record, keeping its ID reserved even if saving fails.
+    // CRUD: CREATE - adds a new record and saves it
     public void save(T record) {
+        // Step 1: Check the record before opening the filing drawer.
         validateRecord(record);
 
         synchronized (STORAGE_LOCK) {
+            // Step 2: Refuse changes if any saved row needs repair.
             List<T> records = readRecords(true);
 
             if (indexOf(records, record.getId()) >= 0) {
@@ -155,14 +190,19 @@ public abstract class FileRepository<T extends Identifiable> {
             }
 
             records.add(record);
+            // Step 3: Save the complete updated drawer as one replacement.
             writeRecords(records);
         }
     }
 
+    // Replaces an existing record while keeping the same ID.
+    // CRUD: UPDATE - changes an existing record
     public void update(T record) {
+        // Step 1: Check the record before opening the filing drawer.
         validateRecord(record);
 
         synchronized (STORAGE_LOCK) {
+            // Step 2: Refuse changes if any saved row needs repair.
             List<T> records = readRecords(true);
             int index = indexOf(records, record.getId());
 
@@ -173,14 +213,18 @@ public abstract class FileRepository<T extends Identifiable> {
             }
 
             records.set(index, record);
+            // Step 3: Save the complete updated drawer as one replacement.
             writeRecords(records);
         }
     }
 
+    // Removes an existing record after checking that it is present.
+    // CRUD: DELETE - removes a record
     public void delete(String id) {
         validateId(id);
 
         synchronized (STORAGE_LOCK) {
+            // Step 2: Refuse changes if any saved row needs repair.
             List<T> records = readRecords(true);
             int index = indexOf(records, id);
 
@@ -191,15 +235,18 @@ public abstract class FileRepository<T extends Identifiable> {
             }
 
             records.remove(index);
+            // Step 3: Save the complete updated drawer as one replacement.
             writeRecords(records);
         }
     }
 
+    // Reserves the next unused number so an old ID is never given to someone else.
     public String nextId(String prefix) {
         // Validate the prefix even when it has never been used.
         IdGenerator.nextId(prefix, 0);
 
         synchronized (STORAGE_LOCK) {
+            // Step 2: Refuse changes if any saved row needs repair.
             List<T> records = readRecords(true);
             Map<String, Integer> counters = readCounters();
 
@@ -226,6 +273,7 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Reads each saved row and reports damaged rows without exposing personal data.
     private List<T> readRecords(boolean requireCleanFile) {
         List<T> records = new ArrayList<>();
         Set<String> ids = new HashSet<>();
@@ -246,7 +294,8 @@ public abstract class FileRepository<T extends Identifiable> {
 
                 try {
                     T record = reader.readValue(line);
-                    validateRecord(record);
+                    // Step 1: Check the record before opening the filing drawer.
+        validateRecord(record);
 
                     if (!ids.add(record.getId())) {
                         throw new ValidationException(
@@ -286,6 +335,7 @@ public abstract class FileRepository<T extends Identifiable> {
         return records;
     }
 
+    // Checks the saved numbering book before handing out another ID.
     private Map<String, Integer> readCounters() {
         try {
             String contents = Files.readString(
@@ -331,6 +381,7 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Saves the numbering book so IDs remain reserved after a restart.
     private void writeCounters(Map<String, Integer> counters) {
         try {
             atomicWrite(
@@ -346,6 +397,7 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Turns records into rows and saves the complete drawer safely.
     private void writeRecords(List<T> records) {
         try {
             StringBuilder contents = new StringBuilder();
@@ -365,6 +417,7 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Prepares a replacement file before swapping it in, protecting the previous copy.
     private void atomicWrite(Path target, String contents)
             throws IOException {
 
@@ -396,6 +449,7 @@ public abstract class FileRepository<T extends Identifiable> {
         }
     }
 
+    // Finds the shelf position of a record, or reports that it is absent.
     private int indexOf(List<T> records, String id) {
         for (int i = 0; i < records.size(); i++) {
             if (id.equals(records.get(i).getId())) {
@@ -406,6 +460,7 @@ public abstract class FileRepository<T extends Identifiable> {
         return -1;
     }
 
+    // Rejects an empty record before anything can be written.
     private void validateRecord(T record) {
         if (record == null) {
             throw new ValidationException(
@@ -416,6 +471,7 @@ public abstract class FileRepository<T extends Identifiable> {
         validateId(record.getId());
     }
 
+    // Checks the file number follows the school letter-and-number format.
     private void validateId(String id) {
         if (id == null
                 || !id.matches("[A-Z][0-9]{3}")

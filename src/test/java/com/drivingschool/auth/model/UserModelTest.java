@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.auth.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -311,7 +312,7 @@ class UserModelTest {
                         .writeValueAsString(student())
         );
 
-        tree.put("type", "INSTRUCTOR");
+        tree.put("type", "UNKNOWN_ROLE");
 
         assertThrows(
                 InvalidTypeIdException.class,

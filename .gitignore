@@ -17,6 +17,7 @@
 # Runtime records: preserve only the folder placeholder
 /data/*
 !/data/.gitkeep
+/data-demo/
 
 # Logs and temporary files
 *.log
@@ -25,3 +26,7 @@
 # Operating system files
 .DS_Store
 Thumbs.db
+# Frontend dependencies
+/node_modules/
+
+/docs/screenshots/

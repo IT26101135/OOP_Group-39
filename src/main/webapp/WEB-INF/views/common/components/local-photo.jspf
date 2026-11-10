@@ -1,0 +1,24 @@
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : local-photo.jspf
+WHAT IT DOES (simple words): Displays an available local photo without losing its fallback.
+REAL-LIFE EXAMPLE: A photograph sits over a painted backdrop.
+OOP USED : Reads LocalPhotoAdvice's availability map
+CRUD     : READ local photos
+============================================================
+--%>
+<%-- LocalPhotoAdvice checks existence; the including page supplies description and loading priority. --%>
+<c:if test="${not empty localPhotos[photoKey]}">
+    <%-- Dimensions measured from the supplied, unchanged WebP originals. --%>
+    <c:set var="photoWidth" value="1600" /><c:set var="photoHeight" value="1066" />
+    <c:choose>
+        <c:when test="${photoKey eq 'hero-road'}"><c:set var="photoWidth" value="1920" /><c:set var="photoHeight" value="1280" /></c:when>
+        <c:when test="${photoKey eq 'mission'}"><c:set var="photoHeight" value="1067" /></c:when>
+        <c:when test="${photoKey eq 'vehicle-automatic'}"><c:set var="photoWidth" value="1200" /><c:set var="photoHeight" value="675" /></c:when>
+        <c:when test="${photoKey eq 'vehicle-manual' or photoKey eq 'vehicle-motorcycle'}"><c:set var="photoWidth" value="1200" /><c:set var="photoHeight" value="800" /></c:when>
+    </c:choose>
+    <img class="ds-local-photo" data-local-photo src="<c:url value='${localPhotos[photoKey]}' />" alt="<c:out value='${photoAlt}' />" width="${photoWidth}" height="${photoHeight}" loading="${photoEager ? 'eager' : 'lazy'}" decoding="async">
+    <span class="ds-local-photo-shade" aria-hidden="true"></span>
+</c:if>

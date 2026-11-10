@@ -1,6 +1,18 @@
+/**
+ * ============================================================
+ * MEMBER   : IT26101135 - [Name]
+ * MODULE   : Authentication and Students
+ * FILE     : AuthServiceTest.java
+ * WHAT IT DOES (simple words): Checks registration and password rules on spare files.
+ * REAL-LIFE EXAMPLE: Practises checking account forms before real students arrive.
+ * OOP USED : Encapsulation and exception handling
+ * CRUD     : CREATE and READ student accounts
+ * ============================================================
+ */
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.Admin;
+import com.drivingschool.auth.model.AccountStatus;
 import com.drivingschool.auth.model.Role;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.repository.UserRepository;
@@ -43,17 +55,20 @@ class AuthServiceTest {
     private AuthService service;
 
     @BeforeAll
+    // Prepares the account details needed by these practice checks: generate test hash.
     static void generateTestHash() {
         testHash = new PasswordHasher().hash(PASSWORD);
     }
 
     @BeforeEach
+    // Checks the account rule using temporary data: set up.
     void setUp() {
         repository = reopen();
         hasher = new PasswordHasher();
         service = new AuthService(repository, hasher);
     }
 
+    // Prepares the account details needed by these practice checks: reopen.
     private UserRepository reopen() {
         return new UserRepository(
                 tempDir.toString(),
@@ -61,6 +76,7 @@ class AuthServiceTest {
         );
     }
 
+    // Prepares the account details needed by these practice checks: register.
     private Student register(String email) {
         return service.registerStudent(
                 "Nimal Perera",
@@ -71,6 +87,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: registration generates id and persists hashed student.
     void registrationGeneratesIdAndPersistsHashedStudent() {
         Student created = service.registerStudent(
                 "  Nimal Perera  ",
@@ -81,6 +98,7 @@ class AuthServiceTest {
 
         assertEquals("S001", created.getId());
         assertEquals(Role.STUDENT, created.getRole());
+        assertEquals(AccountStatus.ACTIVE, created.getStatus());
 
         Student stored = assertInstanceOf(
                 Student.class,
@@ -90,11 +108,13 @@ class AuthServiceTest {
         assertEquals("Nimal Perera", stored.getName());
         assertEquals("nimal@example.com", stored.getEmail());
         assertEquals("0771234567", stored.getPhone());
+        assertEquals(AccountStatus.ACTIVE, stored.getStatus());
         assertNotEquals(PASSWORD, stored.getPasswordHash());
         assertTrue(hasher.matches(PASSWORD, stored.getPasswordHash()));
     }
 
     @Test
+    // Checks the account rule using temporary data: successive registrations receive different ids.
     void successiveRegistrationsReceiveDifferentIds() {
         Student first = register("first@example.com");
         Student second = register("second@example.com");
@@ -105,6 +125,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: rejects duplicate student email ignoring case and outer spaces.
     void rejectsDuplicateStudentEmailIgnoringCaseAndOuterSpaces() {
         register("nimal@example.com");
 
@@ -117,6 +138,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: rejects registration using an administrator email.
     void rejectsRegistrationUsingAnAdministratorEmail() {
         repository.save(new Admin(
                 "A001",
@@ -137,6 +159,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: invalid registration does not save an account.
     void invalidRegistrationDoesNotSaveAnAccount() {
         assertThrows(
                 ValidationException.class,
@@ -174,6 +197,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: authenticates saved student using normalized email.
     void authenticatesSavedStudentUsingNormalizedEmail() {
         Student student = register("nimal@example.com");
 
@@ -191,6 +215,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: authenticates administrator without public admin registration.
     void authenticatesAdministratorWithoutPublicAdminRegistration() {
         repository.save(new Admin(
                 "A001",
@@ -209,6 +234,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: invalid credentials return empty.
     void invalidCredentialsReturnEmpty() {
         register("nimal@example.com");
 
@@ -233,6 +259,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: duplicate stored emails cause storage failure.
     void duplicateStoredEmailsCauseStorageFailure() {
         repository.save(new Student(
                 "S001",
@@ -263,6 +290,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: corrupt storage blocks registration and authentication.
     void corruptStorageBlocksRegistrationAndAuthentication()
             throws IOException {
 
@@ -298,6 +326,7 @@ class AuthServiceTest {
     }
 
     @Test
+    // Checks the account rule using temporary data: concurrent duplicate registrations create only one account.
     void concurrentDuplicateRegistrationsCreateOnlyOneAccount()
             throws Exception {
 

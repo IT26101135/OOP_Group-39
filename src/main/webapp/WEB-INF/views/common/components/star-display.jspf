@@ -1,0 +1,15 @@
+<%--
+============================================================
+MEMBER   : IT26101137 - [Name]
+MODULE   : Reviews and shared rating display
+FILE     : star-display.jspf
+WHAT IT DOES (simple words): Shows whole or partial stars for an existing rating.
+REAL-LIFE EXAMPLE: A feedback card fills part of each star to show the average score.
+OOP USED : Not applicable (JSP presentation)
+CRUD     : READ (displays a saved or calculated review rating)
+============================================================
+--%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- The including page controller supplies ratingValue. Numeric entities keep stars
+     readable even when the JSP compiler reads a fragment with its default encoding. --%>
+<span class="ds-star-display" role="img" aria-label="<c:out value='${ratingValue}' /> out of 5 stars"><span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="ds-star-fill" aria-hidden="true" style="width:<c:out value='${ratingValue * 20}' />%">&#9733;&#9733;&#9733;&#9733;&#9733;</span></span>

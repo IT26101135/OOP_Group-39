@@ -18,6 +18,7 @@ import com.drivingschool.auth.repository.UserRepository;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.auth.util.AccountWriteCoordinator;
 import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
 import com.drivingschool.booking.util.LessonIntervalUtils;
 import com.drivingschool.booking.util.BookingRequestQueue;
@@ -121,7 +122,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             LocalDateTime endTime = startTime.plusMinutes(LESSON_MINUTES);
             for (Booking existing : bookings.readAllStrict()) {
                 if (existing.getStudentId().equals(student.getId())
-                        && existing.getStatus() != Booking.BookingStatus.CANCELLED
+                        && existing.getStatus() != BookingStatus.CANCELLED
                         && LessonIntervalUtils.overlaps(startTime, endTime,
                         existing.getStartTime(), existing.getEndTime())) {
                     throw new ValidationException("You already have a lesson at that time.");
@@ -130,7 +131,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             LocalDateTime now = LocalDateTime.now(clock);
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     profile.getActiveEnrollmentId(), startTime, endTime, null, null,
-                    Booking.BookingStatus.PENDING, now);
+                    BookingStatus.PENDING, now);
             // Step 3: Save only after the relevant time and resource checks pass.
             bookings.save(booking);
             return booking;
@@ -161,7 +162,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     ((Student) student).getActiveEnrollmentId(), startTime,
                     startTime.plusMinutes(LESSON_MINUTES), null, null,
-                    Booking.BookingStatus.PENDING, LocalDateTime.now(clock));
+                    BookingStatus.PENDING, LocalDateTime.now(clock));
             booking.setRequestedInstructorId(instructorId);
             String reason = conflictChecker == null ? null
                     : conflictChecker.conflictReason(booking, instructorId, null);
@@ -244,7 +245,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             if (old.getStartTime().minusHours(changeCutoffHours).isBefore(LocalDateTime.now(clock))) {
                 throw new ValidationException("Bookings can only be changed at least " + changeCutoffHours + " hours before the lesson.");
             }
-            if (old.getStatus() != Booking.BookingStatus.PENDING && old.getStatus() != Booking.BookingStatus.CONFIRMED) {
+            if (old.getStatus() != BookingStatus.PENDING && old.getStatus() != BookingStatus.CONFIRMED) {
                 throw new ValidationException("Only pending or confirmed bookings can be rescheduled.");
             }
             if (newStartTime == null || !newStartTime.isAfter(LocalDateTime.now(clock)))
@@ -264,7 +265,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             Booking replacement = new Booking(bookings.nextId("B"), studentId,
                     student.getActiveEnrollmentId(), newStartTime,
                     newStartTime.plusMinutes(LESSON_MINUTES), null, null,
-                    Booking.BookingStatus.PENDING, LocalDateTime.now(clock));
+                    BookingStatus.PENDING, LocalDateTime.now(clock));
             replacement.setRequestedInstructorId(requestedInstructor);
             String reason = conflictChecker == null ? null
                     : conflictChecker.conflictReason(replacement, requestedInstructor, null, old.getId());
@@ -301,7 +302,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "You can only delete your own lesson requests.");
             }
-            if (booking.getStatus() != Booking.BookingStatus.CANCELLED) {
+            if (booking.getStatus() != BookingStatus.CANCELLED) {
                 throw new ValidationException(
                         "Cancel a lesson request before deleting it.");
             }
@@ -317,7 +318,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         List<Booking> assignedPending = new ArrayList<>();
         List<Booking> history = new ArrayList<>();
         for (Booking booking : all) {
-            if (booking.getStatus() != Booking.BookingStatus.PENDING) history.add(booking);
+            if (booking.getStatus() != BookingStatus.PENDING) history.add(booking);
             else if (booking.getInstructorId() != null) assignedPending.add(booking);
         }
         // OOP: POLYMORPHISM - Submission order protects fairness; lesson order helps read a diary.
@@ -359,7 +360,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
     private String parseFilterStatus(String value) {
         if (value == null || value.isBlank()) return null;
         String checked = value.trim().toUpperCase(java.util.Locale.ROOT);
-        for (Booking.BookingStatus status : Booking.BookingStatus.values()) {
+        for (BookingStatus status : BookingStatus.values()) {
             if (status.name().equals(checked)) return checked;
         }
         throw new ValidationException("Choose a status from the list, or clear the schedule filters and try again.");
@@ -624,8 +625,8 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         for (Booking booking : bookings.readAllStrict()) {
             if (studentId.equals(booking.getStudentId())
                     && !booking.getId().equals(excludedBookingId)
-                    && (booking.getStatus() == Booking.BookingStatus.PENDING
-                    || booking.getStatus() == Booking.BookingStatus.CONFIRMED)) {
+                    && (booking.getStatus() == BookingStatus.PENDING
+                    || booking.getStatus() == BookingStatus.CONFIRMED)) {
                 requested++;
             }
         }

@@ -1,3 +1,14 @@
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : User.java
+WHAT IT DOES (simple words): Keeps the details and rules of user.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.model;
 
 import com.drivingschool.common.exception.ValidationException;
@@ -8,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.Locale;
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @JsonTypeInfo(
@@ -17,8 +29,12 @@ import java.util.regex.Pattern;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Student.class, name = "STUDENT"),
+        @JsonSubTypes.Type(value = InstructorAccount.class, name = "INSTRUCTOR"),
         @JsonSubTypes.Type(value = Admin.class, name = "ADMIN")
 })
+// OOP: ABSTRACTION - Each account must supply its role and dashboard destination.
+// OOP: ENCAPSULATION - Private fields can only change through validated methods.
+// SOLID: O - Another account type can extend User and supply its own answers.
 public abstract class User implements Identifiable {
 
     // Checks the encoded format; it does not hash or verify passwords.
@@ -30,7 +46,10 @@ public abstract class User implements Identifiable {
     private String name;
     private String email;
     private String passwordHash;
+    private AccountStatus status = AccountStatus.ACTIVE;
+    private String createdAt = LocalDateTime.now().toString();
 
+    // Receives the helpers this class needs so each job stays separate.
     protected User(
             String id,
             String requiredPrefix,
@@ -54,14 +73,17 @@ public abstract class User implements Identifiable {
     }
 
     @Override
+    // Shares the id through a public method while the field stays private.
     public final String getId() {
         return id;
     }
 
+    // Shares the name through a public method while the field stays private.
     public final String getName() {
         return name;
     }
 
+    // Stores the name after the checks required by this record.
     public final void setName(String name) {
         if (name == null) {
             throw new ValidationException("Name is required.");
@@ -78,10 +100,12 @@ public abstract class User implements Identifiable {
         this.name = cleaned;
     }
 
+    // Shares the email through a public method while the field stays private.
     public final String getEmail() {
         return email;
     }
 
+    // Stores the email after the checks required by this record.
     public final void setEmail(String email) {
         if (email == null) {
             throw new ValidationException("Email is required.");
@@ -108,10 +132,12 @@ public abstract class User implements Identifiable {
         this.email = cleaned;
     }
 
+    // Shares the password hash through a public method while the field stays private.
     public final String getPasswordHash() {
         return passwordHash;
     }
 
+    // Stores the password hash after the checks required by this record.
     public final void setPasswordHash(String passwordHash) {
         if (passwordHash == null
                 || !BCRYPT_FORMAT.matcher(passwordHash).matches()) {
@@ -123,9 +149,42 @@ public abstract class User implements Identifiable {
         this.passwordHash = passwordHash;
     }
 
+    // Shares the status through a public method while the field stays private.
+    public final AccountStatus getStatus() {
+        return status;
+    }
+
+    // Stores the status after the checks required by this record.
+    public final void setStatus(AccountStatus status) {
+        if (status == null) {
+            throw new ValidationException("Account status is required.");
+        }
+        this.status = status;
+    }
+
+    // Shares the created at through a public method while the field stays private.
+    public final String getCreatedAt() {
+        return createdAt;
+    }
+
+    // Stores the created at after the checks required by this record.
+    public final void setCreatedAt(String createdAt) {
+        if (createdAt == null || createdAt.isBlank()) {
+            throw new ValidationException("Account creation time is required.");
+        }
+        try {
+            LocalDateTime.parse(createdAt);
+        } catch (java.time.format.DateTimeParseException exception) {
+            throw new ValidationException("Account creation time must be ISO date-time.");
+        }
+        this.createdAt = createdAt;
+    }
+
     @JsonIgnore
+    // Shares the role through a public method while the field stays private.
     public abstract Role getRole();
 
     @JsonIgnore
+    // Shares the dashboard path through a public method while the field stays private.
     public abstract String getDashboardPath();
 }

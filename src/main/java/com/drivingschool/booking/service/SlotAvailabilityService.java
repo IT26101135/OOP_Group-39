@@ -12,6 +12,7 @@ CRUD     : See the labelled operations; model and view files support these opera
 package com.drivingschool.booking.service;
 
 import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
 import com.drivingschool.booking.util.LessonIntervalUtils;
 import com.drivingschool.instructor.model.Availability;
@@ -115,7 +116,7 @@ public class SlotAvailabilityService {
     }
 
     // Checks whether a booking still reserves time in the schedule.
-    private boolean active(Booking.BookingStatus status) {
-        return status == Booking.BookingStatus.PENDING || status == Booking.BookingStatus.CONFIRMED;
+    private boolean active(BookingStatus status) {
+        return status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED;
     }
 }

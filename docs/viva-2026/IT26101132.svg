@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690"><rect width="100%" height="100%" fill="white"/><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10" fill="none" stroke="#334155"/></marker><marker id="triangle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="white" stroke="#334155"/></marker></defs>
+<text x="30" y="28" font-family="Arial" font-size="22" fill="#0f172a">IT26101132: Vehicles and seed data</text>
+<text x="30" y="52" font-family="Arial" font-size="13" fill="#475569">Selected methods. Triangle: extends/implements; labelled arrow: dependency. Shared types are included as context.</text>
+<path d="M820 155 L775 155" fill="none" stroke="#64748b" stroke-dasharray="5 4" marker-end="url(#triangle)"/>
+<text x="797.5" y="151.0" font-family="Arial" font-size="10" fill="#334155">implements</text>
+<path d="M425 345 L380 345" fill="none" stroke="#64748b" stroke-dasharray="5 4" marker-end="url(#triangle)"/>
+<text x="402.5" y="341.0" font-family="Arial" font-size="10" fill="#334155">implements</text>
+<path d="M775 345 L820 345" fill="none" stroke="#64748b" marker-end="url(#triangle)"/>
+<text x="797.5" y="341.0" font-family="Arial" font-size="10" fill="#334155">extends</text>
+<path d="M380 155 L425 155" fill="none" stroke="#64748b" marker-end="url(#arrow)"/>
+<text x="402.5" y="151.0" font-family="Arial" font-size="10" fill="#334155">uses</text>
+<path d="M995 230 L205 270" fill="none" stroke="#64748b" marker-end="url(#arrow)"/>
+<text x="600.0" y="246.0" font-family="Arial" font-size="10" fill="#334155">uses</text>
+<path d="M600 460 L600 420" fill="none" stroke="#64748b" marker-end="url(#arrow)"/>
+<text x="600.0" y="436.0" font-family="Arial" font-size="10" fill="#334155">uses</text>
+<g font-family="Arial" fill="#0f172a"><rect x="30" y="80" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="42" y="104" font-size="15" font-weight="bold">VehicleController</text><line x1="30" y1="116" x2="380" y2="116" stroke="#cbd5e1"/>
+<text x="42" y="135" font-size="12">- vehicleService: VehicleOperations</text>
+<text x="42" y="153" font-size="12">- csrfTokenService: CsrfTokenService</text>
+<text x="42" y="171" font-size="12">+ listVehicles()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="425" y="80" width="350" height="150" rx="8" fill="#eff6ff" stroke="#64748b"/><text x="437" y="104" font-size="15" font-weight="bold">VehicleOperations</text><line x1="425" y1="116" x2="775" y2="116" stroke="#cbd5e1"/>
+<text x="437" y="135" font-size="12">interface</text>
+<text x="437" y="153" font-size="12">+ createVehicle()</text>
+<text x="437" y="171" font-size="12">+ updateVehicle()</text>
+<text x="437" y="189" font-size="12">+ deleteVehicle()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="820" y="80" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="832" y="104" font-size="15" font-weight="bold">VehicleService</text><line x1="820" y1="116" x2="1170" y2="116" stroke="#cbd5e1"/>
+<text x="832" y="135" font-size="12">- vehicleRepository: VehicleStore</text>
+<text x="832" y="153" font-size="12">- bookingRepository: BookingRepository</text>
+<text x="832" y="171" font-size="12">+ getAllVehicles()</text>
+<text x="832" y="189" font-size="12">+ updateVehicle()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="30" y="270" width="350" height="150" rx="8" fill="#eff6ff" stroke="#64748b"/><text x="42" y="294" font-size="15" font-weight="bold">VehicleStore</text><line x1="30" y1="306" x2="380" y2="306" stroke="#cbd5e1"/>
+<text x="42" y="325" font-size="12">interface</text>
+<text x="42" y="343" font-size="12">+ readAllStrict()</text>
+<text x="42" y="361" font-size="12">+ save()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="425" y="270" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="437" y="294" font-size="15" font-weight="bold">VehicleRepository</text><line x1="425" y1="306" x2="775" y2="306" stroke="#cbd5e1"/>
+<text x="437" y="325" font-size="12">+ save()</text>
+<text x="437" y="343" font-size="12">+ readAllStrict()</text>
+<text x="437" y="361" font-size="12">+ update()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="820" y="270" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="832" y="294" font-size="15" font-weight="bold">FileRepository</text><line x1="820" y1="306" x2="1170" y2="306" stroke="#cbd5e1"/>
+<text x="832" y="325" font-size="12">- file: Path</text>
+<text x="832" y="343" font-size="12">- counterFile: Path</text>
+<text x="832" y="361" font-size="12">+ save()</text>
+<text x="832" y="379" font-size="12">+ readAllStrict()</text>
+<text x="832" y="397" font-size="12">+ update()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="30" y="460" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="42" y="484" font-size="15" font-weight="bold">Vehicle</text><line x1="30" y1="496" x2="380" y2="496" stroke="#cbd5e1"/>
+<text x="42" y="515" font-size="12">- id: String</text>
+<text x="42" y="533" font-size="12">- registrationNumber: String</text>
+<text x="42" y="551" font-size="12">+ isInsuranceWarning()</text>
+<text x="42" y="569" font-size="12">+ isServiceWarning()</text>
+</g>
+<g font-family="Arial" fill="#0f172a"><rect x="425" y="460" width="350" height="150" rx="8" fill="#f8fafc" stroke="#64748b"/><text x="437" y="484" font-size="15" font-weight="bold">DemoDataSeedRunner</text><line x1="425" y1="496" x2="775" y2="496" stroke="#cbd5e1"/>
+<text x="437" y="515" font-size="12">- users: UserRepository</text>
+<text x="437" y="533" font-size="12">- instructors: InstructorRepository</text>
+<text x="437" y="551" font-size="12">+ run()</text>
+<text x="437" y="569" font-size="12">- syncInstructorRatings()</text>
+</g>
+</svg>

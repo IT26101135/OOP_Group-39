@@ -1,3 +1,14 @@
+/**
+============================================================
+MEMBER   : IT26101135 - [Name]
+MODULE   : Authentication, Students and integration
+FILE     : AdminSeedService.java
+WHAT IT DOES (simple words): Applies the rules for admin seed.
+REAL-LIFE EXAMPLE: A reception desk checks accounts and keeps student details organised.
+OOP USED : See the labelled examples in this module; views only show data.
+CRUD     : See CRUD labels on the record operations.
+============================================================
+*/
 package com.drivingschool.auth.service;
 
 import com.drivingschool.auth.model.Admin;
@@ -14,11 +25,13 @@ import java.util.List;
 import java.util.Locale;
 
 @Service
+// SOLID: S - This class is responsible for application rules.
 public class AdminSeedService {
 
     private final UserRepository userRepository;
     private final PasswordHasher passwordHasher;
 
+    // Receives the helpers this class needs so each job stays separate.
     public AdminSeedService(
             UserRepository userRepository,
             PasswordHasher passwordHasher) {
@@ -31,6 +44,7 @@ public class AdminSeedService {
      * Returns true when an administrator is created.
      * Returns false when an administrator already exists.
      */
+    // Handles seed if needed for this class without changing another class's job.
     public boolean seedIfNeeded(
             String name,
             String email,

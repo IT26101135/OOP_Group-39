@@ -1,7 +1,10 @@
+// Module owner: IT26101135
 package com.drivingschool.admin;
 
 import com.drivingschool.auth.service.AdminSeedService;
 import com.drivingschool.auth.service.AuthService;
+import com.drivingschool.auth.repository.UserRepository;
+import com.drivingschool.auth.model.AccountStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,19 +51,22 @@ class AdminDashboardWebIntegrationTest {
     @Autowired
     AdminSeedService adminSeedService;
 
+    @Autowired UserRepository users;
+
     @Test
     void anonymousVisitorCannotAccessDashboard() throws Exception {
         mvc.perform(get(DASHBOARD))
-                .andExpect(status().isUnauthorized())
-                .andExpect(view().name("common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
     void studentCannotAccessDashboard() throws Exception {
         String email = "dashboard-student-" + UUID.randomUUID() + "@example.com";
 
-        authService.registerStudent(
+        com.drivingschool.student.model.Student registered = authService.registerStudent(
                 "Dashboard Student", email, "0771234567", PASSWORD);
+        registered.setStatus(AccountStatus.ACTIVE); users.update(registered);
 
         MockHttpSession session = login(email);
 
@@ -118,7 +124,47 @@ class AdminDashboardWebIntegrationTest {
         assertTrue(session.isInvalid());
 
         mvc.perform(get(DASHBOARD))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
+    }
+
+    @Test
+    void visitorEnquiryReachesOnlyTheProtectedDashboardAndRetriesDoNotDuplicate() throws Exception {
+        MvcResult form = mvc.perform(get("/contact")).andExpect(status().isOk()).andReturn();
+        String text = "Please discuss parking lessons <script>alert(1)</script>";
+        for (int attempt = 0; attempt < 2; attempt++) {
+            mvc.perform(post("/contact").session(sessionOf(form)).param("_csrf", tokenOf(form))
+                    .param("name", "Enquiry Visitor").param("email", "enquiry@example.test").param("message", text))
+                    .andExpect(redirectedUrl("/contact")).andExpect(flash().attribute("messageSent", true));
+        }
+        String email = "enquiry-admin-" + UUID.randomUUID() + "@example.test";
+        String temporaryAdminId = users.nextId("A");
+        users.save(new com.drivingschool.auth.model.Admin(temporaryAdminId, "Enquiry Administrator", email,
+                new com.drivingschool.auth.util.PasswordHasher().hash(PASSWORD)));
+        try {
+        MvcResult dashboard = mvc.perform(get(DASHBOARD).session(login(email)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(model().attributeExists("contactMessages")).andReturn();
+        java.util.List<?> messages = (java.util.List<?>) dashboard.getModelAndView().getModel().get("contactMessages");
+        assertEquals(1, messages.stream().filter(item ->
+                ((com.drivingschool.common.model.ContactMessage) item).getEmail().equals("enquiry@example.test")).count());
+        MvcResult publicPage = mvc.perform(get("/contact")).andReturn();
+        assertFalse(publicPage.getModelAndView().getModel().containsKey("contactMessages"));
+        mvc.perform(post("/contact").param("name", "Visitor").param("email", "visitor@example.test")
+                .param("message", "A message without a token" )).andExpect(status().isForbidden());
+        } finally {
+            users.delete(temporaryAdminId);
+        }
+    }
+
+    @Test
+    void invalidEnquiryKeepsTypedFieldsOnContactForm() throws Exception {
+        MvcResult form = mvc.perform(get("/contact")).andReturn();
+        mvc.perform(post("/contact").session(sessionOf(form)).param("_csrf", tokenOf(form))
+                .param("name", "Visitor").param("email", "invalid-email").param("message", "Keep this typed question."))
+                .andExpect(status().isBadRequest()).andExpect(view().name("public/contact"))
+                .andExpect(model().attribute("contactMessage", "Keep this typed question."))
+                .andExpect(model().attribute("contactEmail", "invalid-email"))
+                .andExpect(model().attributeExists("formError", "csrfToken"));
     }
 
     private MockHttpSession login(String email) throws Exception {
@@ -132,7 +178,7 @@ class AdminDashboardWebIntegrationTest {
                         .param("email", email)
                         .param("password", PASSWORD))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl(users.readAllStrict().stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElseThrow().getDashboardPath()))
                 .andReturn();
 
         return sessionOf(result);

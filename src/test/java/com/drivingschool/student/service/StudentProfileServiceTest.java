@@ -1,3 +1,4 @@
+// Module owner: IT26101135
 package com.drivingschool.student.service;
 
 import com.drivingschool.auth.model.User;
@@ -86,7 +87,7 @@ class StudentProfileServiceTest {
         assertEquals(student.getEmail(), profile.getEmail());
         assertEquals(student.getPhone(), profile.getPhone());
         var json = mapper.valueToTree(profile);
-        assertEquals(4, json.size());
+        assertEquals(11, json.size());
         assertFalse(json.has("passwordHash"));
         assertFalse(json.has("role"));
     }
@@ -130,6 +131,16 @@ class StudentProfileServiceTest {
         assertEquals(sessionId, request.getSession(false).getId());
         assertEquals("new@example.com", sessions.requireLogin(request).getEmail());
         assertEquals("Updated Learner", service.getOwnProfile(request).getName());
+    }
+
+    @Test
+    void friendlyLessonTypesKeepCanonicalStorageAndCustomChoices() {
+        for (String[] values : new String[][]{{"Manual car", "MANUAL"}, {"Automatic car", "AUTOMATIC"},
+                {"Motorcycle", "MOTORCYCLE"}, {"Refresher", "REFRESHER"}, {"Heavy_vehicle practice", "Heavy_vehicle practice"}}) {
+            service.updateOwnProfile(request, student.getName(), student.getEmail(), student.getPhone(),
+                    null, null, null, values[0], null);
+            assertEquals(values[1], ((Student) repository.findByIdStrict(student.getId()).orElseThrow()).getLicenseTypeWanted());
+        }
     }
 
     @Test
