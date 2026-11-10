@@ -1,0 +1,68 @@
+classDiagram
+direction TB
+class LearningPackage {
+  +setPrice()
+  +getDisplayName()
+}
+class Enrollment {
+  +getAmount()
+  +isPaid()
+  +getDisplayName()
+}
+class LearningRecord {
+  <<interface>>
+  +getDisplayName()
+}
+class LearningPackageCatalog {
+  <<interface>>
+  +listPackages()
+}
+class LearningPackageService {
+  +createPackage()
+  +updatePackage()
+  +deletePackage()
+}
+class EnrollmentOperations {
+  <<interface>>
+  +enroll()
+  +ownEnrollments()
+}
+class EnrollmentAdministration {
+  <<interface>>
+  +markPaid()
+  +cancelRequest()
+}
+class EnrollmentService {
+  +enroll()
+  +markPaid()
+  +cancelRequest()
+}
+class LearningPackageRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class EnrollmentRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class EnrollmentPresentationService {
+  +addStudent()
+  +forBookings()
+}
+LearningPackage ..|> LearningRecord
+Enrollment ..|> LearningRecord
+LearningPackageService ..|> LearningPackageCatalog
+EnrollmentService ..|> EnrollmentOperations
+EnrollmentService ..|> EnrollmentAdministration
+LearningPackageRepository --|> FileRepository
+EnrollmentRepository --|> FileRepository
+LearningPackageService --> LearningPackageRepository : uses
+EnrollmentService --> EnrollmentRepository : uses
+EnrollmentPresentationService --> LearningPackageCatalog : uses

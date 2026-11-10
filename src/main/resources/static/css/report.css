@@ -1,0 +1,40 @@
+/**
+============================================================
+MEMBER   : IT26101137 - [Name]
+MODULE   : Reports
+FILE     : report.css
+WHAT IT DOES (simple words): Draws readable report bars and prints reports on white paper.
+REAL-LIFE EXAMPLE: Turning the manager's dashboard into a paper handout.
+OOP USED : Presentation for the report service
+CRUD     : READ (shows report totals)
+============================================================
+*/
+/* Exact table values stay visible; neutral bars support the numbers without adding another brand colour. */
+.ds-report-chart { max-height: 24px; }
+.ds-report-track { fill: #262626; }
+.ds-report-bar { fill: #D4D4D4; }
+.ds-report-table { min-width: 0; }
+.ds-report-table th, .ds-report-table td { overflow-wrap: anywhere; white-space: normal; }
+.ds-report-table tbody th { font-weight: 400; color: #475569; text-align: left; }
+html:not(.ds-js) [data-print] { display: none; }
+/* White paper needs dark labels throughout, including headings and formerly muted text. */
+@media print {
+  @page { margin: 15mm; }
+  html, body { background: #FFFFFF !important; color: #171717 !important; }
+  body { background-image: none !important; animation: none !important; }
+  body * { color: #171717 !important; box-shadow: none !important; text-shadow: none !important; }
+  .skip-link, .ds-header, .ds-footer, .ds-dashboard-sidebar, .ds-dashboard-drawer,
+  .no-print, dialog, .ds-toast { display: none !important; }
+  .ds-container { width: 100% !important; max-width: none !important; padding: 0 !important; }
+  main.ds-dashboard-shell { display: block; break-inside: auto; }
+  .ds-report-grid { display: block; }
+  .ds-report-section { margin-bottom: 20px; background: #FFFFFF !important; border: 1px solid #D4D4D4; break-inside: avoid; }
+  h1, h2 { background: none !important; -webkit-text-fill-color: #171717 !important; }
+  table, thead, tbody, tr, th, td { background: #FFFFFF !important; border-color: #D4D4D4 !important; }
+  .safe-scroll { overflow: visible !important; }
+  .ds-report-track { fill: #E5E5E5; }
+  .ds-report-bar { fill: #404040; transform: none !important; animation: none !important; }
+}
+
+.ds-report-table tr:last-child { font-weight: 600; }
+@media print { .ds-report-header h1 { font-size: 26pt !important; } .ds-report-section { padding: 16px !important; } .ds-report-table { font-size: 9pt; } .ds-report-table th, .ds-report-table td { padding: 7px; } }

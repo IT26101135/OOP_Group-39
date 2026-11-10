@@ -1,0 +1,70 @@
+@startuml
+' Documentation owner: IT26101135
+' Names verified against Java source; method parameter lists intentionally hidden.
+title Shared foundation — IT26101135
+left to right direction
+skinparam classAttributeIconSize 0
+interface Identifiable {
+  +String getId()
+}
+note right of Identifiable
+Abstraction: every stored record supplies an ID.
+end note
+abstract class FileRepository {
+  -Path file
+  -Path counterFile
+  -ObjectMapper mapper
+  +void save()
+  +List<T> readAllStrict()
+  +Optional<T> findByIdStrict()
+  +void update()
+  +void delete()
+  +String nextId()
+}
+note right of FileRepository
+Generic declaration: FileRepository<T extends Identifiable>. CREATE save; READ readAllStrict/findByIdStrict; UPDATE update; DELETE delete.
+end note
+class RuntimeException <<external>> {
+}
+class ValidationException {
+}
+note right of ValidationException
+Invalid input or business rule.
+end note
+class DuplicateRecordException {
+}
+note right of DuplicateRecordException
+An existing record prevents the operation.
+end note
+class RecordNotFoundException {
+}
+note right of RecordNotFoundException
+A requested saved record is missing.
+end note
+class StorageException {
+}
+note right of StorageException
+The file cannot be safely read or written.
+end note
+class GlobalExceptionHandler {
+  -ErrorPageSupport pages
+  +ModelAndView handleValidation()
+  +ModelAndView handleNotFound()
+  +ModelAndView handleDuplicate()
+  +ModelAndView handleStorage()
+  +ModelAndView handleResponseStatus()
+}
+note right of GlobalExceptionHandler
+Exception handling: friendly pages; exceptions are shared, not six invented module-specific types.
+end note
+FileRepository ..> Identifiable : type bound T
+ValidationException --|> RuntimeException
+DuplicateRecordException --|> RuntimeException
+RecordNotFoundException --|> RuntimeException
+StorageException --|> RuntimeException
+GlobalExceptionHandler ..> ValidationException : handles
+GlobalExceptionHandler ..> DuplicateRecordException : handles
+GlobalExceptionHandler ..> RecordNotFoundException : handles
+GlobalExceptionHandler ..> StorageException : handles
+@enduml
+

@@ -1,0 +1,56 @@
+classDiagram
+direction TB
+class Review {
+  +getRating()
+  +getStatus()
+}
+class ReviewOperations {
+  <<interface>>
+  +createReview()
+  +updateOwnReview()
+  +deleteOwnReview()
+}
+class ReviewModeration {
+  <<interface>>
+  +approveReview()
+  +hideReview()
+}
+class ReviewService {
+  +createReview()
+  -recalculateRating()
+}
+class ReviewRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class ReportCatalog {
+  <<interface>>
+  +all()
+  +business()
+}
+class AdminReportService {
+  +business()
+  +revenue()
+}
+class AdminReportController {
+  +show()
+  +export()
+}
+class BusinessReportSection {
+  +getTitle()
+  +getHeadings()
+  +getRows()
+}
+ReviewService ..|> ReviewOperations
+ReviewService ..|> ReviewModeration
+ReviewRepository --|> FileRepository
+AdminReportService ..|> ReportCatalog
+ReviewService --> ReviewRepository : uses
+AdminReportController --> ReportCatalog : uses
+AdminReportService --> BusinessReportSection : creates

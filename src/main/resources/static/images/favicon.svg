@@ -1,0 +1,16 @@
+<!--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : favicon.svg
+WHAT IT DOES (simple words): Gives the browser tab a simple local car symbol.
+REAL-LIFE EXAMPLE: A small sign helps a learner recognise the school.
+OOP USED : Not applicable (original vector artwork)
+CRUD     : Not applicable (static asset)
+============================================================
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="favicon-title">
+  <title id="favicon-title">DriveSpark Academy car</title>
+  <rect x="1" y="1" width="46" height="46" rx="8" fill="#050505" stroke="#A3A3A3"/>
+  <path d="M12 27h24l-3-8a4 4 0 0 0-4-3H19a4 4 0 0 0-4 3l-3 8Zm2 0v6m20-6v6M17 28h14" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+</svg>

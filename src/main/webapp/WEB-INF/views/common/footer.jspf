@@ -1,0 +1,37 @@
+<%--
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : footer.jspf
+WHAT IT DOES (simple words): Shows the shared footer block.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+--%>
+<%-- This shared footer uses original school copy and existing public routes.
+     The including controller does not need to provide additional data. --%>
+<footer class="ds-footer">
+    <div class="ds-container ds-footer-grid">
+        <div class="ds-footer-about">
+            <a class="ds-footer-brand" href="<c:url value='/' />"><span class="ds-wordmark">DriveSpark<span>Academy</span></span></a>
+            <p>Driving lessons and practical feedback.</p>
+        </div>
+        <div><h2>Lessons</h2>
+            <a href="<c:url value='/packages' />">Packages</a><a href="<c:url value='/instructors' />">Instructors</a><a href="<c:url value='/public/reviews' />">Reviews</a>
+        </div>
+        <div><h2>The academy</h2>
+            <a href="<c:url value='/about' />">About us</a><a href="<c:url value='/faq' />">Questions</a><a href="<c:url value='/contact' />">Contact</a>
+        </div>
+        <div><h2>Contact us</h2><%@ include file="/WEB-INF/views/common/components/school-contact.jspf" %><a href="<c:url value='/contact' />">Send a message</a></div>
+    </div>
+    <%-- Placeholders and sample figures are explained here rather than presented as verified claims. --%>
+    <div class="ds-container ds-footer-notes">
+
+        <%-- HomeController keeps every home disclaimer here; other pages retain their usual fine print. --%>
+
+        <div class="ds-footer-bottom"><span>&copy; 2026 DriveSpark Academy</span><span>Driving lessons</span></div>
+    </div>
+</footer>
+<%@ include file="/WEB-INF/views/common/components/toasts.jspf" %>
+<%@ include file="/WEB-INF/views/common/components/confirm-dialog.jspf" %>

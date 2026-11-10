@@ -1,0 +1,47 @@
+classDiagram
+direction TB
+class AuthController {
+  +register()
+  +login()
+  +logout()
+}
+class AuthSessionService {
+  +loginWithResult()
+  +getCurrentUser()
+}
+class AuthService {
+  +registerStudent()
+  +authenticate()
+}
+class User {
+  +getRole()
+  +getDashboardPath()
+}
+class Student {
+  +setPhone()
+  +getRole()
+}
+class Admin {
+  +getRole()
+}
+class InstructorAccount {
+  +getRole()
+}
+class UserRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+Student --|> User
+Admin --|> User
+InstructorAccount --|> User
+UserRepository --|> FileRepository
+AuthController --> AuthSessionService : uses
+AuthController --> AuthService : uses
+AuthSessionService --> AuthService : uses
+AuthService --> UserRepository : uses

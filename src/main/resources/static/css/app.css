@@ -1,0 +1,1103 @@
+/**
+============================================================
+MEMBER   : IT26101136 - [Name]
+MODULE   : Shared UI
+FILE     : app.css
+WHAT IT DOES (simple words): Styles the shared black-and-white layout, local type and subtle motion.
+REAL-LIFE EXAMPLE: Shared signs help everyone find their way around the school.
+OOP USED : Not applicable (shared presentation)
+CRUD     : Displays existing data; does not save records
+============================================================
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Inter is served from this folder, never requested from a font CDN. */
+@font-face {
+  font-family: 'DriveSpark Inter';
+  src: url('./inter-latin-variable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --ds-header-height: 88px;
+    --ds-page: #050505;
+    --ds-surface: #0A0A0A;
+    --ds-raised: #171717;
+    --ds-primary: #F59E0B;
+    --ds-accent: #F59E0B;
+    --ds-text: #FFFFFF;
+    --ds-secondary: #A3A3A3;
+    --ds-muted: #A3A3A3;
+    --ds-border: rgba(255,255,255,.09);
+  }
+  html { scroll-behavior: smooth; scroll-padding-top: var(--ds-header-height); }
+  body { @apply min-h-screen bg-ink text-white font-sans antialiased; font-size: 17px; line-height: 1.7; }
+  h1,h2,h3,h4 { @apply font-display text-white; font-weight: 400; letter-spacing: -.035em; line-height: 1.08; }
+  a { @apply transition-colors duration-200; }
+  :focus-visible { @apply outline-none ring-2 ring-primary-hover ring-offset-2 ring-offset-ink; }
+  ::selection { background: #F59E0B; color: #000; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+}
+
+@layer components {
+  .ds-container { @apply mx-auto w-[min(1280px,calc(100%-2rem))] md:w-[min(1280px,calc(100%-3rem))]; }
+  .ds-header { @apply sticky top-0 z-40 border-b border-white/10 bg-ink/80 backdrop-blur-xl; }
+  .ds-navbar { @apply flex min-h-[72px] items-center justify-between gap-4; }
+  .ds-brand, .ds-footer-brand { @apply inline-flex shrink-0 items-center gap-3 font-display text-base font-bold text-white no-underline; }
+  .ds-brand img, .ds-footer-brand img { @apply h-10 w-[190px] shrink-0 object-contain; }
+  .ds-nav { @apply flex items-center gap-1; }
+  .ds-nav-link { @apply rounded-lg px-3 py-2 text-sm font-medium text-neutral-300 no-underline hover:bg-white/5 hover:text-white; }
+  .ds-nav-link[aria-current="page"] { @apply bg-primary/15 text-neutral-200; }
+  .skip-link { @apply fixed left-4 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-2 font-semibold text-ink  focus:translate-y-0; }
+  .ds-button, button:not([class]), input[type="submit"] { @apply inline-flex min-h-12 cursor-pointer items-center justify-center border border-transparent bg-accent px-7 py-3 text-sm font-medium text-black transition-colors duration-200 hover:bg-amber-400 disabled:pointer-events-none disabled:opacity-50; }
+  .ds-button-accent { @apply bg-accent text-black hover:bg-amber-400; }
+  /* Outline labels need the dark surface, so remove the primary gradient underneath. */
+  .ds-button-outline { background-image: none; @apply border border-neutral-500 bg-transparent text-white hover:bg-white hover:text-black; }
+  .ds-section { @apply py-12 md:py-16; }
+  .ds-section h1, main > h1 { margin-bottom: 1.5rem; font-size: clamp(40px,5.7vw,88px); font-weight: 400; }
+  main > h1 { color: #FFFFFF; }
+  .ds-eyebrow { @apply mb-3 text-xs font-bold uppercase tracking-[.22em] text-neutral-300; }
+  .ds-feature-card, .ds-card { @apply rounded-none border border-white/10 bg-surface/90 p-6  ; }
+  .ds-section h2 { font-size: clamp(28px,3vw,44px); font-weight: 400; }
+  .ds-feature-card { @apply transition duration-200 hover:-translate-y-1 hover:border-neutral-400/30 ; }
+  .ds-avatar, .ds-avatar-photo { @apply grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-full border-2 border-neutral-300/40    text-2xl font-bold text-white  ; }
+  .ds-avatar-photo { @apply object-cover; }
+  .ds-feature-card h2, .ds-feature-card h3 { @apply mb-2 text-xl font-semibold; }
+  .ds-feature-card p { @apply text-base leading-7 text-secondary; }
+  .ds-footer-grid { @apply grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4; }
+  .ds-footer-grid h2 { @apply mb-3 text-sm font-bold text-neutral-100; }
+  .ds-footer-grid > div:not(:first-child) { @apply flex flex-col items-start gap-2 text-sm text-secondary; }
+  .ds-footer-grid a:not(.ds-footer-brand) { @apply text-secondary no-underline hover:text-white; }
+  .ds-footer-about p { @apply mt-4 max-w-xs text-base leading-7 text-secondary; }
+  .ds-footer-bottom { @apply flex flex-col gap-2 border-t border-white/5 py-4 text-xs text-secondary sm:flex-row sm:justify-between; }
+  .ds-error-shell { @apply mx-auto flex min-h-[80vh] w-[min(720px,calc(100%-2rem))] flex-col items-center justify-center py-16 text-center; }
+  .ds-error-art { @apply mb-6 flex w-full max-w-sm items-center justify-center overflow-hidden rounded-none border border-neutral-300/20 bg-neutral-500/10 ; }
+  .ds-error-art img { @apply h-auto w-full; }
+  .ds-error-shell > p:not(.ds-eyebrow) { @apply max-w-lg text-secondary; }
+  .ds-auth-page { @apply max-w-2xl rounded-none border border-white/10 bg-surface/85 px-6   backdrop-blur-xl md:px-10; }
+  .ds-auth-page form { @apply mt-6 rounded-none border border-white/5 bg-white/[.02] p-5 md:p-7; }
+  .ds-auth-page form label { @apply w-full; }
+  .ds-auth-page form input:not([type="hidden"]) { @apply mt-1 w-full; }
+  .ds-dashboard-shell { @apply grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start; }
+  .ds-dashboard-content { @apply min-w-0; }
+  .ds-dashboard-sidebar { @apply hidden rounded-none border border-white/10 bg-surface p-4 lg:sticky lg:top-24 lg:block; }
+  .ds-dashboard-label { @apply mb-3 px-3 text-[11px] font-bold uppercase tracking-[.18em] text-secondary; }
+  .ds-dashboard-sidebar nav, .ds-dashboard-drawer nav { @apply flex flex-col gap-1; }
+  .ds-dashboard-sidebar a, .ds-dashboard-drawer a { @apply rounded-none px-3 py-2.5 text-sm font-medium text-neutral-300 no-underline hover:bg-white/5 hover:text-white; }
+  .ds-dashboard-sidebar a[aria-current="page"], .ds-dashboard-drawer a[aria-current="page"] { @apply bg-neutral-500/15 text-neutral-200; }
+  .ds-dashboard-drawer { @apply mb-5 border border-white/10 bg-surface p-0 lg:hidden; }
+  .ds-dashboard-drawer summary { @apply rounded-none px-4 py-3; }
+  .ds-dashboard-drawer nav { @apply border-t border-white/5 p-3; }
+  .ds-admin-dashboard-heading { @apply mb-8 rounded-none border border-neutral-300/10    p-6 md:p-8; }
+  .ds-admin-dashboard-eyebrow, .ds-admin-dashboard-label { @apply text-xs font-bold uppercase tracking-[.18em] text-neutral-200; }
+  .ds-admin-dashboard-grid { @apply grid gap-5 sm:grid-cols-2 xl:grid-cols-3; }
+  .ds-admin-dashboard-card { @apply flex flex-col items-start gap-3 rounded-none border border-white/10 bg-surface p-5   transition duration-200 hover:-translate-y-1 hover:border-neutral-400/30 ; }
+  .ds-admin-dashboard-card h3 { @apply text-lg font-semibold; }
+  .ds-admin-dashboard-card p { @apply flex-1 text-base leading-7 text-secondary; }
+  .ds-profile-details { @apply grid grid-cols-[minmax(7rem,.65fr)_minmax(0,1.35fr)] gap-x-4 gap-y-0 rounded-none border border-white/10 bg-surface p-4 md:grid-cols-[minmax(10rem,.7fr)_minmax(0,1.3fr)] md:p-6; }
+  .ds-profile-details dt, .ds-profile-details dd { @apply border-b border-white/5 py-3; }
+  .ds-profile-details dt { @apply text-xs font-semibold uppercase tracking-wide text-secondary; }
+  .ds-profile-details dd { @apply m-0 break-words text-sm text-neutral-100; }
+  .ds-vehicle-message { @apply rounded-none border border-neutral-300/20 bg-neutral-400/10 p-3 text-sm text-neutral-100; }
+  .ds-filter-pills { @apply mb-6 flex flex-wrap gap-2; }
+  .ds-filter-pill { @apply rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-neutral-300/30 hover:bg-neutral-500/10 hover:text-white; }
+  .ds-filter-pill.is-active { @apply border-neutral-300/40 bg-neutral-500/20 text-neutral-100; }
+  .ds-review-card { @apply flex flex-col items-start; }
+  .ds-review-meta { @apply mt-auto pt-5 text-xs text-neutral-300; }
+  .ds-instructor-rating { @apply flex flex-wrap items-center gap-2; }
+  .ds-auth-logo { @apply mb-5 inline-flex; }
+  .ds-auth-logo img { @apply h-10 w-[190px] object-contain; }
+  .ds-auth-page form { @apply relative; }
+  .ds-auth-page form small, form label small { @apply mt-2 block text-xs leading-5 text-neutral-300; }
+  [data-password-wrap] input { @apply pr-16; }
+  .ds-auth-page { @apply mx-auto; }
+  .ds-filter-empty { @apply rounded-none border border-white/10 bg-surface p-5 text-secondary; }
+  .ds-status-badge { @apply inline-flex items-center rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-neutral-100; }
+  .ds-status-badge[data-status="PENDING"], .ds-status-badge[data-status="UNPAID"], .ds-status-badge[data-status="WARNING"] { @apply border-amber-300/30 bg-amber-400/15 text-amber-100; }
+  .ds-status-badge[data-status="CONFIRMED"] { @apply border-neutral-300/30 bg-neutral-400/15 text-neutral-100; }
+  .ds-status-badge[data-status="COMPLETED"], .ds-status-badge[data-status="APPROVED"], .ds-status-badge[data-status="ACTIVE"], .ds-status-badge[data-status="PAID"] { @apply border-neutral-300/30 bg-neutral-400/15 text-neutral-100; }
+  .ds-status-badge[data-status="CANCELLED"], .ds-status-badge[data-status="REJECTED"], .ds-status-badge[data-status="SUSPENDED"] { @apply border-neutral-300/30 bg-neutral-400/15 text-neutral-100; }
+  .ds-status-badge[data-status="NO_SHOW"], .ds-status-badge[data-status="HIDDEN"] { @apply border-neutral-400/30 bg-neutral-400/15 text-neutral-100; }
+  .ds-empty-state { @apply grid min-h-48 place-items-center content-center rounded-none border border-dashed border-white/15 bg-white/[.02] p-8 text-center; }
+  .ds-empty-state h2 { @apply mb-2 text-xl font-semibold; }
+  .ds-empty-state p { @apply max-w-lg text-sm leading-6 text-neutral-300; }
+  .ds-empty-icon { @apply mb-3 grid h-11 w-11 place-items-center rounded-full bg-neutral-400/15 text-xl text-neutral-200; }
+  .ds-breadcrumbs { @apply mb-5 flex items-center gap-2 text-sm text-neutral-300; }
+  .ds-page-header { @apply mb-7 rounded-none border border-white/10     p-5 md:p-7; }
+  .ds-page-header h1 { @apply mb-2 text-3xl font-bold md:text-4xl; }
+  .ds-page-header > p:last-child { @apply mb-0 max-w-3xl text-sm leading-6 text-neutral-300; }
+  .ds-breadcrumbs a { @apply text-neutral-200 hover:text-white; }
+  .ds-toast-stack { @apply fixed right-4 top-20 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3; }
+  .ds-toast { @apply flex items-start gap-3 rounded-none border bg-surface p-4 text-sm ; }
+  .ds-toast-success { @apply border-neutral-300/30 text-neutral-100; }
+  .ds-toast-error { @apply border-neutral-300/30 text-neutral-100; }
+  .ds-toast-dismiss, .ds-modal-close { @apply ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-xl text-neutral-200 hover:bg-white/10; }
+  .ds-confirm-dialog { @apply w-[min(32rem,calc(100vw-2rem))] rounded-none border border-white/10 bg-transparent p-0 text-neutral-100 ; }
+  .ds-confirm-dialog::backdrop { @apply bg-neutral-950/75 backdrop-blur-sm; }
+  .ds-confirm-card { @apply relative rounded-none border border-white/10 bg-surface p-7 ; }
+  .ds-confirm-card h2 { @apply mb-2 text-2xl font-bold; }
+  .ds-confirm-card p:not(.ds-eyebrow) { @apply text-neutral-300; }
+  .ds-confirm-actions { @apply mt-7 flex flex-wrap justify-end gap-3; }
+  .ds-button-danger { @apply    text-neutral-950  ; }
+  .ds-star-input { @apply border-0 p-0; }
+  .ds-star-input legend { @apply mb-2 text-sm font-medium text-neutral-200; }
+  .ds-star-options { @apply flex flex-row-reverse justify-end gap-1; }
+  .ds-star-options input { @apply sr-only; }
+  .ds-star-options label { @apply m-0 cursor-pointer text-3xl text-secondary transition hover:text-amber-300; }
+  .ds-star-options label:hover, .ds-star-options label:hover ~ label,
+  .ds-star-options input:checked ~ label { @apply text-amber-300; }
+  .ds-star-options input:focus-visible + label { @apply rounded ring-2 ring-neutral-300 ring-offset-2 ring-offset-surface; }
+  .ds-star-display { @apply relative inline-block whitespace-nowrap text-lg leading-none text-secondary; }
+  .ds-star-fill { @apply absolute left-0 top-0 overflow-hidden whitespace-nowrap text-amber-300; }
+  .ds-skeleton { @apply grid gap-3 rounded-none border border-white/10 bg-surface p-6; }
+  .ds-skeleton span { @apply h-4 animate-pulse rounded bg-white/10; }
+  .ds-skeleton span:first-child { @apply h-7 w-2/3; }
+  .ds-search-bar, .ds-pagination { @apply flex flex-wrap items-end gap-3 rounded-none border border-white/10 bg-surface p-4; }
+  .ds-search-bar input { @apply min-w-[12rem] flex-1; }
+  .ds-pagination { @apply mt-5 items-center justify-between text-sm text-neutral-200; }
+  .ds-pagination button:disabled { @apply cursor-not-allowed opacity-50; }
+  .ds-password-toggle { @apply absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-bold text-neutral-200 hover:bg-white/10; }
+  .ds-booking-panel { @apply rounded-none border border-neutral-300/15    p-5 md:p-7; }
+  .ds-slot-fieldset { @apply my-5 border-0 p-0; }
+  .ds-slot-fieldset legend { @apply mb-3 text-sm font-semibold text-neutral-100; }
+  .ds-slot-options { @apply flex flex-wrap gap-2; }
+  .ds-slot-chip { @apply m-0 cursor-pointer; }
+  .ds-slot-chip input { @apply sr-only; }
+  .ds-slot-chip span { @apply inline-flex min-h-11 items-center rounded-none border border-white/15 bg-raised px-4 text-sm font-semibold text-neutral-100 transition hover:border-neutral-300/50 hover:bg-neutral-500/15; }
+  .ds-slot-chip input:checked + span { @apply border-neutral-300/60 bg-neutral-500/25 text-white ; }
+  .ds-slot-chip input:focus-visible + span { @apply ring-2 ring-neutral-300 ring-offset-2 ring-offset-surface; }
+  .ds-queue-position { @apply inline-flex rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1 text-xs font-bold text-amber-100; }
+  [data-password-wrap] { @apply relative; }
+  .ds-status-badge, .status-badge, [class*="badge"] { color: #FFFFFF; }
+  .ds-status-badge[data-status="PENDING"], .status-badge[data-status="PENDING"], .ds-status-badge[data-status="WARNING"], .status-badge[data-status="WARNING"] { color: #FEF3C7; }
+  .ds-status-badge[data-status="CONFIRMED"], .status-badge[data-status="CONFIRMED"] { color: #E0F2FE; }
+  .ds-status-badge[data-status="COMPLETED"], .ds-status-badge[data-status="APPROVED"], .status-badge[data-status="COMPLETED"], .status-badge[data-status="APPROVED"] { color: #DCFCE7; }
+  .ds-status-badge[data-status="CANCELLED"], .ds-status-badge[data-status="REJECTED"], .status-badge[data-status="CANCELLED"], .status-badge[data-status="REJECTED"] { color: #FEE2E2; }
+  .ds-status-badge[data-status="NO_SHOW"], .ds-status-badge[data-status="HIDDEN"], .status-badge[data-status="NO_SHOW"], .status-badge[data-status="HIDDEN"] { color: #FFFFFF; }
+  .ds-footer-brand { @apply text-white; }
+  form { @apply max-w-full; }
+  label { @apply mb-1 inline-block text-sm font-medium text-neutral-300; }
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea { @apply max-w-full rounded-none border border-white/10 bg-raised px-3.5 py-2.5 text-sm text-neutral-100 placeholder:text-secondary focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/30; }
+  input[type="checkbox"], input[type="radio"] { @apply accent-neutral-500; }
+  textarea { @apply min-h-28; }
+  form p { @apply mb-4; }
+  details { @apply rounded-none border border-white/10 bg-surface p-5; }
+  details + details { @apply mt-3; }
+  summary { @apply cursor-pointer font-semibold text-neutral-100 marker:text-neutral-300; }
+  details[open] summary { @apply text-neutral-100; }
+  details > p { animation: enter .2s ease-out both; }
+  details p { @apply mt-3 text-base leading-7 text-secondary; }
+  main > p[role="alert"], [role="alert"] { @apply rounded-none border border-neutral-400/20 bg-neutral-500/10 p-3 text-sm text-neutral-200; }
+  main > p[role="status"], [role="status"] { @apply rounded-none border border-neutral-400/20 bg-neutral-500/10 p-3 text-sm text-neutral-200; }
+  main a:not(.ds-button) { @apply text-neutral-300 underline-offset-4 hover:text-neutral-200 hover:underline; }
+  table { @apply w-full border-collapse text-left text-sm; }
+  th { @apply bg-raised px-4 py-3 font-semibold text-neutral-200; }
+  td { @apply border-t border-white/5 px-4 py-3 text-neutral-300; }
+  tbody tr { @apply transition hover:bg-white/[.03]; }
+  article { @apply break-words; }
+  .status-badge, [class*="badge"] { @apply inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-neutral-200; }
+  .status-badge[data-status="PENDING"], .status-badge[data-status="UNPAID"] { @apply border-amber-300/20 bg-amber-400/10 text-amber-200; }
+  .status-badge[data-status="CONFIRMED"] { @apply border-neutral-300/20 bg-neutral-400/10 text-neutral-200; }
+  .status-badge[data-status="COMPLETED"], .status-badge[data-status="APPROVED"], .status-badge[data-status="ACTIVE"], .status-badge[data-status="PAID"] { @apply border-neutral-300/20 bg-neutral-400/10 text-neutral-200; }
+  .status-badge[data-status="CANCELLED"], .status-badge[data-status="REJECTED"], .status-badge[data-status="SUSPENDED"] { @apply border-neutral-300/20 bg-neutral-400/10 text-neutral-200; }
+  .status-badge[data-status="NO_SHOW"], .status-badge[data-status="HIDDEN"] { @apply border-neutral-400/20 bg-neutral-400/10 text-neutral-300; }
+  .ds-nav-toggle { @apply hidden rounded-none border border-white/10 bg-white/5 p-2 text-neutral-200; }
+  @media (max-width: 1023px) {
+    .ds-nav-toggle { @apply inline-flex; }
+    .ds-nav { @apply absolute left-0 right-0 top-full hidden max-h-[80vh] flex-col items-stretch overflow-y-auto border-b border-white/10 bg-ink/95 p-4 backdrop-blur-xl; }
+    .ds-nav.is-open { @apply flex; }
+    .ds-navbar { @apply relative; }
+    table { @apply min-w-[640px]; }
+  }
+  @media (max-width: 767px) { .ds-container { @apply px-0; } }
+}
+
+/* Payment receipts use colour and plain words, so their meaning never depends on colour alone. */
+.ds-dashboard-shell .ds-payment-status[data-status='AWAITING_PAYMENT'] { color: #FDE68A; background: #F59E0B0D; border-color: #F59E0B66; }
+.ds-dashboard-shell .ds-payment-status[data-status='PAID'] { color: #BBF7D0; background: #22C55E0D; border-color: #22C55E66; }
+.ds-dashboard-shell .ds-payment-status[data-status='CANCELLED'] { color: #FECACA; background: #EF44440D; border-color: #EF444466; }
+.ds-payment-instructions { overflow-wrap: anywhere; }
+
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff !important; color: #0A0A0A !important; }
+  .ds-header, .ds-footer, .ds-dashboard-sidebar, .ds-dashboard-drawer, .no-print { display: none !important; }
+  .ds-card, .ds-feature-card, table { background: #fff !important; color: #0A0A0A !important; box-shadow: none !important; }
+  a { color: #0A0A0A !important; text-decoration: none !important; }
+  main, article, section { break-inside: avoid; }
+}
+
+@layer utilities {
+  .safe-scroll { overflow-x: auto; overscroll-behavior-inline: contain; }
+  @keyframes enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes ds-toast-out { 0%,85% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-.5rem); } }
+  /* JavaScript dismisses success messages; without it they remain readable. */
+  @media (prefers-reduced-motion: reduce) { .ds-toast-success { animation: none; } }
+}
+
+
+
+/* Motion is optional. HTML remains readable before any observer is attached. */
+.ds-motion-ready { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s ease; transition-delay: var(--ds-stagger,0ms); }
+.ds-motion-ready.ds-visible { opacity: 1; transform: none; }
+.ds-toast { transition: opacity .2s; }
+.ds-toast-leaving { opacity: 0; }
+[data-progress].ds-visible { transform-origin: left; animation: ds-progress .8s ease both; }
+[data-chart].ds-visible { stroke-dasharray: 1000; animation: ds-chart 1.2s ease both; }
+@keyframes ds-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ds-chart { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes ds-cinema-zoom { from { scale: 1; } to { scale: 1.045; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .ds-motion-ready { opacity: 1; transform: none; }
+  [data-parallax] { --ds-parallax: 0px !important; }
+}
+@media print { .ds-motion-ready { opacity: 1 !important; transform: none !important; } }
+
+/* Native progress keeps rating counts accessible with scripts off; these rules
+   replace browser-default green bars with the shared amber feedback colour. */
+@layer components {
+  .ds-rating-progress { appearance: none; display: block; width: 100%; height: .6rem; overflow: hidden; border: 0; border-radius: 999px; background: #171717; color: #F59E0B; }
+  .ds-rating-progress::-webkit-progress-bar { background: #171717; border-radius: 999px; }
+  .ds-rating-progress::-webkit-progress-value { background: #F59E0B; border-radius: 999px; }
+  .ds-rating-progress::-moz-progress-bar { background: #F59E0B; border-radius: 999px; }
+}
+
+/* Shared cinematic layout. Page-specific section composition follows in Phase B. */
+.ds-container { width: min(1440px,calc(100% - 3rem)); }
+.ds-card, .ds-feature-card { border-color: #262626; background: transparent; box-shadow: none; }
+.ds-feature-card:hover, .ds-admin-dashboard-card:hover { transform: none; box-shadow: none; border-color: #525252; }
+.ds-eyebrow { color: #D4D4D4; font-size: 11px; font-weight: 500; letter-spacing: .22em; }
+.ds-error-art img { filter: grayscale(1); box-shadow: none; }
+.ds-auth-page { backdrop-filter: none; box-shadow: none; }
+.ds-cinematic-section { position: relative; isolation: isolate; display: flex; min-height: 100vh; min-height: 100svh; align-items: flex-end; overflow: hidden; background: linear-gradient(150deg,#262626,#050505 75%); }
+.ds-cinematic-section > .ds-container { position: relative; z-index: 1; padding-block: clamp(5rem,10vh,9rem); }
+.ds-cinematic-background { position: absolute; z-index: -2; inset: -4%; background-size: cover; background-position: center; transform: translateY(var(--ds-parallax,0px)); }
+.ds-cinematic-section::after { content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(0deg,#000D,transparent 85%); }
+.ds-cinematic-hero .ds-cinematic-background { animation: ds-cinema-zoom 18s ease-out both; }
+.ds-cinematic-section h1, .ds-cinematic-section h2 { max-width: 1000px; font-size: clamp(40px,6.5vw,88px); font-weight: 400; }
+.ds-cinematic-section p { max-width: 40rem; color: #D4D4D4; }
+.ds-button::after { content: none; }
+.ds-button:hover { transform: none; box-shadow: none; }
+/* The header background lives on its own layer so it cannot constrain the fixed mobile menu. */
+.ds-header { position: sticky; inset: 0 0 auto; z-index: 60; width: 100%; border: 0; background: transparent; backdrop-filter: none; }
+.ds-header::before { content: ''; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / .94); backdrop-filter: blur(14px); transition: opacity .3s ease; }
+body:has([data-cinematic]) .ds-header { position: fixed; }
+body:has([data-cinematic]) .ds-header:not(.is-scrolled)::before { opacity: 0; }
+.ds-navbar { position: static; display: grid; min-height: var(--ds-header-height); grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
+.ds-wordmark { display: flex; flex-direction: column; gap: 2px; color: #FFFFFF; font-size: 24px; font-weight: 500; letter-spacing: -.055em; line-height: 1.1; }
+.ds-wordmark > span { font-size: 9px; font-weight: 400; letter-spacing: .32em; text-transform: uppercase; }
+.ds-nav { position: static; display: flex; align-items: center; gap: 1.6rem; border: 0; background: transparent; padding: 0; overflow: visible; }
+.ds-nav-link, .ds-nav-group > summary { display: block; margin: 0; padding: .6rem 0; border: 0; border-radius: 0; background: transparent; color: #D4D4D4; font: inherit; font-size: 13px; font-weight: 400; line-height: 1.5; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.ds-nav-link:hover, .ds-nav-group > summary:hover, .ds-nav-link[aria-current='page'] { color: #FFFFFF; background: transparent; text-decoration: underline; text-underline-offset: 7px; }
+.ds-nav-link::after { content: none; }
+.ds-nav-group { position: relative; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.ds-nav-group + .ds-nav-group { margin-top: 0; }
+.ds-nav-group > summary { list-style: none; }
+.ds-nav-group > summary::-webkit-details-marker { display: none; }
+.ds-nav-group > summary::after { content: '+'; margin-left: .45rem; color: #A3A3A3; }
+.ds-nav-group[open] > summary::after { content: '−'; }
+.ds-nav-submenu { position: absolute; top: calc(100% + .5rem); right: 0; min-width: 220px; padding: 1.25rem 1.5rem; border: 1px solid #262626; background: #050505; }
+.ds-nav-submenu .ds-nav-link { padding-block: .65rem; }
+.ds-nav-identity { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #262626; color: #A3A3A3; font-size: 12px; overflow-wrap: anywhere; }
+.ds-nav-identity span { display: block; margin-bottom: .4rem; font-size: 9px; letter-spacing: .16em; }
+.ds-nav-logout { margin: 0; }
+.ds-nav-actions { display: flex; align-items: center; justify-self: end; gap: 1.25rem; }
+.ds-header-cta { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; padding: .55rem 1.4rem; border: 1px solid #737373; color: #FFFFFF; font-size: 12px; text-decoration: none; transition: background .2s,color .2s; }
+.ds-header-cta:hover { background: #FFFFFF; color: #000000; }
+.ds-nav-toggle, .ds-nav-close { display: none; }
+.ds-footer { margin-top: 0; border-top: 1px solid #262626; background: #000000; border-image: none; }
+.ds-footer-grid { padding-block: 5rem; gap: 3rem; }
+.ds-footer-grid h2 { margin-bottom: 1.4rem; color: #A3A3A3; font-size: 11px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; }
+.ds-footer-grid > div:not(:first-child) { gap: .7rem; font-size: 13px; }
+.ds-footer-grid a:not(.ds-footer-brand), .ds-footer-grid p { color: #A3A3A3; font-size: 13px; line-height: 1.8; }
+.ds-footer-grid a:hover { color: #FFFFFF; }
+.ds-footer-notes { padding-block: 2rem; border-top: 1px solid #262626; color: #A3A3A3; font-size: 11px; line-height: 1.8; }
+.ds-footer-notes > p { max-width: 54rem; }
+.ds-footer-bottom { padding-top: 2rem; padding-bottom: 0; border: 0; font-size: 11px; }
+/* Keep anchor landing positions aligned with the smaller navigation bar. */
+@media (max-width: 1023px) {
+  :root { --ds-header-height: 80px; }
+  .ds-navbar { grid-template-columns: 1fr auto; gap: 1rem; min-height: var(--ds-header-height); }
+  .ds-nav-toggle { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; padding: .5rem 0; border: 0; background: transparent; color: #FFFFFF; font-size: 12px; }
+  .ds-js .ds-nav { position: fixed; inset: 0; z-index: 80; display: none; height: 100svh; max-height: none; padding: 6rem 1.5rem 3rem; overflow-y: auto; background: #050505; }
+  .ds-js .ds-nav.is-open { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; }
+  .ds-nav.is-open .ds-nav-link, .ds-nav.is-open .ds-nav-group > summary { font-size: clamp(24px,4vw,36px); line-height: 1.4; white-space: normal; }
+  .ds-nav.is-open .ds-nav-submenu .ds-nav-link { font-size: 18px; }
+  /* The sticky inset subtracts the menu's 6rem padding, keeping Close 1rem from the screen top. */
+  .ds-nav-close { position: sticky; top: -5rem; align-self: flex-end; z-index: 100; flex-shrink: 0; margin-top: -5rem; margin-bottom: 1rem; box-shadow: 0 0 0 12px #050505; display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; border: 0; background: #050505; color: #FFFFFF; font-size: 13px; cursor: pointer; }
+  .ds-nav-close span { font-size: 26px; font-weight: 300; }
+  .ds-nav-submenu { position: static; min-width: 0; margin-top: .5rem; padding: .2rem 0 1rem 1.5rem; border: 0; border-left: 1px solid #262626; }
+  .ds-menu-open { overflow: hidden; }
+  html:not(.ds-js) .ds-navbar { display: flex; flex-wrap: wrap; }
+  html:not(.ds-js) .ds-nav { position: static; display: flex; order: 3; width: 100%; max-height: none; flex-wrap: wrap; gap: 1rem 1.5rem; padding-block: 1rem; }
+  html:not(.ds-js) .ds-nav-group { width: 100%; }
+  html:not(.ds-js) .ds-nav-submenu { position: static; }
+  html:not(.ds-js) .ds-nav-toggle, html:not(.ds-js) .ds-nav-close { display: none; }
+}
+@media (min-width: 1101px) { .ds-nav-close { display: none; } }
+@media (max-width: 600px) {
+  .ds-container { width: calc(100% - 2rem); }
+  .ds-header-cta { padding-inline: 1rem; }
+  .ds-nav-actions { gap: 1rem; }
+  .ds-wordmark { font-size: 22px; }
+}
+
+/* Home: original scenery made from gradients and road markings; no external media is requested. */
+.ds-home { overflow: clip; }
+.ds-home p { margin-block: 1.4rem; font-size: clamp(16px,1.5vw,18px); line-height: 1.8; color: #D4D4D4; }
+.ds-home .ds-eyebrow { margin-top: 0; margin-bottom: 1.7rem; font-size: 11px; line-height: 1.7; color: #D4D4D4; }
+.ds-home h1, .ds-home h2 { font-size: clamp(40px,6.5vw,88px); font-weight: 400; letter-spacing: -.05em; line-height: 1.06; }
+.ds-home h3 { font-weight: 400; }
+.ds-home .ds-container { width: min(1400px,calc(100% - 8rem)); }
+.ds-home-copy { max-width: 850px; }
+.ds-home-copy > p:not(.ds-eyebrow) { max-width: 37rem; }
+.ds-home-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+.ds-home .ds-button { min-width: 160px; min-height: 50px; justify-content: center; padding: .85rem 1.6rem; font-size: 13px; font-weight: 500; }
+.ds-home .ds-button-outline { background: transparent; border: 1px solid #A3A3A3; color: #FFFFFF; }
+.ds-home .ds-button-outline:hover { background: #FFFFFF; color: #000000; }
+.ds-home .ds-cinematic-section > .ds-container { padding-top: 9rem; padding-bottom: 5rem; }
+.ds-home-hero { min-height: max(740px,100svh); }
+.ds-home-hero > .ds-container { padding-bottom: 2rem !important; }
+.ds-scroll-cue { display: flex; justify-content: space-between; align-items: center; gap: 2rem; margin-top: 5rem; padding-top: 1.2rem; border-top: 1px solid #FFFFFF40; color: #D4D4D4; font-size: 11px; letter-spacing: .06em; text-decoration: none; }
+.ds-scroll-cue span { font-size: 22px; }
+/* A pale horizon, angular mountain silhouettes and a broad road give the hero depth. */
+.ds-scene-road { background: radial-gradient(ellipse at 70% 36%,#AAA9A255,transparent 32%),linear-gradient(180deg,#0A0A0A 8%,#353B3D 43%,#8C8E8655 51%,#151719 52%,#020202 100%); }
+.ds-scene-road::before { content: ''; position: absolute; inset: 29% -2% 39%; background: #111518; clip-path: polygon(0 63%,10% 40%,24% 66%,39% 18%,50% 61%,62% 41%,74% 58%,83% 0,96% 50%,100% 35%,100% 100%,0 100%); }
+.ds-scene-road::after { content: ''; position: absolute; inset: 51% -20% -5%; background: linear-gradient(90deg,#1C1C1C,#080808 60%); clip-path: polygon(64% 0,66% 0,100% 100%,10% 100%); }
+.ds-road-lines { position: absolute; z-index: 1; inset: 51% 0 -5%; background: repeating-linear-gradient(180deg,#D4D4D466 0 22px,transparent 22px 55px); clip-path: polygon(68.9% 0,69.15% 0,79% 100%,77.5% 100%); }
+.ds-home-promo { align-items: center; background: #111111; }
+.ds-scene-contours { background: radial-gradient(ellipse at 78% 35%,#D4D4D422,transparent 50%),repeating-radial-gradient(ellipse at 110% 15%,transparent 0 58px,#D4D4D41A 59px 60px,transparent 61px 90px),linear-gradient(140deg,#262626,#0A0A0A 70%); }
+.ds-home-section { display: flex; min-height: 100svh; align-items: center; padding-block: clamp(5rem,10vw,9rem); background: #050505; }
+.ds-home-builder { text-align: center; }
+.ds-home-builder p { max-width: 40rem; margin-inline: auto; }
+.ds-lesson-choices { display: flex; justify-content: center; flex-wrap: wrap; gap: 2.5rem; margin-top: 4rem; }
+.ds-lesson-choices a { display: inline-flex; align-items: center; gap: 2rem; padding-block: 1.25rem; border-bottom: 1px solid #737373; color: #FFFFFF; font-size: clamp(23px,3vw,40px); font-weight: 400; letter-spacing: -.04em; text-decoration: none; }
+.ds-lesson-choices a:hover { border-color: #F59E0B; }
+.ds-lesson-choices span { color: #A3A3A3; font-size: 22px; }
+.ds-home-overview { background: #0A0A0A; }
+.ds-home-tabs { display: flex; gap: 2.5rem; margin-top: 3rem; border-bottom: 1px solid #262626; }
+.ds-home-tabs a { padding-block: 1rem; color: #A3A3A3; font-size: 15px; text-decoration: none; }
+.ds-home-tabs a[aria-selected='true'], .ds-home-tabs a:hover { color: #FFFFFF; box-shadow: 0 1px 0 #FFFFFF; }
+.ds-home-tab-panel { display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: start; padding-top: 3rem; scroll-margin-top: 7rem; }
+.ds-home-tab-panel[hidden] { display: none; }
+.ds-home-panel-number { color: #A3A3A3; font-size: clamp(64px,12vw,160px); line-height: 1; font-weight: 300; letter-spacing: -.06em; }
+.ds-home-tab-panel h3 { font-size: clamp(30px,4vw,52px); line-height: 1.12; }
+.ds-home-tab-panel p { max-width: 36rem; }
+.ds-home-text-link { display: inline-flex; justify-content: space-between; align-items: center; gap: 3rem; min-height: 44px; padding-block: .6rem; border-bottom: 1px solid #737373; color: #FFFFFF; font-size: 14px; text-decoration: none; }
+.ds-home-text-link:hover { border-color: #FFFFFF; opacity: .8; }
+.ds-scene-safety { background: radial-gradient(ellipse at 75% 38%,#A3A3A333,transparent 45%),linear-gradient(135deg,#080808,#333A3B 70%,#111111); }
+.ds-safety-orbit { position: absolute; width: min(62vw,850px); aspect-ratio: 1; top: 5%; right: -8%; border: 1px solid #FFFFFF33; border-radius: 50%; box-shadow: 0 0 0 55px #FFFFFF05,0 0 0 56px #FFFFFF1A,0 0 0 125px #FFFFFF05,0 0 0 126px #FFFFFF12; }
+.ds-safety-orbit::after { content: ''; position: absolute; inset: 24%; border: 1px solid #FFFFFF33; border-radius: 50%; background: linear-gradient(135deg,#FFFFFF0D,transparent); }
+.ds-home sup a { padding: .2rem; color: #FFFFFF; }
+.ds-home-location { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+.ds-home .ds-location-note, .ds-home .ds-home-small { color: #A3A3A3; font-size: 13px; }
+.ds-location-art { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 560px; padding: 2rem; overflow: hidden; --ds-fallback-scene: repeating-linear-gradient(40deg,transparent 0 70px,#D4D4D41A 71px 73px,transparent 74px 140px),repeating-linear-gradient(130deg,#171717 0 75px,#D4D4D422 76px 78px,#171717 79px 150px); background: var(--ds-fallback-scene); }
+.ds-location-art > span:not(.ds-location-marker):not(.ds-local-photo-shade) { position: relative; z-index: 1; width: fit-content; background: #0A0A0A; padding: .4rem .6rem; font-size: 9px; letter-spacing: .14em; color: #D4D4D4; }
+.ds-location-marker { position: absolute; top: 47%; left: 49%; display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; border: 1px solid #D4D4D4; color: #FFFFFF; background: #050505; font-size: 18px; }
+.ds-home-cta { text-align: center; }
+.ds-home-cta .ds-home-copy, .ds-home-cta p { margin-inline: auto; }
+.ds-scene-road-close { background-position: center; filter: brightness(.8); }
+.ds-scene-road-close::before { transform: scaleX(-1); }
+.ds-home-flexible { background: #0A0A0A; }
+.ds-scene-flexible { background: linear-gradient(0deg,#050505,transparent 75%),repeating-linear-gradient(155deg,transparent 0 100px,#FFFFFF0D 101px 102px,transparent 103px 200px),radial-gradient(ellipse at 75% 20%,#606560,#111515 60%); }
+.ds-home-three-points { display: grid; grid-template-columns: repeat(3,1fr); gap: 3rem; margin-top: 4rem; padding: 0; list-style: none; }
+.ds-home-three-points li { padding-top: 1rem; border-top: 1px solid #737373; }
+.ds-home-three-points span { font-size: 11px; color: #A3A3A3; }
+.ds-home-three-points h3 { margin-top: 1.5rem; font-size: 22px; line-height: 1.3; }
+.ds-home-three-points p { margin-bottom: 0; font-size: 15px; }
+.ds-home-progress { display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 5rem; }
+.ds-home-progress > div:last-child { max-width: 32rem; }
+.ds-home-exploring { background: #0A0A0A; }
+.ds-home-tiles { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 3rem; }
+.ds-home-tiles a { display: flex; min-height: 320px; flex-direction: column; justify-content: space-between; padding: 2rem 1.5rem; border-block: 1px solid #262626; border-right: 1px solid #262626; background: linear-gradient(150deg,#171717,#0A0A0A); color: #FFFFFF; text-decoration: none; }
+.ds-home-tiles a:last-child { border-right: 0; }
+.ds-home-tiles a:hover { background: #171717; }
+.ds-home-tiles h3 { margin-block: 3rem; font-size: clamp(24px,2.5vw,36px); letter-spacing: -.04em; }
+.ds-home-tiles span:first-child { color: #A3A3A3; font-size: 9px; letter-spacing: .12em; }
+.ds-home-tiles span:last-child { align-self: end; font-size: 24px; }
+.ds-home-mission { --ds-fallback-scene: radial-gradient(ellipse at 65% 10%,#262626,transparent 65%),#050505; background: var(--ds-fallback-scene); }
+.ds-home-mission-copy { max-width: 1050px; }
+.ds-home-mission-copy > p:last-child { max-width: 36rem; }
+.ds-home-reviews { max-width: 850px; margin-top: 6rem; padding-top: 2rem; border-top: 1px solid #525252; }
+.ds-home-reviews h3 { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.ds-home-reviews blockquote { margin-top: 2rem; max-width: 780px; overflow-wrap: anywhere; color: #FFFFFF; font-size: clamp(24px,3vw,38px); line-height: 1.5; font-weight: 300; }
+.ds-home .ds-review-attribution { color: #A3A3A3; font-size: 13px; }
+.ds-review-controls { display: flex; align-items: center; gap: 1.25rem; margin-block: 1.5rem; }
+.ds-review-controls[hidden] { display: none; }
+.ds-review-controls button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #737373; background: transparent; color: #FFFFFF; font-size: 20px; }
+.ds-review-controls button:hover { background: #FFFFFF; color: #000000; }
+.ds-review-controls span { color: #A3A3A3; font-size: 12px; }
+.ds-home-footnotes { padding-block: 3rem; background: #000000; border-top: 1px solid #262626; scroll-margin-top: 6rem; }
+.ds-home-footnotes p { max-width: 65rem; color: #A3A3A3; font-size: 11px; line-height: 1.8; }
+@media (max-width: 1000px) {
+  .ds-home .ds-container { width: calc(100% - 4rem); }
+  .ds-home-location, .ds-home-progress { gap: 3rem; }
+  .ds-location-art { min-height: 480px; }
+  .ds-home-tiles { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ds-home-tiles a { min-height: 280px; }
+  .ds-home-tiles a:nth-child(2) { border-right: 0; }
+}
+@media (max-width: 600px) {
+  .ds-home .ds-container { width: calc(100% - 2.5rem); }
+  .ds-home-hero { min-height: max(700px,100svh); }
+  .ds-home .ds-cinematic-section > .ds-container { padding-block: 7rem 4rem; }
+  .ds-home-hero > .ds-container { padding-top: 8rem; }
+  .ds-scroll-cue { margin-top: 3.5rem; }
+  .ds-home-actions { gap: .75rem; }
+  .ds-home .ds-button { min-width: 145px; padding-inline: 1.1rem; }
+  .ds-lesson-choices { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; text-align: left; }
+  .ds-lesson-choices a { justify-content: space-between; }
+  .ds-home-tabs { gap: 1.5rem; }
+  .ds-home-tab-panel { grid-template-columns: 1fr; gap: 1rem; }
+  .ds-home-panel-number { font-size: 64px; }
+  .ds-home-location, .ds-home-progress { grid-template-columns: 1fr; }
+  .ds-location-art { min-height: 360px; }
+  .ds-home-three-points { grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; }
+  .ds-home-three-points h3 { margin-top: .7rem; }
+  .ds-home-three-points p { margin-top: .5rem; }
+  .ds-home-tiles { grid-template-columns: 1fr; }
+  .ds-home-tiles a { min-height: 230px; border-right: 0; }
+  .ds-home-tiles h3 { margin-block: 1.5rem; }
+  .ds-home-reviews { margin-top: 4rem; }
+}
+/* Pages keep native content visible even if scripting is unavailable. */
+@media (max-width: 1023px) { html:not(.ds-js) body:has([data-cinematic]) .ds-header { position: relative; background: #000000; } }
+@media (prefers-reduced-motion: reduce) { .ds-home .ds-cinematic-background { animation: none; transform: none; } }
+@media print {
+  .ds-home-section, .ds-home .ds-cinematic-section { min-height: 0; padding-block: 2rem; break-inside: avoid; }
+  .ds-home .ds-container { width: 100%; padding-block: 1rem; }
+  .ds-home .ds-cinematic-background, .ds-home .ds-cinematic-section::after, .ds-home-panel-number, .ds-location-art, .ds-scroll-cue, .ds-review-controls { display: none; }
+  .ds-home-tab-panel[hidden] { display: grid; }
+}
+
+/* Public pages share the same quiet typography; each module keeps its own data and forms. */
+.ds-public { padding-block: clamp(3rem,7vw,7rem); }
+.ds-public.ds-container { width: min(1280px,calc(100% - 8rem)); }
+.ds-public h1, .ds-public-auth h1 { font-size: clamp(40px,6.5vw,88px); font-weight: 400; line-height: 1.06; letter-spacing: -.05em; overflow-wrap: anywhere; }
+.ds-public h2 { font-size: clamp(32px,4vw,56px); font-weight: 400; line-height: 1.12; letter-spacing: -.04em; }
+.ds-public h3 { font-size: 24px; font-weight: 400; line-height: 1.3; }
+.ds-public p, .ds-public-auth p { color: #D4D4D4; font-size: 17px; line-height: 1.8; }
+.ds-public .ds-eyebrow, .ds-public-auth .ds-eyebrow { color: #A3A3A3; font-size: 10px; font-weight: 500; letter-spacing: .18em; line-height: 1.8; }
+.ds-public-heading { max-width: 1000px; padding-bottom: clamp(3rem,6vw,6rem); }
+.ds-public-heading > p:not(.ds-eyebrow), .ds-auth-heading > p:not(.ds-eyebrow) { max-width: 38rem; margin-top: 1.75rem; }
+.ds-public .ds-button, .ds-public-auth .ds-button { min-height: 50px; padding: .8rem 1.6rem; font-size: 13px; font-weight: 500; text-align: center; }
+.ds-public .ds-button-outline { border: 1px solid #737373; background: transparent; color: #FFFFFF; }
+.ds-public .ds-button-outline:hover { background: #FFFFFF; color: #000000; }
+.ds-public .ds-public-note { color: #A3A3A3; font-size: 12px; line-height: 1.8; margin-block: 1.5rem; }
+.ds-public-empty { padding-block: 4rem; border-block: 1px solid #262626; }
+.ds-public-empty p { margin-block: 1.5rem; }
+/* Filters look like simple text tabs and remain separate from server-side instructor sorting. */
+.ds-catalog-filters { gap: 1.8rem; margin-bottom: 0; border-bottom: 1px solid #262626; }
+.ds-catalog-filters .ds-filter-pill { min-height: 48px; padding: .75rem 0; border: 0; border-radius: 0; background: transparent; color: #A3A3A3; font-size: 13px; font-weight: 400; }
+.ds-catalog-filters .ds-filter-pill:hover, .ds-catalog-filters .ds-filter-pill.is-active { background: transparent; color: #FFFFFF; box-shadow: 0 1px 0 #FFFFFF; }
+html:not(.ds-js) .ds-catalog-filters { display: none; }
+.ds-catalog-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.ds-catalog-panel { display: flex; flex-direction: column; padding: 3rem 2rem; border-right: 1px solid #262626; border-bottom: 1px solid #262626; }
+.ds-catalog-panel:nth-child(3n) { border-right: 0; }
+.ds-catalog-panel[hidden] { display: none; }
+.ds-catalog-panel h2 { margin-bottom: 1.5rem; font-size: clamp(28px,3vw,40px); overflow-wrap: anywhere; }
+.ds-catalog-panel .ds-catalog-description { flex-grow: 1; color: #A3A3A3; font-size: 15px; }
+.ds-public .ds-catalog-price { color: #FFFFFF; font-size: clamp(32px,3.8vw,52px); font-weight: 400; letter-spacing: -.05em; line-height: 1.2; margin-block: 2rem; overflow-wrap: anywhere; }
+.ds-catalog-price > span { display: block; color: #A3A3A3; font-size: 11px; font-weight: 400; letter-spacing: .14em; margin-bottom: .4rem; }
+.ds-public-facts { margin-block: 1rem 2rem; }
+.ds-public-facts > div { display: flex; justify-content: space-between; gap: 1rem; padding-block: .85rem; border-top: 1px solid #262626; font-size: 13px; line-height: 1.7; }
+.ds-public-facts dt { color: #A3A3A3; }
+.ds-public-facts dd { color: #FFFFFF; text-align: right; overflow-wrap: anywhere; }
+.ds-detail > .ds-breadcrumbs { margin-bottom: 3rem; color: #A3A3A3; font-size: 12px; overflow-wrap: anywhere; }
+.ds-detail-heading { max-width: 100%; padding: clamp(2rem,6vw,5rem); margin-bottom: 4rem; background: radial-gradient(ellipse at 100% 0,#262626,transparent 70%),#0A0A0A; }
+.ds-detail-heading h1 { max-width: 1000px; }
+.ds-detail-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,380px); gap: 6rem; align-items: start; }
+.ds-detail-story > section { padding-block: 3rem 5rem; border-top: 1px solid #262626; }
+.ds-detail-story p { margin-top: 1.5rem; }
+.ds-detail-inclusions { padding: 0; margin-block: 2rem; list-style: none; }
+.ds-detail-inclusions li { padding-block: 1.25rem; border-bottom: 1px solid #262626; color: #D4D4D4; font-size: 16px; }
+.ds-detail-story .ds-home-text-link { margin-top: 2rem; }
+.ds-detail-enrol { position: sticky; top: 112px; padding: 2rem; border: 1px solid #262626; background: #0A0A0A; }
+.ds-detail-enrol .ds-catalog-price { margin-top: 1.5rem; }
+.ds-detail-enrol .ds-button { width: 100%; }
+.ds-detail-enrol form { padding: 0; margin: 0; border: 0; background: transparent; }
+/* About uses an original CSS landscape and generous editorial spacing instead of statistic cards. */
+.ds-about-public { padding-top: 0; }
+.ds-about-public > .ds-container { width: min(1280px,calc(100% - 8rem)); }
+.ds-about-intro { padding-block: clamp(4rem,8vw,8rem); }
+.ds-about-intro .ds-button { margin-top: 2rem; }
+.ds-about-landscape { position: relative; height: min(65vw,650px); min-height: 320px; overflow: hidden; }
+.ds-about-landscape > .ds-scene-road { position: absolute; inset: 0; }
+.ds-editorial-split { display: grid; grid-template-columns: 1fr 2fr; gap: 4rem; padding-block: clamp(5rem,10vw,9rem); }
+.ds-editorial-split > div { max-width: 48rem; }
+.ds-editorial-split p:not(.ds-eyebrow) { margin-top: 2rem; }
+.ds-values { padding-block: 3rem 6rem; }
+.ds-values-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 2rem; margin-top: 3rem; }
+.ds-values-grid article { padding-top: 1.5rem; border-top: 1px solid #262626; }
+.ds-values-grid span { color: #A3A3A3; font-size: 11px; }
+.ds-values-grid h3 { margin-block: 2rem 1rem; }
+.ds-values-grid p { font-size: 15px; color: #A3A3A3; }
+.ds-public-closing { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 3rem; padding-block: 4rem; border-top: 1px solid #262626; }
+.ds-faq-questions { margin-bottom: 5rem; }
+.ds-faq-questions > details { margin: 0; padding: 0; border: 0; border-top: 1px solid #262626; border-radius: 0; background: transparent; }
+.ds-faq-questions > details:last-child { border-bottom: 1px solid #262626; }
+.ds-faq-questions summary { display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 88px; padding-block: 1.5rem; list-style: none; color: #FFFFFF; font-size: clamp(20px,2.3vw,30px); font-weight: 400; cursor: pointer; }
+.ds-faq-questions summary::-webkit-details-marker { display: none; }
+.ds-faq-questions summary::after { content: '+'; color: #A3A3A3; font-weight: 300; }
+.ds-faq-questions details[open] summary::after { content: '−'; }
+.ds-faq-questions details > div { max-width: 46rem; padding-bottom: 2rem; }
+.ds-faq-questions a { display: inline-flex; margin-top: 1rem; min-height: 44px; align-items: center; text-decoration: underline; text-underline-offset: 5px; font-size: 14px; color: #FFFFFF; }
+.ds-contact-public-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7rem; align-items: start; }
+.ds-contact-public-grid > aside { max-width: 27rem; }
+.ds-contact-public-grid > aside h2 { font-size: clamp(32px,4vw,48px); }
+.ds-contact-public-grid .ds-public-facts { margin-top: 2.5rem; }
+.ds-contact-public-grid .ds-public-facts > div { display: block; padding-block: 1.25rem; }
+.ds-contact-public-grid .ds-public-facts dd { margin-top: .5rem; text-align: left; font-size: 16px; }
+/* Labels stay visible while typing; fields and native validation keep their original names and rules. */
+.ds-public-form { padding: 0; border: 0; background: transparent; }
+.ds-public-form label { display: block; margin-block: 0 .65rem; color: #FFFFFF; font-size: 13px; }
+.ds-public-form input:not([type='hidden']), .ds-public-form textarea, .ds-public-auth input:not([type='hidden']) { width: 100%; min-height: 52px; border: 1px solid #525252; border-radius: 0; background: #0A0A0A; color: #FFFFFF; font-size: 16px; line-height: 1.5; padding: .8rem 1rem; }
+.ds-public-form input:not([type='hidden']) { margin-bottom: 1.75rem; }
+.ds-public-form textarea { min-height: 160px; resize: vertical; }
+.ds-public-form small { display: block; margin-top: .7rem; color: #A3A3A3; font-size: 12px; }
+.ds-public-form > .ds-button { margin-top: 2rem; }
+.ds-public-auth { width: min(560px,calc(100% - 3rem)); max-width: 560px; min-height: 75svh; padding: 4rem 0 6rem; border: 0; background: transparent; }
+.ds-public-auth h1 { font-size: clamp(40px,5vw,64px); }
+.ds-public-auth .ds-auth-heading { margin-bottom: 2.5rem; }
+.ds-public-auth > form { margin: 0; padding: 0; border: 0; background: transparent; }
+.ds-public-auth > form p { margin-block: 1.5rem; }
+.ds-public-auth form label { display: block; color: #FFFFFF; font-size: 13px; }
+.ds-public-auth form input:not([type='hidden']) { margin-top: .6rem; }
+.ds-public-auth form small { color: #A3A3A3; font-size: 12px; line-height: 1.7; }
+.ds-public-auth [data-password-wrap] { display: block; position: relative; }
+.ds-public-auth [data-password-wrap] input { padding-right: 5rem; }
+.ds-public-auth .ds-password-toggle { top: 50%; right: .8rem; min-width: 44px; min-height: 44px; transform: translateY(-50%); color: #D4D4D4; font-size: 12px; }
+.ds-public-auth .ds-auth-submit { width: 100%; margin-top: .5rem; }
+.ds-public-auth > p { margin-top: 1.5rem; font-size: 14px; }
+.ds-public-auth a { color: #FFFFFF; text-decoration: underline; text-underline-offset: 4px; }
+.ds-public-auth > p[role], .ds-public > p[role] { padding: 1rem; margin-block: 1.5rem; border: 1px solid #525252; background: #0A0A0A; font-size: 14px; color: #FFFFFF; }
+/* Instructor rows show the same server-sorted records without changing the bubble sort. */
+.ds-instructor-sort { display: flex; align-items: end; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; padding-block: 1.5rem; border-block: 1px solid #262626; }
+.ds-instructor-sort label { display: block; min-width: 180px; color: #A3A3A3; font-size: 12px; }
+.ds-instructor-sort select { display: block; width: 100%; min-height: 50px; margin-top: .5rem; padding: .75rem 2rem .75rem 1rem; border: 1px solid #525252; border-radius: 0; background-color: #0A0A0A; color: #FFFFFF; font-size: 14px; }
+.ds-instructor-row { display: grid; grid-template-columns: 96px minmax(0,1fr) 220px; gap: 2.5rem; align-items: start; padding-block: 3rem; border-bottom: 1px solid #262626; }
+.ds-instructor-row .ds-avatar, .ds-instructor-row .ds-avatar-photo { width: 96px; height: 96px; border: 1px solid #525252; background: #171717; color: #FFFFFF; font-weight: 400; font-size: 32px; filter: grayscale(1); }
+.ds-instructor-row h2 { font-size: clamp(28px,3vw,40px); overflow-wrap: anywhere; }
+.ds-instructor-row p { margin-top: 1rem; max-width: 40rem; color: #A3A3A3; font-size: 15px; overflow-wrap: anywhere; }
+.ds-instructor-summary > p:first-child { margin-top: 0; color: #FFFFFF; }
+.ds-instructor-summary .ds-instructor-rating { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.ds-instructor-summary .ds-instructor-rating > span:last-child { color: #D4D4D4; font-size: 12px; }
+/* Keep ds-review-card and its plain text children for the home page's approved-review reader. */
+.ds-public-review-list { border-top: 1px solid #262626; }
+.ds-public-review-list .ds-review-card { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 1.5rem 3rem; padding-block: 3rem; border-bottom: 1px solid #262626; }
+.ds-public-review-list blockquote { margin: 0; color: #FFFFFF; font-size: clamp(24px,3vw,36px); font-weight: 300; line-height: 1.5; overflow-wrap: anywhere; }
+.ds-public-review-list .ds-review-meta { grid-column: 2; margin: 0; padding: 0; color: #A3A3A3; font-size: 12px; }
+@media (max-width: 1000px) {
+  .ds-public.ds-container, .ds-about-public > .ds-container { width: calc(100% - 4rem); }
+  .ds-catalog-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ds-catalog-panel { padding-inline: 1.5rem; }
+  .ds-catalog-panel:nth-child(3n) { border-right: 1px solid #262626; }
+  .ds-catalog-panel:nth-child(2n) { border-right: 0; }
+  .ds-detail-grid { grid-template-columns: minmax(0,1fr); gap: 2rem; }
+  .ds-detail-enrol { position: static; grid-row: 1; max-width: 600px; width: 100%; }
+  .ds-detail-story { max-width: 48rem; }
+  .ds-contact-public-grid { gap: 3rem; }
+  .ds-instructor-row { grid-template-columns: 80px minmax(0,1fr); gap: 1.5rem; }
+  .ds-instructor-row .ds-avatar, .ds-instructor-row .ds-avatar-photo { width: 80px; height: 80px; }
+  .ds-instructor-summary { grid-column: 2; }
+  .ds-values-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 600px) {
+  .ds-public.ds-container, .ds-about-public > .ds-container { width: calc(100% - 2.5rem); }
+  .ds-public { padding-block: 3rem; }
+  .ds-public-heading { padding-bottom: 3rem; }
+  .ds-catalog-filters { gap: .75rem 1.5rem; }
+  .ds-catalog-grid { grid-template-columns: minmax(0,1fr); }
+  .ds-catalog-panel { padding: 2.5rem 0; border-right: 0 !important; }
+  .ds-public .ds-catalog-price { font-size: 44px; }
+  .ds-detail-heading { padding: 2rem 1.25rem; margin-bottom: 2.5rem; }
+  .ds-detail-enrol { padding: 1.5rem; }
+  .ds-detail-story > section { padding-block: 2rem 3rem; }
+  .ds-editorial-split { grid-template-columns: 1fr; gap: 1.5rem; padding-block: 4rem; }
+  .ds-values-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .ds-values-grid h3 { margin-top: 1rem; }
+  .ds-public-closing { padding-block: 3rem; }
+  .ds-faq-questions summary { min-height: 80px; font-size: 22px; }
+  .ds-contact-public-grid { grid-template-columns: minmax(0,1fr); gap: 3rem; }
+  .ds-public-auth { width: calc(100% - 2.5rem); padding-top: 3rem; }
+  .ds-instructor-sort { gap: 1rem; }
+  .ds-instructor-sort label { flex-grow: 1; min-width: 130px; }
+  .ds-instructor-row { grid-template-columns: 60px minmax(0,1fr); gap: 1.25rem; }
+  .ds-instructor-row .ds-avatar, .ds-instructor-row .ds-avatar-photo { width: 60px; height: 60px; font-size: 24px; }
+  .ds-instructor-row h2 { font-size: 28px; }
+  .ds-instructor-row > .ds-instructor-copy p { margin-left: -80px; padding-top: 1rem; }
+  .ds-instructor-summary { grid-column: 1 / -1; }
+  .ds-public-review-list .ds-review-card { grid-template-columns: minmax(0,1fr); gap: 1.5rem; }
+  .ds-public-review-list .ds-review-meta { grid-column: 1; }
+}
+@media print {
+  .ds-public, .ds-public-auth { padding-block: 1rem; }
+  .ds-detail-enrol { position: static; }
+  .ds-catalog-grid, .ds-detail-grid { display: block; }
+  .ds-catalog-panel, .ds-instructor-row, .ds-public-review-list .ds-review-card { break-inside: avoid; }
+}
+/* A rating must keep the width of its five stars so grid stretching cannot inflate the filled portion. */
+.ds-public-review-list .ds-star-display { justify-self: start; align-self: start; }
+
+/* Workspace presentation is shared; the original controllers, forms and role menus keep their jobs. */
+.ds-dashboard-shell { width: min(1440px,calc(100% - 5rem)); padding-block: clamp(3rem,5vw,5rem) 6rem; gap: 3.5rem; grid-template-columns: 190px minmax(0,1fr); }
+.ds-dashboard-content { min-width: 0; }
+.ds-dashboard-shell h1 { margin-bottom: 1.5rem; font-size: clamp(40px,5vw,72px); font-weight: 400; line-height: 1.08; letter-spacing: -.045em; overflow-wrap: anywhere; }
+.ds-dashboard-shell h2 { font-size: clamp(26px,2.7vw,38px); font-weight: 400; line-height: 1.2; letter-spacing: -.035em; }
+.ds-dashboard-shell h3 { font-size: 23px; font-weight: 400; line-height: 1.3; }
+.ds-dashboard-shell p { line-height: 1.8; }
+.ds-dashboard-shell .ds-eyebrow, .ds-dashboard-label, .ds-dashboard-shell .ds-admin-dashboard-eyebrow, .ds-dashboard-shell .ds-admin-dashboard-label { color: #A3A3A3; font-size: 10px; font-weight: 500; line-height: 1.8; letter-spacing: .17em; }
+.ds-dashboard-shell [class*='text-indigo-'], .ds-dashboard-shell [class*='text-emerald-'], .ds-dashboard-shell .text-amber-200, .ds-dashboard-shell .text-amber-300 { color: #FFFFFF; }
+.ds-dashboard-shell [class*='text-slate-'] { color: #A3A3A3; }
+.ds-dashboard-shell [class*='bg-indigo-'], .ds-dashboard-shell [class*='bg-emerald-'] { background: #171717; }
+.ds-workspace-heading, .ds-dashboard-shell .ds-admin-dashboard-heading { margin-bottom: 3rem; padding: 0; border: 0; background: transparent; }
+.ds-workspace-heading > p:last-child, .ds-workspace-heading > div > p:last-child { max-width: 44rem; color: #A3A3A3; font-size: 17px; }
+/* A quiet rail and a native mobile disclosure keep all existing destinations accessible. */
+.ds-dashboard-shell .ds-dashboard-sidebar { top: 120px; padding: .5rem 1.5rem 1rem 0; border: 0; border-right: 1px solid #262626; background: transparent; }
+.ds-dashboard-shell .ds-dashboard-label { padding: 0; margin-bottom: 1.5rem; }
+.ds-dashboard-sidebar nav, .ds-dashboard-drawer nav { gap: .35rem; }
+.ds-dashboard-shell .ds-dashboard-sidebar a, .ds-dashboard-shell .ds-dashboard-drawer a { min-height: 44px; padding: .6rem 0; border: 0; background: transparent; color: #A3A3A3; font-size: 13px; font-weight: 400; text-decoration: none; }
+.ds-dashboard-shell .ds-dashboard-sidebar a:hover, .ds-dashboard-shell .ds-dashboard-drawer a:hover, .ds-dashboard-shell .ds-dashboard-sidebar a[aria-current='page'], .ds-dashboard-shell .ds-dashboard-drawer a[aria-current='page'] { background: transparent; color: #FFFFFF; text-decoration: underline; text-underline-offset: 7px; }
+.ds-dashboard-shell .ds-dashboard-drawer { margin: 0; border: 0; border-block: 1px solid #262626; background: transparent; }
+.ds-dashboard-drawer summary { display: flex; min-height: 56px; justify-content: space-between; align-items: center; padding: 1rem 0; color: #FFFFFF; font-size: 13px; font-weight: 400; list-style: none; }
+.ds-dashboard-drawer summary::-webkit-details-marker { display: none; }
+.ds-dashboard-drawer summary::after { content: '+'; font-size: 20px; font-weight: 300; }
+.ds-dashboard-drawer[open] summary::after { content: '−'; }
+.ds-dashboard-drawer nav { padding: 0 0 1rem; border: 0; }
+/* Panels use thin rules and open space, so the data matters more than the container. */
+.ds-dashboard-shell .ds-empty-state { padding: 3rem 1.5rem; border: 1px solid #262626; border-radius: 0; background: #0A0A0A; text-align: left; }
+.ds-dashboard-shell .ds-empty-state p { max-width: 42rem; color: #A3A3A3; }
+.ds-dashboard-shell .ds-feature-card > h2 { margin-bottom: 1rem; }
+.ds-dashboard-shell .ds-feature-card p { color: #D4D4D4; }
+.ds-dashboard-shell .ds-profile-details { padding: 0; border: 0; background: transparent; }
+.ds-dashboard-shell .ds-profile-details dt, .ds-dashboard-shell .ds-profile-details dd { padding-block: 1rem; border-color: #262626; line-height: 1.8; }
+.ds-dashboard-shell .ds-profile-details dt { color: #A3A3A3; font-size: 10px; letter-spacing: .08em; font-weight: 400; }
+.ds-dashboard-shell .ds-profile-details dd { color: #FFFFFF; font-size: 14px; }
+/* Overview values come directly from saved records; currency gets its own small label. */
+.ds-workspace-overview { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2rem; margin-bottom: 3rem; }
+.ds-dashboard-shell .ds-workspace-overview .ds-card { padding-block: 1.75rem; }
+.ds-dashboard-shell .ds-workspace-overview h2 { color: #A3A3A3; font-size: 12px; font-weight: 400; letter-spacing: .04em; }
+.ds-dashboard-shell .ds-workspace-number { display: block; margin-block: .8rem; color: #FFFFFF; font-size: clamp(36px,3.7vw,52px); font-weight: 400; line-height: 1.15; letter-spacing: -.045em; overflow-wrap: anywhere; }
+.ds-workspace-number > span:not(.ds-workspace-unit) { color: #A3A3A3; font-size: 14px; letter-spacing: 0; }
+.ds-dashboard-shell .ds-workspace-package { display: block; margin-block: 1rem; color: #FFFFFF; font-size: clamp(24px,2.5vw,32px); font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+.ds-workspace-overview .ds-card > p:last-child a { display: inline-flex; min-height: 44px; align-items: center; color: #FFFFFF; font-size: 13px; text-decoration: underline; text-underline-offset: 5px; }
+.ds-workspace-statistics { margin-bottom: 4rem; }
+.ds-workspace-stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2rem; }
+.ds-workspace-stat-grid > div { padding-block: 1.5rem; border-top: 1px solid #262626; }
+.ds-workspace-stat-grid > div > span { color: #A3A3A3; font-size: 10px; font-weight: 400; letter-spacing: .12em; }
+.ds-workspace-number .ds-workspace-unit { display: block; margin-bottom: .5rem; color: #A3A3A3; font-size: 10px; font-weight: 400; letter-spacing: .12em; }
+.ds-dashboard-shell .ds-admin-dashboard-grid { gap: 0 2rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.ds-dashboard-shell .ds-admin-dashboard-card { gap: 1.25rem; padding: 2.5rem 0; border: 0; border-top: 1px solid #262626; background: transparent; box-shadow: none; }
+.ds-dashboard-shell .ds-admin-dashboard-card:hover { transform: none; border-color: #262626; box-shadow: none; }
+.ds-dashboard-shell .ds-admin-dashboard-card h3 { font-size: 26px; }
+.ds-dashboard-shell .ds-admin-dashboard-card p { color: #A3A3A3; font-size: 15px; }
+.ds-dashboard-shell .ds-admin-dashboard-card .ds-button { width: 100%; margin-top: .5rem; padding-inline: .75rem; }
+/* Outline actions are the default; an existing accent action stays the restrained primary button. */
+.ds-dashboard-shell .ds-button, .ds-dashboard-shell button:not([class]), .ds-dashboard-shell input[type='submit'] { min-height: 46px; padding: .7rem 1.3rem; border: 1px solid #737373; border-radius: 0; background: transparent; color: #FFFFFF; font-size: 13px; font-weight: 400; box-shadow: none; }
+.ds-dashboard-shell .ds-button:hover, .ds-dashboard-shell button:not([class]):hover { background: #FFFFFF; color: #000000; transform: none; }
+.ds-dashboard-shell .ds-button-accent { border-color: #F59E0B; background: #F59E0B; color: #000000; }
+.ds-dashboard-shell .ds-button-accent:hover { border-color: #FBBF24; background: #FBBF24; color: #000000; }
+.ds-dashboard-shell .ds-button-danger { background: transparent; color: #FFFFFF; border-color: #737373; }
+.ds-dashboard-shell .ds-button-danger:hover { background: #FFFFFF; color: #000000; }
+.ds-dashboard-shell .ds-filter-pills { gap: 1.5rem; margin-bottom: 1.75rem; border-bottom: 1px solid #262626; }
+.ds-dashboard-shell .ds-filter-pill { min-height: 48px; padding: .85rem 0; border: 0; border-radius: 0; background: transparent; color: #A3A3A3; font-size: 13px; font-weight: 400; text-decoration: none; }
+.ds-dashboard-shell .ds-filter-pill:hover, .ds-dashboard-shell .ds-filter-pill.is-active, .ds-dashboard-shell .ds-filter-pill[aria-selected='true'] { background: transparent; color: #FFFFFF; box-shadow: 0 1px 0 #FFFFFF; }
+/* Keep labels outside fields, native validation visible and controls easy to use on a phone. */
+.ds-dashboard-shell label { color: #D4D4D4; font-size: 13px; font-weight: 400; line-height: 1.7; }
+.ds-dashboard-shell input:not([type='hidden']):not([type='checkbox']):not([type='radio']), .ds-dashboard-shell select, .ds-dashboard-shell textarea { min-height: 50px; max-width: 100%; padding: .8rem 1rem; border: 1px solid #525252; border-radius: 0; background: #0A0A0A; color: #FFFFFF; font-size: 16px; line-height: 1.5; }
+.ds-dashboard-shell textarea { min-height: 130px; resize: vertical; }
+.ds-dashboard-shell input::placeholder, .ds-dashboard-shell textarea::placeholder { color: #A3A3A3; }
+.ds-dashboard-shell input[type='checkbox'], .ds-dashboard-shell input[type='radio'] { accent-color: #FFFFFF; }
+.ds-dashboard-shell [data-password-wrap] { display: block; }
+.ds-dashboard-shell [data-password-wrap] input { padding-right: 5rem; }
+.ds-dashboard-shell .ds-password-toggle { min-height: 44px; color: #D4D4D4; font-size: 12px; }
+.ds-dashboard-shell details:not(.ds-dashboard-drawer) { border: 1px solid #262626; border-radius: 0; background: #0A0A0A; }
+.ds-dashboard-shell summary { line-height: 1.6; }
+.ds-dashboard-shell [role='alert'], .ds-dashboard-shell [role='status'] { padding: 1rem; border: 1px solid #525252; background: #0A0A0A; color: #FFFFFF; }
+.ds-dashboard-shell .ds-search-bar, .ds-dashboard-shell .ds-pagination { padding: 1.25rem 0; border: 0; border-block: 1px solid #262626; background: transparent; }
+.ds-dashboard-shell .ds-slot-chip span { border-color: #525252; background: #0A0A0A; color: #D4D4D4; }
+.ds-dashboard-shell .ds-slot-chip input:checked + span { border-color: #FFFFFF; background: #262626; color: #FFFFFF; }
+/* Text names always identify status; amber is reserved for small pending or warning highlights. */
+.ds-dashboard-shell .status-badge, .ds-dashboard-shell .ds-status-badge { border: 1px solid #525252; background: #171717; color: #F5F5F5; font-size: 11px; font-weight: 400; line-height: 1.6; letter-spacing: .01em; }
+.ds-dashboard-shell .status-badge[data-status='PENDING'], .ds-dashboard-shell .ds-status-badge[data-status='WARNING'], .ds-dashboard-shell .status-badge[data-status='UNPAID'] { border-color: #F59E0B66; background: #F59E0B0D; color: #FDE68A; }
+.ds-dashboard-shell .ds-queue-position { border-color: #F59E0B66; background: #F59E0B0D; color: #FDE68A; font-size: 11px; font-weight: 400; }
+.ds-dashboard-shell progress { accent-color: #D4D4D4; }
+.ds-dashboard-shell progress::-webkit-progress-bar { background: #262626; }
+.ds-dashboard-shell progress::-webkit-progress-value { background: #D4D4D4; }
+.ds-dashboard-shell progress::-moz-progress-bar { background: #D4D4D4; }
+.ds-dashboard-shell table { min-width: 0; border: 0; font-size: 13px; }
+.ds-dashboard-shell th { background: transparent; color: #A3A3A3; font-weight: 400; }
+.ds-dashboard-shell td { border-top: 1px solid #262626; color: #D4D4D4; }
+.ds-dashboard-shell th, .ds-dashboard-shell td { padding: 1rem .75rem; overflow-wrap: anywhere; }
+@media screen {
+  .ds-dashboard-shell .ds-report-track { fill: #262626; }
+  .ds-dashboard-shell .ds-report-bar { fill: #D4D4D4; }
+}
+@media (min-width: 1280px) { .ds-dashboard-shell .ds-instructor-overview { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media (max-width: 1100px) {
+  .ds-dashboard-shell { width: calc(100% - 3rem); grid-template-columns: minmax(0,1fr); gap: 2rem; }
+  .ds-dashboard-shell .ds-dashboard-sidebar { display: none; }
+  .ds-dashboard-shell .ds-dashboard-drawer { display: block; }
+  .ds-dashboard-shell .ds-dashboard-drawer:not([open]) nav { display: none; }
+}
+@media (max-width: 700px) {
+  .ds-dashboard-shell { width: calc(100% - 2.5rem); padding-top: 2rem; }
+  .ds-dashboard-shell .ds-admin-dashboard-grid { grid-template-columns: minmax(0,1fr); }
+  .ds-workspace-stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; }
+  .ds-workspace-stat-grid > div:last-child { grid-column: 1 / -1; }
+  .ds-workspace-overview { gap: 1.5rem; }
+  .ds-dashboard-shell .ds-profile-details { grid-template-columns: minmax(0,1fr); }
+  .ds-dashboard-shell .ds-profile-details dt { padding-top: 1rem; padding-bottom: .25rem; border-bottom: 0; }
+  .ds-dashboard-shell .ds-profile-details dd { padding-top: 0; padding-bottom: 1rem; }
+}
+@media (max-width: 480px) {
+  .ds-dashboard-shell .ds-student-overview { grid-template-columns: minmax(0,1fr); }
+  .ds-dashboard-shell .ds-workspace-number { font-size: 40px; }
+}
+@media print {
+  .ds-dashboard-shell { width: 100%; display: block; padding: 0; }
+  .ds-dashboard-shell .ds-dashboard-sidebar, .ds-dashboard-shell .ds-dashboard-drawer { display: none; }
+}
+
+/* A visible white outline stays clear against the black page, including after button hover. */
+html body:where(:not(.ds-account-page):not(.ds-form-page)) :focus-visible { outline: 2px solid #FFFFFF !important; outline-offset: 4px !important; }
+[role='tabpanel'] { scroll-margin-top: 7rem; }
+@media (forced-colors: active) { html body :focus-visible { outline-color: Highlight !important; } }
+/* Paper uses one shared light palette after every screen rule, including hidden tab panels. */
+@media print {
+  @page { margin: 15mm; }
+  :root { color-scheme: light; }
+  html, body { background: #FFFFFF !important; color: #171717 !important; }
+  body * { color: #171717 !important; background-color: transparent !important; background-image: none !important; box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
+  h1, h2, h3, h4 { -webkit-text-fill-color: #171717 !important; }
+  .skip-link, .ds-header, .ds-footer, .ds-dashboard-sidebar, .ds-dashboard-drawer, .no-print, dialog, .ds-toast, .ds-toast-stack, button, input[type='submit'], [data-tabs], .ds-home-actions, .ds-scroll-cue, .ds-review-controls { display: none !important; }
+  main, .ds-container, .ds-home .ds-container, .ds-public.ds-container, .ds-about-public > .ds-container { width: 100% !important; max-width: none !important; margin-inline: 0 !important; padding-inline: 0 !important; }
+  main, section, article { break-inside: auto; }
+  main.ds-dashboard-shell, .ds-catalog-grid, .ds-detail-grid, .ds-public-review-list .ds-review-card { display: block; }
+  .ds-home-section, .ds-home .ds-cinematic-section { min-height: 0 !important; padding-block: 1.5rem !important; }
+  .ds-home .ds-cinematic-section > .ds-container { padding-block: 1rem !important; }
+  .ds-cinematic-background, .ds-cinematic-section::after, .ds-about-landscape, .ds-location-art, .ds-error-art { display: none !important; }
+  .ds-motion-ready { opacity: 1 !important; transform: none !important; }
+  [role='tabpanel'][hidden] { display: block !important; }
+  .ds-card, .ds-feature-card, .ds-catalog-panel, .ds-detail-enrol { border-color: #D4D4D4 !important; }
+  .ds-detail-enrol { position: static; margin-bottom: 1.5rem; }
+  table { width: 100%; min-width: 0 !important; }
+  th, td { border-color: #D4D4D4 !important; }
+  tr, .ds-catalog-panel, .ds-public-review-list .ds-review-card { break-inside: avoid; }
+  .safe-scroll { overflow: visible !important; }
+  .ds-star-display > span:first-child { color: #A3A3A3 !important; }
+  .ds-star-fill { color: #171717 !important; }
+  progress { accent-color: #404040; }
+  progress::-webkit-progress-bar { background: #E5E5E5 !important; }
+  progress::-webkit-progress-value { background: #404040 !important; }
+}
+
+/* PackageNavigationAdvice supplies the content; these local gradients stand in for future photos. */
+/* The transparent bridge keeps slow pointer movement inside the package menu. */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .ds-package-menu { position: relative; }
+  .ds-package-menu:has(.ds-package-trigger[aria-expanded="true"])::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 32px; }
+}
+.ds-package-panel[hidden] { display: none !important; }
+.ds-package-panel { position: fixed; top: var(--ds-header-height); left: 3vw; right: 3vw; max-height: calc(100svh - 104px); overflow: auto; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; padding: 24px; border-radius: 18px; background: #FFFFFF; color: #171717; box-shadow: 0 16px 40px #0005; z-index: 90; }
+.ds-package-choice { min-width: 0; }
+.ds-package-choice h2 { font-size: 26px; line-height: 1.2; margin: 18px 0 10px; color: #171717; }
+.ds-package-choice p { color: #525252; font-size: 14px; margin: 10px 0; }
+.ds-package-thumbnail { height: 125px; border-radius: 10px; background: linear-gradient(155deg,#737373,#171717 55%,#F59E0B55); }
+.ds-package-thumbnail[data-type='AUTOMATIC'] { background: linear-gradient(145deg,#D4D4D4,#404040 65%,#171717); }
+.ds-package-thumbnail[data-type='MOTORCYCLE'] { background: linear-gradient(25deg,#171717,#A3A3A3 55%,#262626); }
+.ds-package-enroll { display: inline-block; padding: 10px 24px; background: #000; color: #FFF !important; border-radius: 999px; font-size: 14px; }
+.ds-package-view { display: block; color: #171717 !important; text-decoration: underline; font-size: 14px; padding: 12px 0; }
+.ds-package-panel a:focus-visible { outline: 3px solid #B45309; outline-offset: 3px; }
+.ds-package-trigger[aria-expanded='true'], .ds-nav-link[aria-current='page'] { background: #E5E5E5; color: #171717; border-radius: 999px; padding-inline: 12px; }
+@media (max-width: 1023px) {
+  .ds-package-menu { width: 100%; }
+  .ds-package-panel { position: static; display: grid; grid-template-columns: 1fr; margin: 8px 0; padding: 16px; max-height: none; width: 100%; }
+  .ds-package-thumbnail { height: 64px; width: 88px; float: right; margin-left: 12px; }
+  .ds-package-choice { padding-block: 8px; border-bottom: 1px solid #D4D4D4; }
+  .ds-package-choice h2 { font-size: 24px; margin-top: 0; }
+}
+
+/* LocalPhotoAdvice omits absent files; original artwork stays beneath available photographs. */
+.ds-photo-surface, .ds-package-thumbnail, .ds-location-art, .ds-about-landscape { position: relative; overflow: hidden; }
+.ds-local-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+/* One 64% black shade leaves the photo visible and keeps light copy readable, even over white. */
+.ds-local-photo-shade { position: absolute; inset: 0; background: rgb(0 0 0 / .64); z-index: 2; pointer-events: none; }
+/* Photo sections already have a shade; the painted fallback keeps its original extra gradient. */
+.ds-cinematic-section:has(.ds-local-photo)::after { background: none; }
+.ds-scene-road-close:has(.ds-local-photo) { filter: none; }
+/* Small captions need the same contrast protection as the body copy on a photograph. */
+.ds-photo-surface .ds-eyebrow, .ds-photo-surface .ds-review-attribution, .ds-photo-surface .ds-review-controls span, .ds-cinematic-section .ds-home-three-points span { color: #D4D4D4; }
+.ds-photo-surface:has(> .ds-local-photo) > :not(.ds-local-photo):not(.ds-local-photo-shade) { position: relative; z-index: 3; }
+.ds-package-thumbnail .ds-local-photo-shade, .ds-catalog-photo .ds-local-photo-shade { background: linear-gradient(180deg,transparent,#0004); }
+.ds-cinematic-background > .ds-local-photo { z-index: 2; }
+.ds-cinematic-background > .ds-local-photo-shade { z-index: 3; }
+.ds-location-art > span:not(.ds-local-photo-shade):not(.ds-location-marker) { position: relative; z-index: 3; }
+.ds-location-marker { z-index: 3; }
+.ds-public-auth { position: relative; }
+.ds-auth-photo { display: none; }
+.ds-auth-photo:has(.ds-local-photo) { display: block; height: 300px; margin-bottom: 2rem; background: linear-gradient(130deg,#262626,#050505); }
+.ds-catalog-photo:has(.ds-local-photo) { height: 200px; margin-bottom: 1.5rem; }
+.ds-public-heading:has(> .ds-local-photo) { padding: 3rem; background: #0A0A0A; }
+@media(min-width:1280px) { .ds-auth-photo:has(.ds-local-photo) { position: absolute; left: calc(-23vw - 20px); top: 32px; width: 23vw; height: calc(100% - 64px); margin-bottom: 0; } }
+@media print { .ds-local-photo, .ds-local-photo-shade, .ds-auth-photo { display: none !important; } }
+
+/* These standalone photos carry no text, so a lighter shade keeps their detail visible. */
+.ds-auth-photo .ds-local-photo-shade, .ds-about-landscape .ds-local-photo-shade { background: linear-gradient(180deg,#0002,#0006); }
+
+/* Shared dropdown timing: change these four tokens to tune presentation motion. */
+:root { --ds-open-time: 280ms; --ds-close-time: 180ms; --ds-open-ease: cubic-bezier(.16,1,.3,1); --ds-close-ease: cubic-bezier(.4,0,1,1); }
+.ds-js .ds-animated-panel { opacity: 0; transform: translateY(-10px) scale(.98); transform-origin: top center; visibility: hidden; pointer-events: none; transition: opacity var(--ds-close-time) var(--ds-close-ease), transform var(--ds-close-time) var(--ds-close-ease), visibility 0s var(--ds-close-time); }
+.ds-js .ds-animated-panel.is-visible { opacity: 1; transform: translateY(0) scale(1); visibility: visible; pointer-events: auto; transition: opacity var(--ds-open-time) var(--ds-open-ease), transform var(--ds-open-time) var(--ds-open-ease), visibility 0s; }
+.ds-confirm-dialog[open], .ds-toast { animation: ds-panel-in var(--ds-open-time) var(--ds-open-ease) both; }
+.ds-confirm-dialog.is-leaving, .ds-toast-leaving { animation: none; opacity: 0; transform: translateY(-10px) scale(.98); pointer-events: none; transition: opacity var(--ds-close-time) var(--ds-close-ease), transform var(--ds-close-time) var(--ds-close-ease); }
+@keyframes ds-panel-in { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+/* Reset uses the same field styles as login, with two columns for laptop presentations. */
+.ds-auth-recovery { width: min(1040px,calc(100% - 4rem)); max-width: 1040px; padding-block: 2rem 3rem; }
+.ds-auth-recovery .ds-auth-heading { margin-bottom: 1.5rem; }
+.ds-auth-recovery .ds-auth-heading h1 { font-size: clamp(40px,4vw,56px); margin-top: 1rem; }
+.ds-auth-recovery .ds-wordmark { text-decoration: none; }
+.ds-auth-forms { display: grid; grid-template-columns: 1fr 1.3fr; gap: 3rem; }
+.ds-auth-forms form { display: grid; align-content: start; gap: 1rem; padding: 0; border: 0; background: transparent; }
+.ds-auth-forms h2 { font-size: 26px; }
+.ds-auth-forms button[type='submit'] { margin-top: .5rem; }
+/* Vehicle create/edit controls share a stacked label and full-width input. */
+.ds-vehicle-field { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.ds-vehicle-field input, .ds-vehicle-field select { width: 100%; }
+@media (min-width: 1024px) {
+  .ds-vehicle-editor { padding-block: 2rem; }
+  .ds-vehicle-editor .ds-vehicle-form-heading { margin-bottom: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-form-heading h1 { font-size: 48px; }
+  .ds-vehicle-editor .ds-card { padding-block: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-readonly { margin-bottom: 1rem; padding-bottom: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-details { grid-template-columns: repeat(4,minmax(0,1fr)); margin-block: .5rem; }
+  .ds-vehicle-editor .ds-vehicle-form { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+  .ds-vehicle-editor .ds-vehicle-form-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 1023px) { .ds-auth-forms { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-js .ds-animated-panel, .ds-js .ds-animated-panel.is-visible, .ds-confirm-dialog.is-leaving, .ds-toast-leaving { transform: none; transition-duration: 20ms; }
+  .ds-confirm-dialog[open], .ds-toast { animation: none; }
+}
+/* Keep error recovery actions visible at laptop and projector heights. */
+.ds-error-shell { padding-block: 2rem; gap: .75rem; }
+.ds-error-shell h1 { font-size: clamp(40px,4vw,56px); }
+.ds-error-art { max-width: 240px; margin-bottom: .25rem; }
+@media (min-width: 1024px) and (max-height: 800px) {
+  .ds-auth-recovery { padding-block: 1rem 2rem; }
+  .ds-auth-recovery .ds-auth-heading { margin-bottom: 1rem; }
+  .ds-auth-recovery .ds-auth-heading h1 { font-size: 44px; margin-top: .5rem; }
+  .ds-auth-forms form { gap: .6rem; }
+  .ds-auth-recovery input:not([type='hidden']) { min-height: 44px; padding-block: .5rem; margin-top: .35rem; }
+}
+
+/* Home alternates plain reading space with vivid photos. Only horizontal photo edges fade. */
+:root { --ds-photo-page: #0A0A0A; --ds-vignette-height: 120px; --ds-vignette-strength: 1; }
+.ds-home-rhythm, .ds-home-rhythm > .ds-home-section, .ds-home-rhythm + .ds-footer { background: var(--ds-photo-page); }
+.ds-home-rhythm + .ds-footer { border-top: 0; }
+.ds-home-rhythm .ds-home-photo { padding-block: 0; text-align: left; }
+.ds-home-picture { position: relative; isolation: isolate; overflow: hidden; aspect-ratio: 3/2; min-height: 0; background: var(--ds-fallback-scene,linear-gradient(145deg,#262626,#0A0A0A)); }
+.ds-home-photo .ds-location-art { min-height: 0; }
+.ds-home-photo .ds-local-photo-shade { background: none; }
+.ds-photo-copy { padding-block: 4rem; min-width: 0; overflow-wrap: anywhere; }
+.ds-home-photo h2 { font-size: clamp(40px,4vw,64px); }
+.ds-home-photo .ds-home-copy, .ds-home-photo p { margin-inline: 0; }
+.ds-photo-right .ds-home-picture { order: 2; }
+.ds-home-photo .ds-home-three-points { gap: 1rem; margin-top: 2rem; }
+.ds-home-photo .ds-home-three-points h3 { margin-top: .75rem; font-size: 18px; }
+.ds-home-photo .ds-home-three-points p { font-size: 14px; line-height: 1.6; }
+.ds-home-stories .ds-home-reviews { max-width: 1100px; margin: 0; padding: 0; border: 0; }
+.ds-home-stories .ds-home-reviews h2 { font-size: clamp(40px,6.5vw,88px); }
+/* The hero keeps its scenery, copy and zoom animation; the edge layer does not move. */
+.ds-home-hero > .ds-blend-layer { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.ds-home-hero { --ds-vignette-top: 0px; }
+.ds-edge-vignette { --ds-vignette-top: var(--ds-vignette-height); --ds-vignette-bottom: var(--ds-vignette-height); }
+.ds-home-hero > .ds-edge-vignette { --ds-vignette-top: 0px; }
+.ds-edge-vignette::after { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: var(--ds-vignette-strength); background: linear-gradient(to bottom,var(--ds-photo-page),transparent) top / 100% var(--ds-vignette-top) no-repeat,linear-gradient(to top,var(--ds-photo-page),transparent) bottom / 100% var(--ds-vignette-bottom) no-repeat; }
+/* Location labels sit above the edge shade on their original opaque backgrounds. */
+.ds-home-photo .ds-location-art > span:not(.ds-local-photo-shade):not(.ds-location-marker), .ds-home-photo .ds-location-marker { z-index: 5; }
+@media (max-width: 1000px) { .ds-home-photo > .ds-container { grid-template-columns: 1fr; } .ds-photo-right .ds-home-picture { order: 0; } .ds-home-picture { min-height: 60svh; } }
+@media print { .ds-home-picture, .ds-home-hero > .ds-blend-layer { display: none; } }
+
+/* Public photo edges use the same page tone; card and menu thumbnails keep their own styles. */
+.ds-vignette-page, .ds-vignette-page > .ds-footer { background: var(--ds-photo-page); }
+.ds-page-photo { --ds-vignette-top: 0px; }
+/* Missing header photos keep the same reading space instead of moving the next section. */
+header.ds-page-photo { padding: 3rem; }
+.ds-about-landscape.ds-page-photo { --ds-vignette-top: var(--ds-vignette-height); }
+/* Keep words above the edge shade. The existing photo shade still protects text in the middle. */
+.ds-page-photo.ds-photo-surface > :not(.ds-local-photo):not(.ds-local-photo-shade) { position: relative; z-index: 5; }
+.ds-page-photo.ds-auth-photo .ds-local-photo-shade, .ds-page-photo.ds-about-landscape .ds-local-photo-shade { background: none; }
+/* Painted road markings are a fallback, so they stay behind the real landscape. */
+.ds-page-photo > .ds-scene-road { z-index: 0; }
+/* An absent photo keeps the same side-panel footprint and its dark gradient backdrop. */
+.ds-auth-photo.ds-page-photo { display: block; height: 300px; margin-bottom: 2rem; }
+@media (min-width: 1280px) { .ds-auth-photo.ds-page-photo { position: absolute; left: calc(-23vw - 20px); top: 32px; width: 23vw; height: calc(100% - 64px); margin-bottom: 0; } }
+
+/* Auth side photos end just above this footer, so no thin rule interrupts their fade. */
+.ds-vignette-page:has(.ds-auth-photo) > .ds-footer { border-top: 0; }
+
+/* IT26101136: One account card system. Public marketing keeps its cinematic surfaces. */
+body.ds-account-page, body.ds-form-page { background: #f1f5f9; color: #0f172a; color-scheme: light; --ds-secondary: #475569; --ds-muted: #475569; --ds-text: #0f172a; }
+.ds-account-page .ds-dashboard-shell { padding-block: 40px; gap: 32px; }
+.ds-account-page .ds-dashboard-content h1, .ds-form-page h1 { color: #0f172a; font-size: clamp(30px,3vw,46px); font-weight: 600; line-height: 1.2; }
+.ds-account-page .ds-dashboard-content :is(h2,h3,h4), .ds-form-page :is(h2,h3,h4) { color: #0f172a; font-weight: 600; }
+.ds-account-page .ds-dashboard-content h2 { font-size: 24px; line-height: 1.35; }
+.ds-account-page .ds-dashboard-content h3 { font-size: 20px; line-height: 1.4; }
+.ds-account-page .ds-dashboard-content :is([class*="text-slate-"],[class*="text-indigo-"],[class*="text-amber-"],[class*="text-neutral-"]), .ds-form-page :is(.ds-eyebrow,small,[class*="text-slate-"]) { color: #475569; }
+:is(.ds-account-page,.ds-form-page) :is(.ds-card,.ds-feature-card,.ds-stat-card,.ds-booking-panel,.ds-admin-dashboard-card) { background: #fff; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px rgb(15 23 42 / 6%); }
+.ds-account-page .ds-feature-card:hover { transform: translateY(-1px); background: #fff; border-color: #cbd5e1; }
+.ds-account-page :is(.ds-card,.ds-feature-card,.ds-stat-card,.ds-booking-panel,.ds-admin-dashboard-card) :is(p,dt,small,.ds-eyebrow) { color: #475569; }
+.ds-account-page :is(.ds-card,.ds-feature-card) :is(dd,strong) { color: #0f172a; }
+.ds-account-page .ds-dashboard-content .ds-eyebrow { color: #475569; }
+.ds-account-page .ds-workspace-overview { align-items: start; gap: 20px; margin-block: 24px; }
+.ds-account-page .ds-workspace-overview .ds-card { padding: 24px; }
+.ds-account-page .ds-workspace-stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.ds-account-page .ds-workspace-number { color: #0f172a; font-size: 40px; line-height: 1.25; font-weight: 600; margin-block: 12px; }
+.ds-account-page .ds-workspace-unit { color: #475569; font-size: 14px; }
+.ds-account-page .ds-dashboard-content a:not(.ds-button) { color: #334155; text-underline-offset: 4px; }
+.ds-account-page .ds-workspace-overview .ds-card > p:last-child a { color: #334155; }
+.ds-account-page .ds-admin-dashboard-grid { gap: 20px; margin-top: 20px; }
+.ds-account-page .ds-dashboard-sidebar { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; color: #e2e8f0; padding: 20px 12px; }
+.ds-account-page .ds-dashboard-sidebar a, .ds-account-page .ds-dashboard-sidebar .ds-dashboard-label { color: #e2e8f0; }
+.ds-account-page .ds-dashboard-sidebar a[aria-current='page'] { background: #334155; color: #fff; border-radius: 8px; }
+.ds-account-page .ds-dashboard-drawer { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 16px; }
+.ds-account-page .ds-dashboard-drawer a { color: #e2e8f0; }
+:is(.ds-account-page,.ds-form-page) .ds-header { background: #020617; color: #e2e8f0; --ds-secondary: #cbd5e1; --ds-text: #fff; }
+:is(.ds-account-page,.ds-form-page) .ds-footer { background: #020617; --ds-secondary: #cbd5e1; --ds-text: #fff; color: #cbd5e1; }
+:is(.ds-account-page,.ds-form-page) .ds-footer h2 { color: #fff; }
+:is(.ds-account-page,.ds-form-page) .ds-button, .ds-confirm-dialog .ds-button { background: #f59e0b; color: #111827; border: 1px solid #d97706; border-radius: 10px; font-weight: 600; }
+:is(.ds-account-page,.ds-form-page) .ds-button:hover { background: #fbbf24; }
+:is(.ds-account-page,.ds-form-page) .ds-button-outline, .ds-confirm-dialog .ds-button-outline { color: #0f172a; background: transparent; border-color: #64748b; }
+:is(.ds-account-page,.ds-form-page) .ds-button-outline:hover { background: #e2e8f0; }
+:is(.ds-account-page,.ds-form-page) .ds-button-danger, .ds-confirm-dialog .ds-button-danger { background: #b91c1c; color: #fff; border-color: #991b1b; }
+:is(.ds-account-page,.ds-form-page) :is(input:not([type='hidden']):not([type='checkbox']):not([type='radio']),select,textarea) { background: #fff; color: #0f172a; border: 1px solid #64748b; border-radius: 8px; color-scheme: light; }
+:is(.ds-account-page,.ds-form-page) :is(input,textarea)::placeholder { color: #64748b; opacity: 1; }
+html body:is(.ds-account-page,.ds-form-page) :is(input,textarea,select,button,a):focus-visible { outline: 2px solid #92400e; outline-offset: 3px; box-shadow: none; }
+:is(.ds-account-page,.ds-form-page) :is(label,legend) { color: #334155; }
+:is(.ds-account-page,.ds-form-page) :is(input[type='checkbox'],input[type='radio']) { accent-color: #92400e; }
+.ds-account-page :is(.status-badge,.ds-status-badge,.ds-queue-position), .ds-form-page .status-badge { background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; border-radius: 999px; box-shadow: none; }
+.ds-account-page [data-status]:is([data-status='ACTIVE'],[data-status='PAID'],[data-status='CONFIRMED'],[data-status='COMPLETED'],[data-status='APPROVED']) { background: #dcfce7; color: #166534; border-color: #86efac; }
+.ds-account-page [data-status]:is([data-status='PENDING'],[data-status='AWAITING_PAYMENT'],[data-status='WARNING']) { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.ds-account-page [data-status]:is([data-status='CANCELLED'],[data-status='REJECTED'],[data-status='NO_SHOW'],[data-status='SUSPENDED'],[data-status='MAINTENANCE']) { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.ds-account-page .ds-empty-state { color: #475569; border: 1px dashed #94a3b8; border-radius: 16px; background: #fff; padding: 24px; }
+.ds-account-page .ds-slot-chip span { color: #0f172a; background: #f8fafc; border-color: #94a3b8; }
+.ds-account-page .ds-slot-chip input:checked + span { color: #78350f; background: #fef3c7; border-color: #b45309; }
+.ds-account-page [role='tab'] { color: #334155; }
+.ds-account-page [role='tab'][aria-selected='true'] { color: #78350f; background: #fef3c7; border-color: #b45309; }
+.ds-account-page .safe-scroll { border: 1px solid #e2e8f0; border-radius: 12px; }
+.ds-account-page table { background: #fff; color: #0f172a; border-collapse: collapse; }
+.ds-account-page th, .ds-account-page td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+.ds-account-page thead { background: #f8fafc; color: #334155; }
+.ds-account-page .ds-report-table tbody th { color: #334155; }
+.ds-confirm-dialog { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 24px 80px #02061755; }
+.ds-confirm-dialog :is(h2,p,label,.ds-eyebrow) { color: #0f172a; }
+.ds-confirm-dialog textarea { color: #0f172a; background: #fff; border-color: #64748b; }
+.ds-toast-success { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; }
+.ds-toast-error { background: #fff1f2; color: #881337; border: 1px solid #fda4af; }
+.ds-account-page :is([role='alert'],.ds-profile-error,.ds-form-error) { color: #991b1b; background: #fef2f2; border-color: #fca5a5; border-radius: 10px; padding: 12px; }
+.ds-form-page .ds-auth-page { background: #fff; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 16px; padding-block: 32px; margin-block: 32px; box-shadow: 0 8px 24px #0f172a0f; }
+.ds-form-page .ds-auth-page form { background: #fff; border: 0; padding: 0; }
+.ds-form-page .ds-auth-page :is(a,p) { color: #334155; }
+.ds-form-page .ds-auth-page .ds-button { color: #111827; }
+@media(max-width:767px) { .ds-account-page .ds-workspace-stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .ds-account-page .ds-dashboard-shell { gap: 20px; padding-block: 24px; } }
+@media(prefers-reduced-motion:reduce) { .ds-account-page .ds-feature-card:hover { transform: none; } }
+/* IT26101135: Home photographs fill each section using the existing hero approach. */
+.ds-home-rhythm .ds-home-photo { position: relative; isolation: isolate; overflow: hidden; min-height: calc(100svh - 88px); }
+.ds-home-rhythm .ds-home-photo > .ds-home-location { position: relative; display: flex; align-items: center; min-height: inherit; gap: 0; }
+.ds-home-rhythm .ds-home-photo .ds-home-picture { position: absolute; inset: 0; left: calc(50% - 50vw); width: 100vw; height: 100%; aspect-ratio: auto; min-height: 0; z-index: -2; order: 0; }
+.ds-home-rhythm .ds-home-photo .ds-home-picture::after { display: none; }
+.ds-home-rhythm .ds-home-photo .ds-local-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; }
+.ds-home-rhythm .ds-home-photo .ds-local-photo-shade { background: linear-gradient(90deg,#020617db,#02061740); }
+.ds-home-rhythm .ds-photo-right .ds-local-photo-shade { background: linear-gradient(270deg,#020617db,#02061740); }
+.ds-home-rhythm .ds-home-photo .ds-photo-copy { position: relative; z-index: 5; width: 50%; max-width: 640px; padding-block: 64px; }
+.ds-home-rhythm .ds-photo-right .ds-photo-copy { margin-left: auto; }
+.ds-home-rhythm .ds-home-photo h2 { color: #fff; font-size: clamp(40px,4.5vw,68px); }
+.ds-home-rhythm .ds-home-photo p { color: #e2e8f0; }
+@media(max-width:767px) { .ds-home-rhythm .ds-home-photo .ds-photo-copy { width: 100%; padding-block: 48px; } .ds-home-rhythm .ds-home-photo .ds-local-photo-shade { background: #020617ad; } }
+@media print { .ds-account-page .ds-card { box-shadow: none; break-inside: avoid; } }
+
+/* Account descendants that previously carried explicit dark-theme colours. */
+.ds-account-page .ds-dashboard-shell details:not(.ds-dashboard-drawer), .ds-account-page .ds-dashboard-content details > form { background: #fff; color: #0f172a; border-color: #e2e8f0; border-radius: 12px; }
+.ds-account-page .ds-dashboard-content .bg-surface { background: #f8fafc; }
+.ds-account-page .ds-dashboard-content :is(.ds-admin-dashboard-label,.ds-admin-dashboard-eyebrow,.ds-empty-state p) { color: #475569; }
+.ds-account-page .ds-dashboard-content table :is(th,td) { color: #0f172a; }
+:is(.ds-account-page,.ds-form-page) .ds-password-toggle { color: #334155; background: #f1f5f9; }
+.ds-account-page .ds-dashboard-shell .ds-filter-pill { color: #334155; border-color: #94a3b8; }
+.ds-account-page .ds-dashboard-shell .ds-filter-pill.is-active { color: #78350f; background: #fef3c7; box-shadow: 0 2px 0 #b45309; }
+.ds-account-page .ds-star-display, .ds-account-page .ds-star-display > span:first-child { color: #64748b; }
+.ds-account-page .ds-star-display .ds-star-fill { color: #92400e; }
+.ds-confirm-dialog .ds-confirm-card { color: #0f172a; background: #fff; border: 0; border-radius: 16px; }
+.ds-confirm-dialog .ds-confirm-card :is(p,label) { color: #334155; }
+.ds-confirm-dialog .ds-modal-close, .ds-toast .ds-toast-dismiss { color: #334155; background: #e2e8f0; }
+.ds-form-page .ds-auth-page .ds-wordmark span { color: #334155; }
+
+.ds-account-page .ds-dashboard-content details > summary { color: #334155; }
+.ds-account-page .ds-admin-dashboard-heading p { color: #475569; }
+
+/* IT26101135: Shared form alignment and readable controls on white cards. */
+.ds-form-page .ds-auth-page { width: min(1040px,calc(100% - 64px)); max-width: 1040px; padding: 32px; margin: 32px auto; min-height: 0; }
+.ds-form-page .ds-auth-page:has(.ds-auth-photo) { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1fr); gap: 40px; align-items: stretch; }
+.ds-form-page .ds-auth-content { min-width: 0; }
+.ds-form-page .ds-auth-page .ds-auth-photo { display: block; position: relative; inset: auto; width: 100%; height: auto; min-height: 360px; margin: 0; border-radius: 12px; overflow: hidden; }
+.ds-form-page .ds-auth-photo::after { display: none; }
+.ds-form-page .ds-auth-photo .ds-local-photo { object-position: center 65%; }
+.ds-form-page .ds-auth-heading { margin-bottom: 24px; }
+.ds-form-page .ds-auth-heading h1 { font-size: clamp(30px,3vw,42px); line-height: 1.15; }
+.ds-form-page .ds-auth-heading > p:not(.ds-eyebrow) { margin-top: 16px; font-size: 16px; line-height: 1.65; }
+.ds-form-page .ds-auth-page form :is(label,legend) { color: #334155; font-size: 14px; font-weight: 500; }
+.ds-form-page .ds-auth-content > form { margin: 0; }
+.ds-form-page .ds-auth-content > form p { margin-block: 20px; }
+.ds-form-page .ds-auth-content > p { margin-top: 20px; font-size: 14px; line-height: 1.6; }
+.ds-form-page .ds-auth-page [data-password-wrap] { position: relative; display: block; margin-top: .6rem; }
+.ds-form-page .ds-auth-page [data-password-wrap] input { padding-right: 76px; margin-top: 0; }
+.ds-form-page .ds-auth-page .ds-password-toggle { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); min-width: 48px; min-height: 40px; border-radius: 6px; color: #334155; }
+.ds-form-page .ds-auth-page [role='alert'] { color: #991b1b; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px; border-radius: 10px; }
+.ds-form-page .ds-auth-page [role='status'] { color: #1e3a8a; background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px; border-radius: 10px; }
+.ds-form-page .ds-auth-page [role] a { color: inherit; }
+.ds-form-page .ds-auth-forms { gap: 32px; }
+.ds-form-page .ds-auth-forms > form { min-width: 0; }
+.ds-form-page .ds-auth-recovery .ds-wordmark { display: none; }
+.ds-form-page .ds-auth-recovery .ds-auth-heading h1 { margin-top: 0; }
+.ds-account-page .ds-workspace-overview > .ds-card { margin-block: 0; }
+.ds-account-page .ds-workspace-statistics { margin-block: 24px; }
+.ds-account-page .ds-dashboard-sidebar a, .ds-account-page .ds-dashboard-drawer a { padding-inline: 12px; }
+.ds-account-page .ds-dashboard-shell :is(.ds-dashboard-sidebar,.ds-dashboard-drawer) a[href*='#'] { background: transparent; text-decoration: none; }
+.ds-account-page .ds-dashboard-shell :is(.ds-dashboard-sidebar,.ds-dashboard-drawer) a[href*='#']:hover { text-decoration: underline; }
+:is(.ds-account-page,.ds-form-page) :is(.ds-header,.ds-footer,.ds-dashboard-sidebar,.ds-dashboard-drawer) :is(a,button,summary):focus-visible { outline: 2px solid #fbbf24; outline-offset: 3px; box-shadow: none; }
+.ds-account-page :is(.ds-slot-chip,.ds-star-options) input:focus-visible + :is(span,label) { outline: 2px solid #92400e; outline-offset: 3px; box-shadow: none; }
+.ds-account-page .ds-button:disabled, .ds-account-page .ds-button:disabled:hover { color: #475569; background: #e2e8f0; border-color: #94a3b8; opacity: 1; cursor: not-allowed; transform: none; }
+.ds-account-page :is(input,select,textarea) { min-width: 0; max-width: 100%; }
+.ds-account-page :is(.ds-card,.ds-feature-card,.ds-stat-card,.ds-booking-panel) { min-width: 0; overflow-wrap: anywhere; }
+@media(max-width:767px) {
+  .ds-form-page .ds-auth-page { width: calc(100% - 32px); margin-block: 24px; padding: 24px; }
+  .ds-form-page .ds-auth-page:has(.ds-auth-photo) { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .ds-form-page .ds-auth-page .ds-auth-photo { display: none; }
+  .ds-form-page .ds-auth-forms { grid-template-columns: minmax(0,1fr); gap: 32px; }
+  .ds-account-page .ds-dashboard-shell { width: calc(100% - 32px); }
+  .ds-account-page .ds-workspace-stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ds-account-page .ds-workspace-stat-grid > div:last-child { grid-column: auto; }
+}
+@media(max-width:480px) {
+  .ds-account-page .ds-workspace-stat-grid .ds-workspace-number { font-size: 30px; }
+  .ds-account-page .ds-workspace-overview { grid-template-columns: minmax(0,1fr); }
+}
+@media(min-width:1024px) and (max-height:800px) {
+  .ds-form-page .ds-auth-recovery { padding: 24px; margin-block: 24px; }
+  .ds-form-page .ds-auth-recovery .ds-auth-heading { margin-bottom: 16px; }
+  .ds-form-page .ds-auth-recovery .ds-auth-forms form { gap: 10px; }
+  .ds-form-page .ds-auth-recovery .ds-auth-forms h2 { font-size: 24px; }
+}
+@media(forced-colors:active) {
+  .ds-account-page :is(.ds-slot-chip,.ds-star-options) input:focus-visible + :is(span,label) { outline-color: Highlight; }
+}
+
+/* Match the existing field selector so its transparent focus outline cannot hide keyboard focus. */
+html body:is(.ds-account-page,.ds-form-page) input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):focus-visible { outline: 2px solid #92400e; outline-offset: 3px; box-shadow: none; }
