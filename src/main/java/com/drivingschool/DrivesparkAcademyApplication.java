@@ -8,7 +8,8 @@ import java.time.Clock;
 import java.time.ZoneId;
 
 @SpringBootApplication
-public class DrivesparkAcademyApplication {
+public class
+rivesparkAcademyApplication {
 
     @Bean
     public Clock applicationClock() {
@@ -20,3 +21,4 @@ public class DrivesparkAcademyApplication {
     }
 
 }
+
