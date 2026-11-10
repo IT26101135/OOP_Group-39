@@ -60,7 +60,10 @@ public class EnrollmentPresentationService {
         Map<String, EnrollmentUsageView> usage = new LinkedHashMap<>();
         Enrollment selected = null;
         Enrollment latestPaid = null;
+        boolean awaitingPayment = false;
         for (Enrollment receipt : receipts.values()) {
+            if (student.getId().equals(receipt.getStudentId())
+                    && "AWAITING_PAYMENT".equals(receipt.getStatus())) awaitingPayment = true;
             if (student.getId().equals(receipt.getStudentId()) && receipt.isPaid()
                     && newerThan(receipt, latestPaid)) latestPaid = receipt;
         }
@@ -72,7 +75,7 @@ public class EnrollmentPresentationService {
             // Exhausting the account clears its active IDs. Only the latest Paid receipt can represent that zero.
             if (student.getActiveEnrollmentId() == null && student.getActivePackageId() == null
                     && student.getLessonsRemaining() == 0 && receipt == latestPaid) balanceOwner = true;
-            usage.put(receipt.getId(), describe(receipt, courses.get(receipt.getPackageId()), student, ownBookings, balanceOwner));
+            usage.put(receipt.getId(), describe(receipt, courses.get(receipt.getPackageId()), student, ownBookings, balanceOwner, awaitingPayment));
             if (student.getActiveEnrollmentId() == null) {
                 if (selected == null
                         || ("AWAITING_PAYMENT".equals(receipt.getStatus()) && !"AWAITING_PAYMENT".equals(selected.getStatus()))
@@ -89,7 +92,8 @@ public class EnrollmentPresentationService {
         model.addAttribute("packages", ownPackages);
         model.addAttribute("enrollments", ownReceipts);
         model.addAttribute("enrollmentUsage", usage);
-        model.addAttribute("currentUsage", selected == null ? unavailable() : usage.get(selected.getId()));
+        model.addAttribute("currentUsage", selected == null
+                ? (ownReceipts.isEmpty() ? noPackage() : unavailable()) : usage.get(selected.getId()));
         model.addAttribute("bookingPackages", bookingViews(ownBookings, receipts, courses));
     }
 
@@ -119,14 +123,14 @@ public class EnrollmentPresentationService {
             if (receipt == null || !booking.getStudentId().equals(receipt.getStudentId())) {
                 result.put(booking.getId(), unavailable());
             } else {
-                result.put(booking.getId(), describe(receipt, courses.get(receipt.getPackageId()), null, List.of(), false));
+                result.put(booking.getId(), describe(receipt, courses.get(receipt.getPackageId()), null, List.of(), false, false));
             }
         }
         return result;
     }
 
     private EnrollmentUsageView describe(Enrollment receipt, LearningPackage course,
-            Student student, List<Booking> lessons, boolean balanceOwner) {
+            Student student, List<Booking> lessons, boolean balanceOwner, boolean awaitingPayment) {
         int completed = 0;
         int requested = 0;
         int confirmed = 0;
@@ -149,14 +153,12 @@ public class EnrollmentPresentationService {
         else if (student.getLessonsRemaining() == 0) status = "Used up";
         else status = "Active";
         String left = current && receipt.isPaid() ? String.valueOf(student.getLessonsRemaining()) : "Not recorded";
+        if ("Awaiting payment".equals(status)) left = "Available after payment";
         String message = "";
         if ("Historical".equals(status) || (receipt.isPaid() && !current)) {
-            message = "Historical enrollment — remaining balance not recorded";
+            message = "Past package. The remaining lesson balance was not recorded.";
         }
         if ("Awaiting payment".equals(status)) message = "Lessons available after payment";
-        if ("Used up".equals(status) || "Expired".equals(status)) {
-            message += (message.isEmpty() ? "" : ". ") + "Contact the school to renew. Buying another package is not available yet.";
-        }
         boolean bookable = "Active".equals(status);
         boolean full = bookable && requested + confirmed >= student.getLessonsRemaining();
         if (full) message = "Your remaining lessons are already requested. View your bookings to change a request.";
@@ -173,7 +175,22 @@ public class EnrollmentPresentationService {
             label = "My enrollments";
             if (message.isEmpty()) message = "Package details are unavailable. Contact the school for help.";
         }
-        return new EnrollmentUsageView(course == null ? "Package unavailable (" + receipt.getPackageId() + ")" : course.getName(),
+        if (current && ("Used up".equals(status) || "Expired".equals(status))) {
+            if (awaitingPayment) {
+                message = "Your next package is awaiting payment. Open My enrollments for its payment instructions.";
+                url = "/enrollments";
+                label = "My enrollments";
+            } else if (hasOpenLessons(lessons)) {
+                message = "Resolve your pending or confirmed lessons before choosing another package. Ask us for help if needed.";
+                url = "/bookings";
+                label = "View my lessons";
+            } else {
+                message = "You can choose another package. Your past payments and lessons stay in your history.";
+                url = "/packages";
+                label = "Choose another package";
+            }
+        }
+        return new EnrollmentUsageView(course == null ? "Package no longer listed" : course.getName(),
                 course == null ? "Not recorded" : course.getType().toString(),
                 receipt.getValidUntil() == null ? "Validity not recorded" : receipt.getValidUntil().toString(),
                 status, left, course == null ? "Not recorded" : String.valueOf(course.getLessonCount()),
@@ -186,9 +203,22 @@ public class EnrollmentPresentationService {
         return timeOrder > 0 || (timeOrder == 0 && receipt.getId().compareTo(previous.getId()) > 0);
     }
 
+    private boolean hasOpenLessons(List<Booking> lessons) {
+        for (Booking lesson : lessons) {
+            if (lesson.getStatus() == BookingStatus.PENDING || lesson.getStatus() == BookingStatus.CONFIRMED) return true;
+        }
+        return false;
+    }
+
     private EnrollmentUsageView unavailable() {
         return new EnrollmentUsageView("Package unavailable", "Not recorded", "Validity not recorded",
                 "Unavailable", "Not recorded", "Not recorded", 0, 0, 0, false,
-                "/enrollments", "My enrollments", "No current package details are available. View packages or contact the school.");
+                "/enrollments", "My enrollments", "You have no current package. View our packages or contact us for help.");
+    }
+
+    private EnrollmentUsageView noPackage() {
+        return new EnrollmentUsageView("Choose your first package", "Not recorded", "Validity not recorded",
+                "No package", "Not recorded", "Not recorded", 0, 0, 0, false,
+                "/packages", "Browse packages", "Choose a package and request enrollment. You can book lessons after we confirm payment.");
     }
 }

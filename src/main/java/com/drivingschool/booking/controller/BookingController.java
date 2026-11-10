@@ -85,6 +85,13 @@ public class BookingController {
         presentation.addStudent(request, model, ownBookings);
         addRequestGroups(ownBookings, model);
         String bookingProblem = bookingService.bookingProblem(request);
+        int openLessons = 0;
+        for (Booking booking : ownBookings) {
+            if (booking.getStatus() == BookingStatus.PENDING || booking.getStatus() == BookingStatus.CONFIRMED) openLessons++;
+        }
+        if (bookingProblem == null && openLessons >= student.getLessonsRemaining()) {
+            bookingProblem = "All your remaining lessons are already requested. Open your current requests to change one.";
+        }
         model.addAttribute("bookingProblem", bookingProblem);
         model.addAttribute("canBook", bookingProblem == null);
         model.addAttribute("instructors", activeInstructors());
@@ -104,7 +111,7 @@ public class BookingController {
                           @RequestParam String startTime,
                           RedirectAttributes flash) {
         bookingService.requestLesson(request, packageId, instructorId, parseStartTime(startTime));
-        flash.addFlashAttribute("success", "Lesson request sent. An administrator will confirm the instructor and vehicle.");
+        flash.addFlashAttribute("success", "Your lesson request has been sent. We will confirm your instructor and vehicle.");
         return "redirect:/bookings";
     }
 
@@ -125,7 +132,7 @@ public class BookingController {
     public String reschedule(HttpServletRequest request, @RequestParam String bookingId,
                              @RequestParam String startTime, RedirectAttributes flash) {
         bookingService.rescheduleOwnBooking(request, bookingId, parseStartTime(startTime));
-        flash.addFlashAttribute("success", "A new pending request was added to the end of the queue.");
+        flash.addFlashAttribute("success", "Your new lesson request has been sent. Earlier requests will be handled first.");
         return "redirect:/bookings";
     }
 

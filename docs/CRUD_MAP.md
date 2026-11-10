@@ -1,5 +1,7 @@
 # CRUD map
 
+> **Current guide (10 Nov 2026):** use the [source-checked viva pack](viva-2026/README.md), [six individual diagrams](viva-2026/class-diagrams.html) and [six printable cheat sheets](viva-2026/cheat-sheets.pdf). The older material below is historical and may mention removed interfaces or earlier report layouts.
+
 Owner: **IT26101135 - [Name]** (integration documentation). Names remain placeholders until the team supplies them.
 
 This map was checked against the current source, not earlier logs. Each operation has separate controller, service and repository rows. A URL belongs to the controller; repeating it on a service or repository row shows which browser request reaches that method, not another public endpoint. JSP paths are relative to `src/main/webapp/WEB-INF/views/`; a form can redirect to a list or login after a successful write. All writes are POST requests protected by CSRF and the existing role/ownership checks.

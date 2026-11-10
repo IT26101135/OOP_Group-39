@@ -12,17 +12,17 @@ CRUD     : Displays existing data; does not save records
 <%-- This block shows dashboard sidebar. NavigationInterceptor supplies the current role and menu details. --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <aside class="ds-dashboard-sidebar" aria-label="Dashboard navigation">
-    <p class="ds-dashboard-label">Workspace</p>
+    <p class="ds-dashboard-label">Your account</p>
     <nav aria-label="Workspace pages">
         <c:choose>
             <c:when test="${navRole eq 'STUDENT'}">
-                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
+                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">My lessons</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
             </c:when>
             <c:when test="${navRole eq 'INSTRUCTOR'}">
                 <a href="<c:url value='/instructor/dashboard' />">Dashboard</a><a href="<c:url value='/instructor/dashboard#assigned-lessons' />">Assigned lessons</a><a href="<c:url value='/instructor/availability' />">Availability</a><a href="<c:url value='/reviews' />">My reviews</a>
             </c:when>
             <c:when test="${navRole eq 'ADMIN'}">
-                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Users</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/enrollments' />">Awaiting payment</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
+                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Students</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/enrollments' />">Awaiting payment</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
             </c:when>
         </c:choose>
     </nav>
@@ -33,13 +33,13 @@ CRUD     : Displays existing data; does not save records
     <nav aria-label="Workspace pages">
         <c:choose>
             <c:when test="${navRole eq 'STUDENT'}">
-                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">Book / My bookings</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
+                <a href="<c:url value='/student/profile' />">Dashboard</a><a href="<c:url value='/bookings' />">My lessons</a><a href="<c:url value='/student/progress' />">Progress</a><a href="<c:url value='/reviews' />">Reviews</a><a href="<c:url value='/student/profile/edit' />">Profile</a>
             </c:when>
             <c:when test="${navRole eq 'INSTRUCTOR'}">
                 <a href="<c:url value='/instructor/dashboard' />">Dashboard</a><a href="<c:url value='/instructor/dashboard#assigned-lessons' />">Assigned lessons</a><a href="<c:url value='/instructor/availability' />">Availability</a><a href="<c:url value='/reviews' />">My reviews</a>
             </c:when>
             <c:when test="${navRole eq 'ADMIN'}">
-                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Users</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/enrollments' />">Awaiting payment</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
+                <a href="<c:url value='/admin/dashboard' />">Dashboard</a><a href="<c:url value='/admin/students' />">Students</a><a href="<c:url value='/admin/packages' />">Packages</a><a href="<c:url value='/admin/enrollments' />">Awaiting payment</a><a href="<c:url value='/admin/vehicles' />">Vehicles</a><a href="<c:url value='/admin/bookings' />">Schedule</a><a href="<c:url value='/admin/reviews' />">Reviews</a><a href="<c:url value='/admin/reports' />">Reports</a>
             </c:when>
         </c:choose>
     </nav>

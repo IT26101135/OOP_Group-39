@@ -18,6 +18,7 @@ import com.drivingschool.booking.model.Booking;
 import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
 import com.drivingschool.common.exception.ValidationException;
+import com.drivingschool.common.exception.DuplicateRecordException;
 import com.drivingschool.learningpackage.model.Enrollment;
 import com.drivingschool.learningpackage.model.LearningPackage;
 import com.drivingschool.learningpackage.repository.EnrollmentRepository;
@@ -84,7 +85,7 @@ class EnrollmentPaymentServiceTest {
     void rejectsInactivePackage() {
         course.setActive(false);
         packages.update(course);
-        assertTrue(assertThrows(ValidationException.class, () -> service.markPaid(admin, "E001")).getMessage().contains("inactive"));
+        assertTrue(assertThrows(ValidationException.class, () -> service.markPaid(admin, "E001")).getMessage().contains("no longer available"));
         assertWaitingWithoutLessons();
     }
 
@@ -93,7 +94,7 @@ class EnrollmentPaymentServiceTest {
     void rejectsSuspendedStudent() {
         student.setStatus(AccountStatus.SUSPENDED);
         users.update(student);
-        assertTrue(assertThrows(ValidationException.class, () -> service.markPaid(admin, "E001")).getMessage().contains("Suspended"));
+        assertTrue(assertThrows(ValidationException.class, () -> service.markPaid(admin, "E001")).getMessage().contains("suspended"));
         assertWaitingWithoutLessons();
     }
 
@@ -157,6 +158,145 @@ class EnrollmentPaymentServiceTest {
     @Test
     void confirmationAndCancellationCannotBothSucceed() throws Exception {
         raceDecisions(true);
+    }
+
+    @Test
+    void expiredRenewalKeepsOldReceiptAndLessonHistory() {
+        prepareRenewal(false);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(2);
+        bookings.save(new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                "I001", "V001", BookingStatus.COMPLETED, start.minusDays(1)));
+        Enrollment next = service.enroll(admin, "P001");
+        assertEquals("AWAITING_PAYMENT", next.getStatus());
+        assertEquals("E001", ((Student) users.findByIdStrict("S001").orElseThrow()).getActiveEnrollmentId());
+        service.markPaid(admin, next.getId());
+        assertEquals(2, receipts.readAllStrict().size());
+        Enrollment old = receipts.findByIdStrict("E001").orElseThrow();
+        assertEquals("PAID", old.getStatus());
+        assertEquals(new BigDecimal("1500"), old.getAmount());
+        assertEquals(LocalDate.now(clock).minusDays(1), old.getValidUntil());
+        assertEquals(BookingStatus.COMPLETED, bookings.findByIdStrict("B001").orElseThrow().getStatus());
+        assertEquals(next.getId(), ((Student) users.findByIdStrict("S001").orElseThrow()).getActiveEnrollmentId());
+        assertEquals(5, ((Student) users.findByIdStrict("S001").orElseThrow()).getLessonsRemaining());
+    }
+
+    @Test
+    void firstPaymentStillHandlesAnOlderUnpaidPendingRequest() {
+        LocalDateTime start = LocalDateTime.now(clock).plusDays(2);
+        bookings.save(new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                null, null, BookingStatus.PENDING, LocalDateTime.now(clock)));
+        assertEquals("PAID", service.markPaid(admin, "E001").getStatus());
+        assertEquals(5, ((Student) users.findByIdStrict("S001").orElseThrow()).getLessonsRemaining());
+    }
+
+    @Test
+    void usedUpStudentCanRenewAndOldPaymentCannotBeConfirmedAgain() {
+        prepareRenewal(true);
+        Enrollment next = service.enroll(admin, "P001");
+        service.markPaid(admin, next.getId());
+        assertEquals(2, receipts.readAllStrict().size());
+        assertEquals(5, ((Student) users.findByIdStrict("S001").orElseThrow()).getLessonsRemaining());
+        assertThrows(ValidationException.class, () -> service.markPaid(admin, "E001"));
+    }
+
+    @Test
+    void pendingLessonPreventsRenewal() {
+        assertOpenLessonPreventsRenewal(BookingStatus.PENDING);
+    }
+
+    @Test
+    void confirmedLessonPreventsRenewal() {
+        assertOpenLessonPreventsRenewal(BookingStatus.CONFIRMED);
+    }
+
+    private void assertOpenLessonPreventsRenewal(BookingStatus status) {
+        prepareRenewal(false);
+        LocalDateTime start = LocalDateTime.now(clock).plusDays(2);
+        bookings.save(new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                status == BookingStatus.CONFIRMED ? "I001" : null,
+                status == BookingStatus.CONFIRMED ? "V001" : null, status, LocalDateTime.now(clock)));
+        assertTrue(assertThrows(DuplicateRecordException.class, () -> service.enroll(admin, "P001"))
+                .getMessage().contains("pending or confirmed"));
+        assertEquals(1, receipts.readAllStrict().size());
+    }
+
+    @Test
+    void paymentRechecksOpenLessonsCreatedAfterRenewalRequest() {
+        prepareRenewal(false);
+        Enrollment next = service.enroll(admin, "P001");
+        LocalDateTime start = LocalDateTime.now(clock).plusDays(2);
+        bookings.save(new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                null, null, BookingStatus.PENDING, LocalDateTime.now(clock)));
+        assertThrows(ValidationException.class, () -> service.markPaid(admin, next.getId()));
+        assertEquals("AWAITING_PAYMENT", receipts.findByIdStrict(next.getId()).orElseThrow().getStatus());
+        assertEquals("E001", ((Student) users.findByIdStrict("S001").orElseThrow()).getActiveEnrollmentId());
+    }
+
+    @Test
+    void usablePackageIncludingItsExpiryDayCannotBeReplaced() {
+        service.markPaid(admin, "E001");
+        when(auth.requireLogin(admin)).thenAnswer(invocation -> users.findByIdStrict("S001").orElseThrow());
+        Enrollment paid = receipts.findByIdStrict("E001").orElseThrow();
+        paid.setValidUntil(LocalDate.now(clock));
+        receipts.update(paid);
+        assertTrue(assertThrows(DuplicateRecordException.class, () -> service.enroll(admin, "P001"))
+                .getMessage().contains("still have lessons"));
+        assertEquals(1, receipts.readAllStrict().size());
+    }
+
+    @Test
+    void paymentRechecksUsablePackageRestoredAfterRenewalRequest() {
+        prepareRenewal(true);
+        Enrollment next = service.enroll(admin, "P001");
+        Student restored = (Student) users.findByIdStrict("S001").orElseThrow();
+        restored.setLessonsRemaining(2);
+        restored.setActivePackageId("P001");
+        restored.setActiveEnrollmentId("E001");
+        users.update(restored);
+        assertThrows(ValidationException.class, () -> service.markPaid(admin, next.getId()));
+        assertEquals("AWAITING_PAYMENT", receipts.findByIdStrict(next.getId()).orElseThrow().getStatus());
+        assertEquals(2, ((Student) users.findByIdStrict("S001").orElseThrow()).getLessonsRemaining());
+    }
+
+    @Test
+    void concurrentRenewalRequestsCreateOnlyOneAwaitingReceipt() throws Exception {
+        prepareRenewal(false);
+        ExecutorService callers = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            Callable<Boolean> attempt = () -> {
+                start.await(5, TimeUnit.SECONDS);
+                try {
+                    service.enroll(admin, "P001");
+                    return true;
+                } catch (DuplicateRecordException error) {
+                    assertTrue(error.getMessage().contains("awaiting payment"));
+                    return false;
+                }
+            };
+            Future<Boolean> first = callers.submit(attempt);
+            Future<Boolean> second = callers.submit(attempt);
+            start.countDown();
+            assertNotEquals(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS));
+            assertEquals(2, receipts.readAllStrict().size());
+        } finally {
+            start.countDown();
+            callers.shutdownNow();
+        }
+    }
+
+    private void prepareRenewal(boolean usedUp) {
+        service.markPaid(admin, "E001");
+        Student paid = (Student) users.findByIdStrict("S001").orElseThrow();
+        if (usedUp) {
+            paid.setLessonsRemaining(0);
+            users.update(paid);
+        } else {
+            Enrollment old = receipts.findByIdStrict("E001").orElseThrow();
+            old.setValidUntil(LocalDate.now(clock).minusDays(1));
+            receipts.update(old);
+        }
+        when(auth.requireLogin(admin)).thenAnswer(invocation -> users.findByIdStrict("S001").orElseThrow());
     }
 
     // Starts two callers together and checks the loser gets the same friendly explanation.

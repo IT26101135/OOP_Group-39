@@ -145,6 +145,43 @@ class InstructorScheduleServiceTest {
                 () -> service.availability(request)).getStatusCode().value());
     }
 
+    @Test
+    void protectsConfirmedLessonsDuringHoursDeletion() {
+        Availability block = service.addAvailability(request, DayOfWeek.MONDAY,
+                LocalTime.of(9, 0), LocalTime.of(12, 0));
+        saveConfirmedLesson(LocalDate.of(2030, 1, 7));
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> service.deleteAvailability(request, block.getId()));
+        assertTrue(error.getMessage().contains("removing"));
+        assertTrue(hours.findByIdStrict(block.getId()).isPresent());
+        assertEquals(BookingStatus.CONFIRMED, bookings.readAllStrict().get(0).getStatus());
+    }
+
+    @Test
+    void blocksAddingAndMovingLeaveOverAssignedPendingLesson() {
+        InstructorLeave earlier = service.addLeave(request, LocalDate.of(2030, 1, 2), "Appointment");
+        LocalDateTime start = LocalDate.of(2030, 1, 7).atTime(10, 0);
+        bookings.save(new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                "I001", "V001", BookingStatus.PENDING, LocalDateTime.now(clock)));
+        assertTrue(assertThrows(ValidationException.class, () -> service.addLeave(request,
+                start.toLocalDate(), "Conflicting leave")).getMessage().contains("administrator"));
+        assertThrows(ValidationException.class, () -> service.updateLeave(request,
+                earlier.getId(), start.toLocalDate(), "Conflicting move"));
+        assertEquals(1, leaves.readAllStrict().size());
+        assertEquals(LocalDate.of(2030, 1, 2), leaves.findByIdStrict(earlier.getId()).orElseThrow().getDate());
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict("B001").orElseThrow().getStatus());
+    }
+
+    @Test
+    void unassignedRequestsDoNotPreventLeave() {
+        LocalDateTime start = LocalDate.of(2030, 1, 7).atTime(10, 0);
+        Booking waiting = new Booking("B001", "S001", "E001", start, start.plusHours(1),
+                null, null, BookingStatus.PENDING, LocalDateTime.now(clock));
+        waiting.setRequestedInstructorId("I001");
+        bookings.save(waiting);
+        assertEquals(start.toLocalDate(), service.addLeave(request, start.toLocalDate(), "Appointment").getDate());
+    }
+
     // Saves a real confirmed lesson so safeguards are checked against file data.
     private void saveConfirmedLesson(LocalDate date) {
         LocalDateTime start = date.atTime(10, 0);

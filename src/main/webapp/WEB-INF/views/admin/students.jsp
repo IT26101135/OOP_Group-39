@@ -21,7 +21,7 @@ CRUD     : See CRUD labels on the record operations.
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
 </head>
-<body>
+<body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
     <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %>
@@ -29,18 +29,18 @@ CRUD     : See CRUD labels on the record operations.
         <p class="ds-eyebrow">STUDENT ADMINISTRATION</p><h1>Manage student accounts</h1>
         <%-- AdminManagementController supplies the search query and matching students. --%>
         <form class="ds-card mb-6 flex flex-wrap items-end gap-3" method="get" action="<c:url value='/admin/students' />">
-            <div class="min-w-0 flex-1"><label for="student-search">Search by ID, name, or email</label><input class="block w-full" id="student-search" name="q" value="<c:out value='${query}' />"></div>
+            <div class="min-w-0 flex-1"><label for="student-search">Search by name or email</label><input class="block w-full" id="student-search" name="q" value="<c:out value='${query}' />"></div>
             <button class="ds-button" type="submit">Search</button>
         </form>
         <c:choose>
-            <c:when test="${empty students}"><div class="ds-empty-state"><h2>No matching students</h2><p>Try a different name, email or student ID.</p></div></c:when>
+            <c:when test="${empty students}"><div class="ds-empty-state"><h2>No students match your search</h2><p>Try another name or email address.</p><a class="ds-home-text-link" href="<c:url value='/admin/students' />">Clear search</a></div></c:when>
             <c:otherwise>
                 <div class="grid gap-5">
                 <c:forEach items="${students}" var="student">
                     <%-- This card shows one account from AdminManagementController. --%>
                     <article class="ds-feature-card">
-                        <h2><c:out value="${student.name}" /> <span class="text-sm text-slate-400">(<c:out value="${student.id}" />)</span></h2>
-                        <p class="mb-5"><span class="status-badge" data-status="<c:out value='${student.status}' />"><c:out value="${student.status}" /></span> Created <c:out value="${fn:substring(student.createdAt, 0, 10)}" /></p>
+                        <h2><c:out value="${student.name}" /></h2>
+                        <p class="mb-5"><span class="status-badge" data-status="<c:out value='${student.status}' />"><c:out value="${student.status eq 'PENDING' ? 'Awaiting approval' : publicDisplay.label(student.status)}" /></span> Created <c:out value="${publicDisplay.date(fn:substring(student.createdAt, 0, 10))}" /></p>
                         <%-- AdminManagementController accepts only the existing contact fields. --%>
                         <form class="grid gap-4 sm:grid-cols-2" method="post" action="<c:url value='/admin/students/update' />">
                             <input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />"><input type="hidden" name="id" value="<c:out value='${student.id}' />">
@@ -52,7 +52,7 @@ CRUD     : See CRUD labels on the record operations.
                         <%-- AdminManagementController checks approval and suspension requests. --%>
                         <form class="mt-5 flex flex-wrap items-end gap-3 border-t border-white/10 pt-5" method="post" action="<c:url value='/admin/students/status' />">
                             <input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />"><input type="hidden" name="id" value="<c:out value='${student.id}' />">
-                            <div><label for="status-<c:out value='${student.id}' />">Account status</label><select class="block" id="status-<c:out value='${student.id}' />" name="status"><c:forEach items="${statuses}" var="status"><option value="<c:out value='${status}' />" <c:if test="${student.status eq status}">selected</c:if>><c:out value="${status}" /></option></c:forEach></select></div>
+                            <div><label for="status-<c:out value='${student.id}' />">Account status</label><select class="block" id="status-<c:out value='${student.id}' />" name="status"><c:forEach items="${statuses}" var="status"><option value="<c:out value='${status}' />" <c:if test="${student.status eq status}">selected</c:if>><c:out value="${status eq 'PENDING' ? 'Awaiting approval' : publicDisplay.label(status)}" /></option></c:forEach></select></div>
                             <button class="ds-button ds-button-outline" type="submit">Update status</button>
                         </form>
                         <%-- AdminManagementController protects accounts with attached learning history. --%>

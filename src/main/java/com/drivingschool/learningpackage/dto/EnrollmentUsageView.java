@@ -51,4 +51,5 @@ public class EnrollmentUsageView {
     public String getNextUrl() { return nextUrl; }
     public String getNextLabel() { return nextLabel; }
     public String getMessage() { return message; }
+    public boolean isDetailsAvailable() { return !"Not recorded".equals(lessonCount); }
 }

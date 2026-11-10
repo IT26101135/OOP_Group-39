@@ -60,7 +60,7 @@ class AuthorizationErrorHandlerTest {
                         "title", "Access denied"))
                 .andExpect(model().attribute(
                         "message",
-                        "You do not have permission to access this resource."
+                        "You don't have access to this page. Return to your account to continue."
                 ));
     }
 
@@ -70,7 +70,7 @@ class AuthorizationErrorHandlerTest {
             throws Exception {
 
         mockMvc.perform(get("/test-errors/not-found"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound()).andExpect(view().name("common/error"));
     }
 
     @Controller

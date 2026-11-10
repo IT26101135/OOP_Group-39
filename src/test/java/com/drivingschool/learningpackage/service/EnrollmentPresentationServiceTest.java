@@ -81,19 +81,33 @@ class EnrollmentPresentationServiceTest {
         EnrollmentUsageView history = (EnrollmentUsageView) usage.get("E001");
         assertEquals("Historical", history.getStatus());
         assertEquals("Not recorded", history.getLessonsLeft());
-        assertEquals("Historical enrollment — remaining balance not recorded", history.getMessage());
+        assertEquals("Past package. The remaining lesson balance was not recorded.", history.getMessage());
         assertFalse(history.isBookable());
         assertEquals("3", ((EnrollmentUsageView) model.get("currentUsage")).getLessonsLeft());
     }
 
     @Test
-    void expiredReceiptHasNoBookLinkAndDoesNotPromiseRenewal() {
+    void expiredReceiptOffersAnotherPackageWithoutBooking() {
         current.setValidUntil(LocalDate.of(2030, 1, 9));
         EnrollmentUsageView view = currentView(List.of());
         assertEquals("Expired", view.getStatus());
         assertFalse(view.isBookable());
         assertNotEquals("/bookings", view.getNextUrl());
-        assertTrue(view.getMessage().contains("Buying another package is not available yet"));
+        assertEquals("/packages", view.getNextUrl());
+        assertTrue(view.getMessage().contains("You can choose another package"));
+    }
+
+    @Test
+    void renewalSummaryDirectsOpenLessonsAndExistingPaymentRequestToTheirNextStep() {
+        current.setValidUntil(LocalDate.of(2030, 1, 9));
+        EnrollmentUsageView blocked = currentView(List.of(lesson("B001", "E002", BookingStatus.CONFIRMED)));
+        assertEquals("/bookings", blocked.getNextUrl());
+        assertTrue(blocked.getMessage().contains("Resolve"));
+        Enrollment waiting = receipt("E003", "AWAITING_PAYMENT");
+        when(receipts.readAllStrict()).thenReturn(List.of(current, waiting));
+        EnrollmentUsageView payment = currentView(List.of());
+        assertEquals("/enrollments", payment.getNextUrl());
+        assertTrue(payment.getMessage().contains("awaiting payment"));
     }
 
     @Test
@@ -114,7 +128,7 @@ class EnrollmentPresentationServiceTest {
     void missingPackageIsSafeAndNotBookable() {
         when(packages.listPackages()).thenReturn(List.of());
         EnrollmentUsageView view = currentView(List.of());
-        assertEquals("Package unavailable (P001)", view.getPackageName());
+        assertEquals("Package no longer listed", view.getPackageName());
         assertEquals("Not recorded", view.getType());
         assertEquals("Unavailable", view.getStatus());
         assertFalse(view.isBookable());
@@ -185,6 +199,28 @@ class EnrollmentPresentationServiceTest {
         verify(receipts, times(1)).readAllStrict();
         verify(packages, times(1)).listPackages();
         verifyNoInteractions(bookings);
+    }
+
+    @Test
+    void newStudentGetsCompactPackageNextStep() {
+        student.setLessonsRemaining(0);
+        when(receipts.readAllStrict()).thenReturn(List.of());
+        EnrollmentUsageView view = currentView(List.of());
+        assertFalse(view.isDetailsAvailable());
+        assertFalse(view.isBookable());
+        assertEquals("/packages", view.getNextUrl());
+        assertEquals("Browse packages", view.getNextLabel());
+    }
+
+    @Test
+    void awaitingPaymentShowsAllowanceWithoutUsableCredits() {
+        current.setStatus("AWAITING_PAYMENT");
+        EnrollmentUsageView view = currentView(List.of());
+        assertEquals("Available after payment", view.getLessonsLeft());
+        assertEquals("5", view.getLessonCount());
+        assertTrue(view.isDetailsAvailable());
+        assertFalse(view.isBookable());
+        assertEquals("/enrollments/E002/payment", view.getNextUrl());
     }
 
     private EnrollmentUsageView currentView(List<Booking> lessons) {

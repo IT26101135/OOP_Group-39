@@ -40,11 +40,20 @@ public class AdminReportService implements ReportCatalog {
     private final InstructorRepository instructors;
     private final VehicleRepository vehicles;
     private final ReviewRepository reviews;
+    private final com.drivingschool.learningpackage.repository.LearningPackageRepository packages;
 
     // Receives the existing filing drawers; reports never modify them.
     public AdminReportService(EnrollmentRepository enrollments, BookingRepository bookings,
                               InstructorRepository instructors, VehicleRepository vehicles,
                               ReviewRepository reviews) {
+        this(enrollments, bookings, instructors, vehicles, reviews, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AdminReportService(EnrollmentRepository enrollments, BookingRepository bookings,
+            InstructorRepository instructors, VehicleRepository vehicles, ReviewRepository reviews,
+            com.drivingschool.learningpackage.repository.LearningPackageRepository packages) {
+        this.packages = packages;
         this.enrollments = enrollments;
         this.bookings = bookings;
         this.instructors = instructors;
@@ -195,4 +204,85 @@ public class AdminReportService implements ReportCatalog {
         }
         return new ReportSection(title, rows, false);
     }
+    // CRUD: READ - capture each store once; reports do not modify records.
+    @Override
+    public List<BusinessReportSection> business() {
+        var receipts = enrollments.readAllStrict();
+        var lessons = bookings.readAllStrict();
+        var teachers = instructors.readAllStrict();
+        var fleet = vehicles.readAllStrict();
+        var feedback = reviews.readAllStrict();
+        Map<String, com.drivingschool.learningpackage.model.LearningPackage> courses = new LinkedHashMap<>();
+        if (packages != null) for (var course : packages.readAllStrict()) courses.put(course.getId(), course);
+        var result = new ArrayList<BusinessReportSection>();
+        var display = new com.drivingschool.common.controller.SchoolPresentationAdvice.PublicDisplay();
+        Map<String, List<Enrollment>> byCourse = new TreeMap<>();
+        Map<String, BigDecimal> byMonth = new TreeMap<>();
+        for (var receipt : receipts) {
+            byCourse.computeIfAbsent(receipt.getPackageId(), key -> new ArrayList<>()).add(receipt);
+            if (receipt.isPaid()) byMonth.merge(receipt.getEnrolledAt().toLocalDate().toString().substring(0, 7), receipt.getAmount(), BigDecimal::add);
+        }
+        List<List<String>> rows = new ArrayList<>();
+        long paidCount = 0, waitingCount = 0, cancelledCount = 0;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        for (var group : byCourse.entrySet()) {
+            var course = courses.get(group.getKey());
+            long paid = group.getValue().stream().filter(Enrollment::isPaid).count();
+            long waiting = group.getValue().stream().filter(e -> "AWAITING_PAYMENT".equals(e.getStatus())).count();
+            long cancelled = group.getValue().stream().filter(e -> "CANCELLED".equals(e.getStatus())).count();
+            BigDecimal revenue = BigDecimal.ZERO;
+            for (var receipt : group.getValue()) if (receipt.isPaid()) revenue = revenue.add(receipt.getAmount());
+            paidCount += paid; waitingCount += waiting; cancelledCount += cancelled; totalRevenue = totalRevenue.add(revenue);
+            rows.add(List.of(course == null ? "Package no longer listed" : course.getName(), course == null ? "-" : display.label(course.getType()),
+                    Integer.toString(group.getValue().size()), Long.toString(paid), Long.toString(waiting), Long.toString(cancelled), money(revenue)));
+        }
+        if (rows.isEmpty()) rows.add(List.of("No records for this period"));
+        rows.add(List.of("Total", "", Integer.toString(receipts.size()), Long.toString(paidCount), Long.toString(waitingCount), Long.toString(cancelledCount), money(totalRevenue)));
+        result.add(new BusinessReportSection("enrollments", "Enrollments by package",
+                List.of("Package", "Type", "Enrollments", "Paid", "Awaiting payment", "Cancelled", "Revenue LKR"), rows));
+        rows = new ArrayList<>();
+        for (var month : byMonth.entrySet()) rows.add(List.of(java.time.YearMonth.parse(month.getKey()).format(
+                java.time.format.DateTimeFormatter.ofPattern("MMM yyyy", Locale.UK)), money(month.getValue())));
+        if (rows.isEmpty()) rows.add(List.of("No records for this period"));
+        rows.add(List.of("Total", money(totalRevenue)));
+        result.add(new BusinessReportSection("revenue", "Revenue by month", List.of("Enrollment month", "Revenue LKR"), rows));
+        rows = new ArrayList<>();
+        if (!lessons.isEmpty()) for (var status : BookingStatus.values()) rows.add(List.of(display.label(status),
+                Long.toString(lessons.stream().filter(b -> b.getStatus() == status).count())));
+        result.add(new BusinessReportSection("statuses", "Bookings by status", List.of("Status", "Bookings"), rows));
+        Map<String, String> teacherNames = new LinkedHashMap<>();
+        for (var teacher : teachers) teacherNames.put(teacher.getId(), teacher.getName());
+        for (var lesson : lessons) if (lesson.getInstructorId() != null) teacherNames.putIfAbsent(lesson.getInstructorId(), "Instructor no longer listed");
+        rows = new ArrayList<>();
+        for (var teacher : teacherNames.entrySet()) {
+            var assigned = lessons.stream().filter(b -> teacher.getKey().equals(b.getInstructorId())).toList();
+            rows.add(List.of(teacher.getValue(), Integer.toString(assigned.size()), count(assigned, BookingStatus.COMPLETED),
+                    count(assigned, BookingStatus.CANCELLED), count(assigned, BookingStatus.NO_SHOW)));
+        }
+        result.add(new BusinessReportSection("instructors", "Bookings by instructor", List.of("Instructor", "Total", "Completed", "Cancelled", "No-show"), rows));
+        rows = new ArrayList<>();
+        for (var teacher : teachers) {
+            var approved = feedback.stream().filter(r -> teacher.getId().equals(r.getInstructorId()) && r.getStatus() == ReviewStatus.APPROVED).toList();
+            double average = approved.stream().mapToInt(Review::getRating).average().orElse(0);
+            rows.add(List.of(teacher.getName(), Integer.toString(teacher.getYearsOfExperience()), Integer.toString(approved.size()), String.format(Locale.ROOT, "%.1f", average)));
+        }
+        result.add(new BusinessReportSection("ratings", "Instructor ratings", List.of("Instructor", "Experience in years", "Approved reviews", "Average rating"), rows));
+        rows = new ArrayList<>();
+        for (var vehicle : fleet) rows.add(List.of(vehicle.getRegistrationNumber(), vehicle.getMake() + " " + vehicle.getModel(),
+                vehicle.getVehicleCategory() == com.drivingschool.vehicle.model.VehicleCategory.MOTORCYCLE ? "Motorcycle" : display.label(vehicle.getTransmissionType()),
+                Long.toString(lessons.stream().filter(b -> vehicle.getId().equals(b.getVehicleId())).count()), display.label(vehicle.getOperationalStatus()),
+                vehicle.getInsuranceExpiry() == null ? "-" : display.date(vehicle.getInsuranceExpiry()),
+                vehicle.getNextServiceDate() == null ? "-" : display.date(vehicle.getNextServiceDate())));
+        result.add(new BusinessReportSection("vehicles", "Vehicle usage", List.of("Registration", "Make and model", "Type", "Lessons", "Status", "Insurance expiry", "Next service"), rows));
+        return List.copyOf(result);
+    }
+
+    private String count(List<Booking> lessons, BookingStatus status) {
+        return Long.toString(lessons.stream().filter(b -> b.getStatus() == status).count());
+    }
+
+    private String money(BigDecimal amount) {
+        return amount.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+    }
+
 }

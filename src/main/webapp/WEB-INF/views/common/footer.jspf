@@ -15,22 +15,22 @@ CRUD     : Displays existing data; does not save records
     <div class="ds-container ds-footer-grid">
         <div class="ds-footer-about">
             <a class="ds-footer-brand" href="<c:url value='/' />"><span class="ds-wordmark">DriveSpark<span>Academy</span></span></a>
-            <p>Confidence for the road ahead.</p>
+            <p>Driving lessons and practical feedback.</p>
         </div>
-        <div><h2>Discover</h2>
+        <div><h2>Lessons</h2>
             <a href="<c:url value='/packages' />">Packages</a><a href="<c:url value='/instructors' />">Instructors</a><a href="<c:url value='/public/reviews' />">Reviews</a>
         </div>
         <div><h2>The academy</h2>
             <a href="<c:url value='/about' />">About us</a><a href="<c:url value='/faq' />">Questions</a><a href="<c:url value='/contact' />">Contact</a>
         </div>
-        <div><h2>Visit</h2><p>Colombo, Sri Lanka</p><p>Mon&ndash;Sat, 8:00&ndash;18:00</p><p>School address to be confirmed.</p></div>
+        <div><h2>Contact us</h2><%@ include file="/WEB-INF/views/common/components/school-contact.jspf" %><a href="<c:url value='/contact' />">Send a message</a></div>
     </div>
     <%-- Placeholders and sample figures are explained here rather than presented as verified claims. --%>
     <div class="ds-container ds-footer-notes">
-        <p>Coursework demonstration. Package prices and sample figures are illustrative. Address, opening hours and social profiles must be confirmed by the academy.</p>
+
         <%-- HomeController keeps every home disclaimer here; other pages retain their usual fine print. --%>
-        <c:if test="${requestScope.homePageNotes}"><div id="home-notes"><p>1. DriveSpark Academy is a university project. Safety descriptions illustrate the proposed school service; confirm vehicle equipment and inspection details with the academy.</p><p>Package prices and lesson counts come from the current project data. The monthly spotlight is an editorial selection, with no discount implied. Reviews may include labelled demo records.</p><p>Location and opening hours are placeholders. No real address, directions or operating hours have been verified. Photo fallback: Original abstract scenery is used in place of photography.</p></div></c:if>
-        <div class="ds-footer-bottom"><span>&copy; 2026 DriveSpark Academy</span><span>English &nbsp;/&nbsp; Colombo, Sri Lanka</span></div>
+
+        <div class="ds-footer-bottom"><span>&copy; 2026 DriveSpark Academy</span><span>Driving lessons</span></div>
     </div>
 </footer>
 <%@ include file="/WEB-INF/views/common/components/toasts.jspf" %>

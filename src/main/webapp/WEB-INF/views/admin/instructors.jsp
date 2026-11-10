@@ -14,7 +14,7 @@ CRUD     : See the labelled operations; model and view files support these opera
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manage instructors | DriveSpark Academy</title><meta name="description" content="Manage instructor accounts, contact details and teaching profiles.">
-<link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><link rel="stylesheet" href="<c:url value='/css/tailwind.css' />"></head><body>
+<link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />"><link rel="stylesheet" href="<c:url value='/css/tailwind.css' />"></head><body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
     <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
@@ -34,8 +34,8 @@ CRUD     : See the labelled operations; model and view files support these opera
 <fieldset class="sm:col-span-2"><legend class="mb-2 text-sm text-slate-300">Vehicle types taught</legend><div class="flex flex-wrap gap-4"><label><input type="checkbox" name="vehicleTypes" value="Manual"> Manual</label><label><input type="checkbox" name="vehicleTypes" value="Automatic"> Automatic</label><label><input type="checkbox" name="vehicleTypes" value="Motorcycle"> Motorcycle</label></div></fieldset>
 <div class="sm:col-span-2"><button class="ds-button" type="submit">Add instructor</button></div></form></section>
 <%-- AdminManagementController supplies this page section. --%>
-<section aria-labelledby="instructor-records"><h2 id="instructor-records" class="mb-5">Instructor records</h2><c:choose><c:when test="${empty instructors}"><div class="ds-empty-state"><p>No instructors have been added.</p></div></c:when><c:otherwise><div class="grid gap-5"><c:forEach items="${instructors}" var="instructor"><%-- AdminManagementController supplies this record card. --%>
-<article class="ds-card"><div class="mb-4 flex flex-wrap items-start justify-between gap-3"><h3 class="text-xl"><c:out value="${instructor.name}" /></h3><span class="status-badge" data-status="${instructor.active ? 'ACTIVE' : 'INACTIVE'}"><c:out value="${instructor.id}" /> - ${instructor.active ? 'Active' : 'Inactive'}</span></div>
+<section aria-labelledby="instructor-records"><h2 id="instructor-records" class="mb-5">Instructor records</h2><c:choose><c:when test="${empty instructors}"><div class="ds-empty-state"><p>No instructors have been added. Use the form above to add one.</p></div></c:when><c:otherwise><div class="grid gap-5"><c:forEach items="${instructors}" var="instructor"><%-- AdminManagementController supplies this record card. --%>
+<article class="ds-card"><div class="mb-4 flex flex-wrap items-start justify-between gap-3"><h3 class="text-xl"><c:out value="${instructor.name}" /></h3><span class="status-badge" data-status="${instructor.active ? 'ACTIVE' : 'INACTIVE'}">${instructor.active ? 'Active' : 'Inactive'}</span></div>
 <%-- Sending contact and teaching fields together preserves profile details during a basic edit. --%>
 <%-- AdminManagementController supplies this form and its original field names. --%>
 <form class="grid gap-4 sm:grid-cols-2" method="post" action="<c:url value='/admin/instructors/update' />"><input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />"><input type="hidden" name="id" value="${instructor.id}"><div><label for="name-${instructor.id}">Full name</label><input class="block w-full" id="name-${instructor.id}" name="name" type="text" required minlength="2" maxlength="100" value="<c:out value='${instructor.name}' />"></div>

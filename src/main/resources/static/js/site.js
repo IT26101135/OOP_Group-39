@@ -25,9 +25,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname.replace(/;jsessionid=[^/]+/g, '').replace(/\/$/, '') || '/';
     document.querySelectorAll('#primary-navigation a[href], .ds-dashboard-sidebar a[href], .ds-dashboard-drawer a[href]').forEach((link) => {
       const target = new URL(link.href, window.location.origin).pathname.replace(/;jsessionid=[^/]+/g, '').replace(/\/$/, '') || '/';
-      const matches = path === target || (target !== '/' && path.startsWith(`${target}/`));
+      const matches = !new URL(link.href, window.location.origin).hash && (path === target || (target !== '/' && path.startsWith(`${target}/`)));
       if (matches) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('.ds-dashboard-sidebar, .ds-dashboard-drawer').forEach((menu) => {
+      let current = null;
+      let longestPath = 0;
+      menu.querySelectorAll('a[href]').forEach((link) => {
+        const url = new URL(link.href, window.location.origin);
+        const target = url.pathname.replace(/;jsessionid=[^/]+/g, '').replace(/\/$/, '') || '/';
+        link.removeAttribute('aria-current');
+        if (!url.hash && (path === target || path.startsWith(`${target}/`)) && target.length > longestPath) {
+          current = link;
+          longestPath = target.length;
+        }
+      });
+      if (current) current.setAttribute('aria-current', 'page');
     });
   }
 
@@ -52,13 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
   }
 
-  // Wait until submission is accepted and named button values have been collected.
-  document.querySelectorAll('form').forEach((form) => {
-    form.addEventListener('submit', (event) => {
-      window.setTimeout(() => showSubmitLoading(form, event), 0);
-    });
-  });
-
   // Native dialog supplies keyboard focus containment and Escape handling.
   const confirmDialog = document.querySelector('#ds-confirm-dialog');
   const confirmMessage = document.querySelector('#ds-confirm-message');
@@ -76,9 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
           event.preventDefault();
           pendingForm = form;
           if (confirmMessage) confirmMessage.textContent = form.dataset.confirm;
+          if (confirmContinue) confirmContinue.textContent = form.querySelector('button[type="submit"]')?.textContent.trim() || 'Confirm';
           if (confirmReasonWrap) confirmReasonWrap.hidden = false;
           if (confirmReason) confirmReason.value = '';
           if (confirmContinue) confirmContinue.disabled = true;
+          confirmDialog.returnValue = '';
           confirmDialog.showModal();
         });
       });
@@ -93,17 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         pendingForm = form;
         if (confirmMessage) confirmMessage.textContent = form.dataset.confirm;
+          if (confirmContinue) confirmContinue.textContent = form.querySelector('button[type="submit"]')?.textContent.trim() || 'Confirm';
         const reasonRequired = form.dataset.confirmReason === 'true';
         if (confirmReasonWrap) confirmReasonWrap.hidden = !reasonRequired;
         if (confirmReason) confirmReason.value = '';
         if (confirmContinue) confirmContinue.disabled = reasonRequired;
+        confirmDialog.returnValue = '';
         confirmDialog.showModal();
       });
     });
     confirmDialog.addEventListener('close', () => {
-      if (confirmDialog.returnValue !== 'confirm' || !pendingForm) return;
       const form = pendingForm;
       pendingForm = null;
+      if (confirmDialog.returnValue !== 'confirm' || !form) return;
       if (form.dataset.confirmReason === 'true') {
         const existingReason = form.querySelector('[name="reason"]');
         if (existingReason && confirmReason) existingReason.value = confirmReason.value.trim();
@@ -116,6 +127,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirmContinue) confirmContinue.disabled = confirmReason.value.trim().length === 0;
     });
   }
+
+  // Wait until submission is accepted and named button values have been collected.
+  document.querySelectorAll('form').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      if (event.defaultPrevented || form.dataset.allowRepeat === 'true') return;
+      if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        return;
+      }
+      form.dataset.submitting = 'true';
+      window.setTimeout(() => showSubmitLoading(form, event), 0);
+    });
+  });
 
   document.querySelectorAll('[data-password-toggle]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -137,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     field.addEventListener('input', () => {
       const value = field.value;
       const okay = value.length >= 8 && /[A-Za-z]/.test(value) && /\d/.test(value);
-      hint.textContent = okay ? 'Good password: length, letter and number included.' : 'Use at least 8 characters, including a letter and a number.';
+      hint.textContent = okay ? 'Your password includes a letter and a number.' : 'Use at least 8 characters, including a letter and a number.';
       hint.classList.toggle('text-emerald-300', okay);
       hint.classList.toggle('text-slate-300', !okay);
     });

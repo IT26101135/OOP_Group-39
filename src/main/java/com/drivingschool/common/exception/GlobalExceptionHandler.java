@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 // SOLID: S - One shared place turns application problems into friendly pages.
 @ControllerAdvice
@@ -33,6 +36,18 @@ public class GlobalExceptionHandler {
 
     private static final Logger LOG =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ModelAndView handleFormBinding(Exception exception, HttpServletRequest request) {
+        return errorPage(request, HttpStatus.BAD_REQUEST, "Please check your input",
+                "Some details are missing or invalid. Return to the form and check the dates, numbers and choices.");
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ModelAndView handleWrongMethod(HttpRequestMethodNotSupportedException exception, HttpServletRequest request) {
+        return errorPage(request, HttpStatus.METHOD_NOT_ALLOWED, "This action is not available here",
+                "Open the page from your account and use its form to try again.");
+    }
 
     @ExceptionHandler(ValidationException.class)
     // Explains which information needs correcting.
@@ -83,9 +98,8 @@ public class GlobalExceptionHandler {
         return errorPage(
                 request,
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Storage operation failed",
-                "We could not complete the operation. "
-                        + "Please contact the administrator."
+                "We couldn't complete your request",
+                "Please try again. If the problem continues, contact us."
         );
     }
 
@@ -105,11 +119,19 @@ public class GlobalExceptionHandler {
                 request,
                     HttpStatus.FORBIDDEN,
                     "Access denied",
-                    "You do not have permission to access this resource."
+                    "You don't have access to this page. Return to your account to continue."
             );
         }
 
         // Preserve Spring's normal handling of other HTTP status errors.
+        // Keep the original status while presenting a safe page rather than internal error data.
+        HttpStatus original = HttpStatus.resolve(status);
+        if (original == HttpStatus.NOT_FOUND) {
+            return errorPage(request, original, "We could not find that page",
+                    "Check the address or return to the list to choose another record.");
+        }
+        if (original != null) return errorPage(request, original, "We couldn't complete your request",
+                "Return to your account and try again. Contact us if the problem continues.");
         throw exception;
     }
 

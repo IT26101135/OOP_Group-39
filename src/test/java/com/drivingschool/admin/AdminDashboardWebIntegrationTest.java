@@ -127,6 +127,46 @@ class AdminDashboardWebIntegrationTest {
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?required"));
     }
 
+    @Test
+    void visitorEnquiryReachesOnlyTheProtectedDashboardAndRetriesDoNotDuplicate() throws Exception {
+        MvcResult form = mvc.perform(get("/contact")).andExpect(status().isOk()).andReturn();
+        String text = "Please discuss parking lessons <script>alert(1)</script>";
+        for (int attempt = 0; attempt < 2; attempt++) {
+            mvc.perform(post("/contact").session(sessionOf(form)).param("_csrf", tokenOf(form))
+                    .param("name", "Enquiry Visitor").param("email", "enquiry@example.test").param("message", text))
+                    .andExpect(redirectedUrl("/contact")).andExpect(flash().attribute("messageSent", true));
+        }
+        String email = "enquiry-admin-" + UUID.randomUUID() + "@example.test";
+        String temporaryAdminId = users.nextId("A");
+        users.save(new com.drivingschool.auth.model.Admin(temporaryAdminId, "Enquiry Administrator", email,
+                new com.drivingschool.auth.util.PasswordHasher().hash(PASSWORD)));
+        try {
+        MvcResult dashboard = mvc.perform(get(DASHBOARD).session(login(email)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(model().attributeExists("contactMessages")).andReturn();
+        java.util.List<?> messages = (java.util.List<?>) dashboard.getModelAndView().getModel().get("contactMessages");
+        assertEquals(1, messages.stream().filter(item ->
+                ((com.drivingschool.common.model.ContactMessage) item).getEmail().equals("enquiry@example.test")).count());
+        MvcResult publicPage = mvc.perform(get("/contact")).andReturn();
+        assertFalse(publicPage.getModelAndView().getModel().containsKey("contactMessages"));
+        mvc.perform(post("/contact").param("name", "Visitor").param("email", "visitor@example.test")
+                .param("message", "A message without a token" )).andExpect(status().isForbidden());
+        } finally {
+            users.delete(temporaryAdminId);
+        }
+    }
+
+    @Test
+    void invalidEnquiryKeepsTypedFieldsOnContactForm() throws Exception {
+        MvcResult form = mvc.perform(get("/contact")).andReturn();
+        mvc.perform(post("/contact").session(sessionOf(form)).param("_csrf", tokenOf(form))
+                .param("name", "Visitor").param("email", "invalid-email").param("message", "Keep this typed question."))
+                .andExpect(status().isBadRequest()).andExpect(view().name("public/contact"))
+                .andExpect(model().attribute("contactMessage", "Keep this typed question."))
+                .andExpect(model().attribute("contactEmail", "invalid-email"))
+                .andExpect(model().attributeExists("formError", "csrfToken"));
+    }
+
     private MockHttpSession login(String email) throws Exception {
         MvcResult page = mvc.perform(get("/login"))
                 .andExpect(status().isOk())

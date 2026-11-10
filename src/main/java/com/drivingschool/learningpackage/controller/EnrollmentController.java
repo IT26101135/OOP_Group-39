@@ -58,13 +58,13 @@ public class EnrollmentController {
     public EnrollmentController(EnrollmentOperations enrollmentService,
                                 AuthSessionService auth,
                                 CsrfTokenService csrf, Clock clock,
-                                @Value("${app.payment.admin-email:admin@drivespark.test}") String paymentAdminEmail, EnrollmentPresentationService presentation) {
+                                @Value("${app.school.email:}") String paymentAdminEmail, EnrollmentPresentationService presentation) {
         this.presentation = presentation;
         this.enrollmentService = enrollmentService;
         this.auth = auth;
         this.csrf = csrf;
         this.clock = clock;
-        this.paymentAdminEmail = paymentAdminEmail;
+        this.paymentAdminEmail = paymentAdminEmail.trim();
     }
 
     @GetMapping
@@ -135,7 +135,7 @@ public class EnrollmentController {
     public String delete(HttpServletRequest request, @RequestParam String enrollmentId,
                          RedirectAttributes flash) {
         enrollmentService.deleteOwnEnrollment(request, enrollmentId);
-        flash.addFlashAttribute("success", "Unused unpaid enrollment removed.");
+        flash.addFlashAttribute("success", "Your unpaid package request has been removed.");
         return "redirect:/enrollments";
     }
 

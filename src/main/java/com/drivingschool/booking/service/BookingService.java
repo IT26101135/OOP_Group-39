@@ -117,7 +117,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
 
         // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
-            paidEnrollments.requirePaid(student.getId(), profile.getActiveEnrollmentId());
+            paidEnrollments.requirePaidForLesson(student.getId(), profile.getActiveEnrollmentId(), startTime.toLocalDate());
             requireCommitmentRoom(student.getId(), null);
             LocalDateTime endTime = startTime.plusMinutes(LESSON_MINUTES);
             for (Booking existing : bookings.readAllStrict()) {
@@ -157,7 +157,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         }
         // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
-            paidEnrollments.requirePaid(student.getId(), ((Student) student).getActiveEnrollmentId());
+            paidEnrollments.requirePaidForLesson(student.getId(), ((Student) student).getActiveEnrollmentId(), startTime.toLocalDate());
             requireCommitmentRoom(student.getId(), null);
             Booking booking = new Booking(bookings.nextId("B"), student.getId(),
                     ((Student) student).getActiveEnrollmentId(), startTime,
@@ -200,7 +200,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
                     "Student ownership or administrator access is required.");
         }
         if (bookingId == null || !bookingId.matches("B(?!000)[0-9]{3}")) {
-            throw new ValidationException("Booking ID must be B001 to B999.");
+            throw new ValidationException("We could not identify this lesson. Return to your lesson list and try again.");
         }
         // Step 2: Read the record without changing its state or lesson balance.
         Booking booking = findBooking(bookingId);
@@ -250,6 +250,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             }
             if (newStartTime == null || !newStartTime.isAfter(LocalDateTime.now(clock)))
                 throw new ValidationException("Choose a new lesson time in the future.");
+            paidEnrollments.requirePaidForLesson(studentId, old.getEnrollmentId(), newStartTime.toLocalDate());
             User current = users.findByIdStrict(studentId).orElseThrow();
             if (!(current instanceof Student student) || student.getActivePackageId() == null
                     || student.getActiveEnrollmentId() == null || student.getLessonsRemaining() < 1)
@@ -334,9 +335,13 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         List<Booking> all = getAllBookings(request);
         LocalDate firstDate = parseFilterDate(from);
         LocalDate lastDate = parseFilterDate(to);
+        if (firstDate != null && lastDate != null && firstDate.isAfter(lastDate)) {
+            throw new ValidationException("Choose an end date on or after the start date, or clear the filters.");
+        }
+        String selectedStatus = parseFilterStatus(status);
         List<Booking> result = new ArrayList<>();
         for (Booking booking : all) {
-            if (matchesFilters(booking, firstDate, lastDate, instructorId, vehicleId, status)) result.add(booking);
+            if (matchesFilters(booking, firstDate, lastDate, instructorId, vehicleId, selectedStatus)) result.add(booking);
         }
         return List.copyOf(result);
     }
@@ -350,6 +355,15 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         } catch (DateTimeParseException exception) {
             throw new ValidationException("Choose a valid schedule filter date.");
         }
+    }
+
+    private String parseFilterStatus(String value) {
+        if (value == null || value.isBlank()) return null;
+        String checked = value.trim().toUpperCase(java.util.Locale.ROOT);
+        for (BookingStatus status : BookingStatus.values()) {
+            if (status.name().equals(checked)) return checked;
+        }
+        throw new ValidationException("Choose a status from the list, or clear the schedule filters and try again.");
     }
 
     // Checks one booking against the administrator's chosen filters.
@@ -374,7 +388,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         // Step 2: Let one booking writer check and save at a time, like one reception desk.
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
-            paidEnrollments.requirePaid(target.getStudentId(), target.getEnrollmentId());
+            paidEnrollments.requirePaidForLesson(target.getStudentId(), target.getEnrollmentId(), target.getStartTime().toLocalDate());
             String reason = conflictChecker.conflictReason(target, instructorId, vehicleId);
             if (reason != null) throw new ValidationException(reason);
             target.reassign(instructorId, vehicleId);
@@ -432,10 +446,10 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
             BookingRequestQueue queue = new BookingRequestQueue(bookings.readAllStrict());
             Booking next = queue.peek();
             if (next == null || !next.getId().equals(target.getId())) {
-                throw new ValidationException("Pending requests must be processed in FIFO order.");
+                throw new ValidationException("Handle the oldest waiting request first.");
             }
             // Step 3: Retire an unpaid legacy request before even looking up resources.
-            String paymentProblem = paidEnrollments.problemFor(target.getStudentId(), target.getEnrollmentId());
+            String paymentProblem = paidEnrollments.problemForLesson(target.getStudentId(), target.getEnrollmentId(), target.getStartTime().toLocalDate());
             if (paymentProblem != null) {
                 target.reject(paymentProblem);
                 bookings.update(target);
@@ -489,7 +503,7 @@ public class BookingService implements StudentBookingOperations, AdminBookingOpe
         synchronized (BOOKING_LOCK) {
             Booking target = findBooking(bookingId);
             if (!user.getId().equals(target.getInstructorId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            paidEnrollments.requirePaid(target.getStudentId(), target.getEnrollmentId());
+            paidEnrollments.requirePaidForLesson(target.getStudentId(), target.getEnrollmentId(), target.getStartTime().toLocalDate());
             String conflict = conflictChecker == null ? null
                     : conflictChecker.conflictReason(target, target.getInstructorId(), target.getVehicleId());
             if (conflict != null) throw new ValidationException(conflict);

@@ -1,5 +1,7 @@
 # Class diagrams and system flows
 
+> **Current guide (10 Nov 2026):** use the [source-checked viva pack](viva-2026/README.md), [six individual diagrams](viva-2026/class-diagrams.html) and [six printable cheat sheets](viva-2026/cheat-sheets.pdf). The older material below is historical and may mention removed interfaces or earlier report layouts.
+
 Owner: **IT26101135**, shared documentation. Phase B. Source checked: **9 November 2026**.
 
 These diagrams describe the Java files currently in this checkout. They do not change the application. Phase A already has its own dated snapshot in [GIT_BRANCH_PLAN.md](GIT_BRANCH_PLAN.md); its old Git counts are not a new comparison made here. The more recent [MERGE_ANALYSIS.md](MERGE_ANALYSIS.md) describes an earlier failing build, not a test result obtained by this documentation task.

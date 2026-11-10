@@ -12,4 +12,4 @@ CRUD     : Displays existing data; does not save records
 <%-- This block shows status badge. The including page controller supplies this block through model attributes. --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="badgeStatus" value="${status}" />
-<span class="ds-status-badge" data-status="<c:out value='${badgeStatus}' />"><c:out value="${badgeStatus}" /></span>
+<span class="ds-status-badge" data-status="<c:out value='${badgeStatus}' />"><c:out value="${publicDisplay.label(badgeStatus)}" /></span>

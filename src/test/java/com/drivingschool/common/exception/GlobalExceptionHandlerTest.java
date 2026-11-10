@@ -84,14 +84,37 @@ class GlobalExceptionHandlerTest {
                 .andExpect(model().attribute("statusCode", 500))
                 .andExpect(model().attribute(
                         "message",
-                        "We could not complete the operation. "
-                                + "Please contact the administrator."
+                        "Please try again. If the problem continues, contact us."
                 ));
+    }
+
+    @Test
+    void missingFieldUsesHelpfulHtmlViewEvenWithJsonAccept() throws Exception {
+        mockMvc.perform(get("/test-errors/form").accept("application/json"))
+                .andExpect(status().isBadRequest()).andExpect(view().name("common/error"))
+                .andExpect(model().attribute("statusCode", 400));
+    }
+
+    @Test
+    void invalidNumberUsesHelpfulHtmlView() throws Exception {
+        mockMvc.perform(get("/test-errors/form").param("lessons", "abc"))
+                .andExpect(status().isBadRequest()).andExpect(view().name("common/error"));
+    }
+
+    @Test
+    void wrongMethodKeeps405WithRecoveryView() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/test-errors/form"))
+                .andExpect(status().isMethodNotAllowed()).andExpect(view().name("common/error"));
     }
 
     // Only used by tests; these routes are not part of the running app.
     @Controller
     static class ErrorTestController {
+
+        @GetMapping("/test-errors/form")
+        public String form(@org.springframework.web.bind.annotation.RequestParam int lessons) {
+            return "unused-test-view";
+        }
 
         @GetMapping("/test-errors/validation")
         public String validation() {

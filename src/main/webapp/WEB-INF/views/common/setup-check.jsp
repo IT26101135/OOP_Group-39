@@ -15,22 +15,22 @@ CRUD     : READ (shows setup information from SetupController)
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="description" content="DriveSpark Academy - Setup Check at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="description" content="Check whether the DriveSpark Academy website is available.">
     <meta name="theme-color" content="#050505">
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DriveSpark Academy - Setup Check</title>
+    <title>Service status | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
 <body>
-<a class="skip-link" href="#main-content">Skip to setup information</a>
+<a class="skip-link" href="#main-content">Skip to service status</a>
 <%-- SetupController supplies the project name and setup message. --%>
 <main id="main-content" tabindex="-1" class="ds-container ds-section">
     <h1><c:out value="${projectName}"/></h1>
     <p><c:out value="${message}"/></p>
-    <p>Phase 0: project setup.</p>
+    <p>You can browse our packages or return to the home page.</p>
 </main>
 </body>
 </html>

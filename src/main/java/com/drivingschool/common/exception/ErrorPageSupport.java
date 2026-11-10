@@ -44,7 +44,16 @@ public class ErrorPageSupport {
         page.addObject("navRole", role);
         // Step 2: Offer the role's own destination and, for validation, the original form.
         page.addObject("recoveryUrl", dashboard(role));
-        if (status == HttpStatus.BAD_REQUEST) page.addObject("retryUrl", formPath(request));
+        if (status == HttpStatus.BAD_REQUEST || status == HttpStatus.CONFLICT || status == HttpStatus.METHOD_NOT_ALLOWED) {
+            String form = formPath(request);
+            if (allowedLink(form, role)) page.addObject("retryUrl", form);
+        } else if (status == HttpStatus.NOT_FOUND) {
+            String list = recordList(request, role);
+            if (allowedLink(list, role)) {
+                page.addObject("retryUrl", list);
+                page.addObject("retryLabel", "Back to the list");
+            }
+        }
         return page;
     }
 
@@ -89,5 +98,26 @@ public class ErrorPageSupport {
             if (path.startsWith(form)) return form;
         }
         return null;
+    }
+
+    private String recordList(HttpServletRequest request, String role) {
+        String path = request.getRequestURI();
+        Object original = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+        if (original instanceof String) path = (String) original;
+        if (path.startsWith("/admin/vehicles/")) return "/admin/vehicles";
+        if (path.startsWith("/bookings/")) return "ADMIN".equals(role) ? "/admin/bookings" : "/bookings";
+        if (path.startsWith("/enrollments/")) return "/enrollments";
+        if (path.startsWith("/packages/")) return "/packages";
+        return null;
+    }
+
+    // Recovery links must not send a user into another role's protected pages.
+    private boolean allowedLink(String path, String role) {
+        if (path == null) return false;
+        if (path.startsWith("/admin/")) return "ADMIN".equals(role);
+        if (path.startsWith("/instructor/")) return "INSTRUCTOR".equals(role);
+        if (path.startsWith("/student/") || path.startsWith("/enrollments") || path.startsWith("/bookings")) return "STUDENT".equals(role);
+        if (path.startsWith("/reviews")) return !"PUBLIC".equals(role);
+        return true;
     }
 }

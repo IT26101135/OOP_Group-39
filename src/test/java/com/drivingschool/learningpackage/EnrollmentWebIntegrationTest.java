@@ -95,7 +95,7 @@ class EnrollmentWebIntegrationTest {
         mvc.perform(get("/enrollments/" + enrollment.getId() + "/payment").session(session))
                 .andExpect(status().isOk()).andExpect(view().name("student/payment-instructions"))
                 .andExpect(model().attribute("packageName", "Course " + packageId))
-                .andExpect(model().attribute("paymentAdminEmail", "admin@drivespark.test"));
+                .andExpect(model().attribute("paymentAdminEmail", ""));
         mvc.perform(get("/enrollments").session(session)).andExpect(status().isOk())
                 .andExpect(model().attributeExists("enrollments", "expiryLabels"));
         mvc.perform(post("/enrollments/update").session(session).param("_csrf", token)

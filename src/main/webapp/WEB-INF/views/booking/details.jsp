@@ -20,7 +20,7 @@ CRUD     : READ only; changes remain on the existing booking list pages.
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
 </head>
-<body>
+<body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
     <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %>
@@ -30,26 +30,26 @@ CRUD     : READ only; changes remain on the existing booking list pages.
         <p class="mb-6">Read your lesson information here. To make changes, return to the booking list.</p>
         <%-- Step 1: Show the authorized booking and its own enrollment's package. --%>
         <article class="ds-card">
-            <h2><c:out value="${booking.id}" /></h2>
-            <p class="my-3"><span class="status-badge" data-status="${booking.status}"><c:out value="${booking.status}" /></span></p>
+            <h2><c:out value="${'LESSON'}" /></h2>
+            <p class="my-3"><span class="status-badge" data-status="${booking.status}"><c:out value="${publicDisplay.label(booking.status)}" /></span></p>
             <dl class="grid gap-4 sm:grid-cols-2">
                 <div><dt>Package</dt><dd><c:out value="${packageDetails.packageName}" /></dd></div>
-                <div><dt>Course type</dt><dd><c:out value="${packageDetails.type}" /></dd></div>
-                <div><dt>Student</dt><dd><c:out value="${booking.studentId}" /></dd></div>
-                <div><dt>Enrollment</dt><dd><c:out value="${booking.enrollmentId}" /></dd></div>
-                <div><dt>Lesson date</dt><dd><c:out value="${booking.startTime.toLocalDate()}" /></dd></div>
-                <div><dt>Lesson time</dt><dd><c:out value="${booking.startTime.toLocalTime().withSecond(0).withNano(0)}" /> to <c:out value="${booking.endTime.toLocalTime().withSecond(0).withNano(0)}" /></dd></div>
-                <div><dt>Requested instructor</dt><dd><c:out value="${booking.requestedInstructorId}" default="Not recorded" /></dd></div>
-                <div><dt>Assigned instructor</dt><dd><c:out value="${booking.instructorId}" default="Not assigned" /></dd></div>
-                <div><dt>Vehicle</dt><dd><c:out value="${booking.vehicleId}" default="Not assigned" /></dd></div>
-                <div><dt>Package valid until</dt><dd><c:out value="${packageDetails.validity}" /></dd></div>
-                <div><dt>Request submitted</dt><dd><c:out value="${booking.createdAt.toLocalDate()}" /> <c:out value="${booking.createdAt.toLocalTime().withSecond(0).withNano(0)}" /></dd></div>
+                <div><dt>Course type</dt><dd><c:out value="${publicDisplay.label(packageDetails.type)}" /></dd></div>
+                <div><dt>Student</dt><dd><c:out value="${accountDisplay.person(booking.studentId)}" /></dd></div>
+                <div><dt>Enrollment</dt><dd><c:out value="${accountDisplay.enrollment(booking.enrollmentId)}" /></dd></div>
+                <div><dt>Lesson date</dt><dd><c:out value="${publicDisplay.date(booking.startTime.toLocalDate())}" /></dd></div>
+                <div><dt>Lesson time</dt><dd><c:out value="${publicDisplay.time(booking.startTime.toLocalTime())}" /> to <c:out value="${publicDisplay.time(booking.endTime.toLocalTime())}" /></dd></div>
+                <div><dt>Requested instructor</dt><dd><c:out value="${accountDisplay.person(booking.requestedInstructorId)}" default="Not recorded" /></dd></div>
+                <div><dt>Assigned instructor</dt><dd><c:out value="${accountDisplay.person(booking.instructorId)}" default="Not assigned" /></dd></div>
+                <div><dt>Vehicle</dt><dd><c:out value="${accountDisplay.vehicle(booking.vehicleId)}" default="Not assigned" /></dd></div>
+                <div><dt>Package valid until</dt><dd><c:out value="${publicDisplay.date(packageDetails.validity)}" /></dd></div>
+                <div><dt>Request submitted</dt><dd><c:out value="${publicDisplay.date(booking.createdAt.toLocalDate())}" /> <c:out value="${publicDisplay.time(booking.createdAt.toLocalTime())}" /></dd></div>
             </dl>
             <%-- Step 2: Distinguish waiting for assignment from waiting for instructor approval. --%>
             <c:choose>
                 <c:when test="${booking.status eq 'PENDING' and empty booking.instructorId}">
                     <p class="mt-5">Waiting for assignment.</p>
-                    <c:if test="${queuePosition gt 0}"><p>FIFO position <c:out value="${queuePosition}" /></p></c:if>
+                    <c:if test="${queuePosition gt 0}"><p>Position in waiting list <c:out value="${queuePosition}" /></p></c:if>
                 </c:when>
                 <c:when test="${booking.status eq 'PENDING'}"><p class="mt-5">Assigned - waiting for instructor approval.</p></c:when>
                 <c:when test="${booking.status eq 'CONFIRMED'}"><p class="mt-5">Your lesson is confirmed.</p></c:when>

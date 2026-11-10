@@ -28,3 +28,5 @@
 Thumbs.db
 # Frontend dependencies
 /node_modules/
+
+/docs/screenshots/

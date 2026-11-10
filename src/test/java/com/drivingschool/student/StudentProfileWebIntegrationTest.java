@@ -230,7 +230,7 @@ class StudentProfileWebIntegrationTest {
             MvcResult failed = mvc.perform(edit(session, token, "New Name", student.getEmail(), "0771234567"))
                     .andExpect(status().isInternalServerError()).andExpect(view().name("common/error"))
                     .andReturn();
-            assertEquals("We could not complete the operation. Please contact the administrator.",
+            assertEquals("Please try again. If the problem continues, contact us.",
                     failed.getModelAndView().getModel().get("message"));
         } finally {
             Files.write(file, before);

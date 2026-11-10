@@ -194,7 +194,7 @@ class BookingTest {
         Booking booking = createConfirmedBooking();
         ValidationException error = assertThrows(ValidationException.class,
                 () -> booking.complete(end.minusSeconds(1), true));
-        assertTrue(error.getMessage().contains("2026-11-01 11:00"));
+        assertTrue(error.getMessage().contains("1 Nov 2026, 11:00 am"));
         assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
     }
 
@@ -206,10 +206,13 @@ class BookingTest {
     }
 
     @Test
-    void noShowStartsAtLessonStartAndDemoCanBypassTime() {
+    void noShowWaitsUntilLessonEndAndDemoCanBypassTime() {
         Booking booking = createConfirmedBooking();
         assertThrows(ValidationException.class, () -> booking.markNoShow(start.minusSeconds(1), true));
-        booking.markNoShow(start, true);
+        assertThrows(ValidationException.class, () -> booking.markNoShow(start, true));
+        assertThrows(ValidationException.class, () -> booking.markNoShow(end.minusSeconds(1), true));
+        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+        booking.markNoShow(end, true);
         assertEquals(BookingStatus.NO_SHOW, booking.getStatus());
         Booking demo = createConfirmedBooking();
         demo.markNoShow(start.minusDays(1), false);

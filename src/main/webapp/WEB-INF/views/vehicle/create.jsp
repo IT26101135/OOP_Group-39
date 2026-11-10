@@ -27,7 +27,7 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
     <title>Add vehicle | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body>
+<body class="ds-account-page">
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
@@ -103,7 +103,7 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
                             <c:if test="${vehicleCreateForm.transmissionType eq transmission}">
                                 selected
                             </c:if>>
-                            <c:out value="${transmission}" />
+                            <c:out value="${publicDisplay.label(transmission)}" />
                         </option>
                     </c:forEach>
                 </select>
@@ -120,24 +120,24 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
                             <c:if test="${vehicleCreateForm.vehicleCategory eq category}">
                                 selected
                             </c:if>>
-                            <c:out value="${category}" />
+                            <c:out value="${publicDisplay.label(category)}" />
                         </option>
                     </c:forEach>
                 </select>
             </div>
 
             <div class="ds-vehicle-field min-w-0 flex flex-col gap-2">
-                <label for="vehicle-status">Initial operational status</label>
+                <label for="vehicle-status">Vehicle status</label>
                 <select class="w-full" id="vehicle-status"
                         name="operationalStatus"
                         required>
-                    <option value="">Select operational status</option>
+                    <option value="">Choose a status</option>
                     <c:forEach items="${operationalStatuses}" var="status">
                         <option value="<c:out value='${status}' />"
                             <c:if test="${vehicleCreateForm.operationalStatus eq status}">
                                 selected
                             </c:if>>
-                            <c:out value="${status}" />
+                            <c:out value="${publicDisplay.label(status)}" />
                         </option>
                     </c:forEach>
                 </select>

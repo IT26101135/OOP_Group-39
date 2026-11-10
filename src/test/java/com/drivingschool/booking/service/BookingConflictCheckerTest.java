@@ -88,7 +88,7 @@ class BookingConflictCheckerTest {
     // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     @Test void rejectsMissingActiveEnrollment() {
         student.setLessonsRemaining(0);
-        assertTrue(checker.conflictReason(target, "I001", "V001").contains("Paid enrollment"));
+        assertTrue(checker.conflictReason(target, "I001", "V001").contains("paid package"));
     }
     // Checks a scheduling rule with temporary or mocked records, keeping live data untouched.
     @Test void rejectsInstructorOutsideAvailability() {

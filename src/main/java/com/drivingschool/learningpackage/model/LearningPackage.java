@@ -76,7 +76,7 @@ public class LearningPackage implements LearningRecord {
     private static String validateId(String id) {
         if (id == null || !id.matches("P(?!000)[0-9]{3}")) {
             throw new ValidationException(
-                    "Package ID must be between P001 and P999.");
+                    "Choose a package from the package list and try again.");
         }
 
         return id;

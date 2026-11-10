@@ -153,7 +153,7 @@ public class LearningPackageService implements LearningPackageCatalog {
                     repository.findByIdStrict(id)
                             .orElseThrow(() ->
                                     new RecordNotFoundException(
-                                            "Learning package not found: " + id));
+                                            "This package is no longer listed. Return to the package list."));
 
             // Construct a replacement so invalid updates cannot
             // partially modify the existing package.
@@ -194,7 +194,7 @@ public class LearningPackageService implements LearningPackageCatalog {
             validatePackageId(id);
             LearningPackage current = repository.findByIdStrict(id)
                     .orElseThrow(() -> new RecordNotFoundException(
-                            "Learning package not found: " + id));
+                            "This package is no longer listed. Return to the package list."));
             LearningPackage replacement = new LearningPackage(id, name,
                     description, price, lessonCount, validityDays,
                     current.isActive());
@@ -213,7 +213,7 @@ public class LearningPackageService implements LearningPackageCatalog {
             validatePackageId(id);
             LearningPackage learningPackage = repository.findByIdStrict(id)
                     .orElseThrow(() -> new RecordNotFoundException(
-                            "Learning package not found: " + id));
+                            "This package is no longer listed. Return to the package list."));
             learningPackage.setActive(active);
             repository.update(learningPackage);
             return learningPackage;
@@ -226,7 +226,7 @@ public class LearningPackageService implements LearningPackageCatalog {
         synchronized (PACKAGE_WRITE_LOCK) {
             validatePackageId(id);
             repository.findByIdStrict(id).orElseThrow(() ->
-                    new RecordNotFoundException("Learning package not found: " + id));
+                    new RecordNotFoundException("This package is no longer listed. Return to the package list."));
             // Older booking files may hold a package ID in the enrollment field.
             // Preserve that compatibility check as well as current enrollment links.
             if (bookings != null && bookings.readAllStrict().stream()
@@ -247,7 +247,7 @@ public class LearningPackageService implements LearningPackageCatalog {
     private static void validatePackageId(String id) {
         if (id == null || !id.matches("P(?!000)[0-9]{3}")) {
             throw new ValidationException(
-                    "Package ID must be between P001 and P999.");
+                    "Choose a package from the package list and try again.");
         }
     }
 

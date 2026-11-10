@@ -134,6 +134,16 @@ class StudentProfileServiceTest {
     }
 
     @Test
+    void friendlyLessonTypesKeepCanonicalStorageAndCustomChoices() {
+        for (String[] values : new String[][]{{"Manual car", "MANUAL"}, {"Automatic car", "AUTOMATIC"},
+                {"Motorcycle", "MOTORCYCLE"}, {"Refresher", "REFRESHER"}, {"Heavy_vehicle practice", "Heavy_vehicle practice"}}) {
+            service.updateOwnProfile(request, student.getName(), student.getEmail(), student.getPhone(),
+                    null, null, null, values[0], null);
+            assertEquals(values[1], ((Student) repository.findByIdStrict(student.getId()).orElseThrow()).getLicenseTypeWanted());
+        }
+    }
+
+    @Test
     void normalizedNoOpAvoidsWriteAndIdAllocation() throws Exception {
         byte[] counters = Files.readAllBytes(directory.resolve("users.txt.ids.txt"));
         clearInvocations(repository);

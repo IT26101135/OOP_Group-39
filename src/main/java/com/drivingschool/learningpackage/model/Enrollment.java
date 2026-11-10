@@ -65,7 +65,7 @@ public class Enrollment implements LearningRecord {
     private void validateDetails(String id, String studentId, String packageId,
                                  LocalDateTime enrolledAt, BigDecimal amount) {
         if (id == null || !id.matches("E(?!000)[0-9]{3}")) {
-            throw new ValidationException("Enrollment ID must be E001 to E999.");
+            throw new ValidationException("We could not identify this package request. Return to your packages and try again.");
         }
         if (studentId == null || !studentId.matches("S(?!000)[0-9]{3}")) {
             throw new ValidationException("A valid student ID is required.");

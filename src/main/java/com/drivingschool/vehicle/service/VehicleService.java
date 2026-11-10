@@ -107,7 +107,7 @@ public class VehicleService implements VehicleOperations {
     public Vehicle getVehicleByIdStrict(String id) {
         if (id == null || !id.matches("V\\d{3}")) {
             throw new ValidationException(
-                    "Vehicle ID must use the format V001 to V999."
+                    "Choose a vehicle from the vehicle list and try again."
             );
         }
 
@@ -115,7 +115,7 @@ public class VehicleService implements VehicleOperations {
 
         if (number < 1 || number > 999) {
             throw new ValidationException(
-                    "Vehicle ID must be between V001 and V999."
+                    "Choose a vehicle from the vehicle list and try again."
             );
         }
 
@@ -208,7 +208,7 @@ public class VehicleService implements VehicleOperations {
     // Gives the caller a friendly error when the requested vehicle no longer exists.
     private Vehicle requireVehicle(Optional<Vehicle> result, String vehicleId) {
         if (result.isEmpty()) {
-            throw new RecordNotFoundException("Vehicle not found: " + vehicleId);
+            throw new RecordNotFoundException("This vehicle is no longer listed. Return to the vehicle list.");
         }
         return result.get();
     }

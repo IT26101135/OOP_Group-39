@@ -18,4 +18,7 @@ public interface ReportCatalog {
     // CRUD: READ   - finds or lists report totals
     // Builds the same seven sections for the screen and the download.
     List<ReportSection> all();
+
+    // CRUD: READ - business tables shared by the report page, print and CSV.
+    List<BusinessReportSection> business();
 }

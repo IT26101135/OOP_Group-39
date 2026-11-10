@@ -3,7 +3,9 @@ package com.drivingschool.common.controller;
 
 import com.drivingschool.auth.service.CsrfTokenService;
 import com.drivingschool.common.service.ContactService;
+import com.drivingschool.common.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,8 +42,18 @@ public class PublicPagesController {
     public String submitContact(@RequestParam String name,
                                 @RequestParam String email,
                                 @RequestParam String message,
-                                RedirectAttributes flash) {
-        contactService.submit(name, email, message);
+                                RedirectAttributes flash, HttpServletRequest request,
+                                HttpServletResponse response, Model model) {
+        try {
+            contactService.submit(name, email, message);
+        } catch (ValidationException error) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            model.addAttribute("formError", error.getMessage());
+            model.addAttribute("contactName", name);
+            model.addAttribute("contactEmail", email);
+            model.addAttribute("contactMessage", message);
+            return contact(request, model);
+        }
         flash.addFlashAttribute("messageSent", true);
         return "redirect:/contact";
     }

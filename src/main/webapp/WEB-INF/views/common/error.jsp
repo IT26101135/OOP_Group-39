@@ -16,13 +16,13 @@ CRUD     : Supports error messages for CREATE, READ, UPDATE and DELETE
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="description" content="DriveSpark Academy - Error at DriveSpark Academy. Explore lessons, learning resources and driving school information.">
+    <meta name="description" content="We couldn't complete your request. Return to the form or your account to continue.">
     <meta name="theme-color" content="#050505">
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DriveSpark Academy - Error</title>
+    <title>Request help | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
 <body>
@@ -41,7 +41,7 @@ CRUD     : Supports error messages for CREATE, READ, UPDATE and DELETE
 
     <p><c:out value="${message}"/></p>
     <%-- ErrorPageSupport supplies only known local form and role destinations. --%>
-    <c:if test="${not empty retryUrl}"><p><a class="ds-button" href="<c:url value='${retryUrl}' />">Back to the form</a></p></c:if>
+    <c:if test="${not empty retryUrl}"><p><a class="ds-button" href="<c:url value='${retryUrl}' />"><c:out value="${retryLabel}" default="Back to the form" /></a></p></c:if>
     <p><a class="ds-button ds-button-outline" href="<c:url value='${recoveryUrl}' />"><c:choose><c:when test="${navRole eq 'PUBLIC'}">Log in</c:when><c:otherwise>Go to my dashboard</c:otherwise></c:choose></a></p>
     <p><a class="ds-home-text-link" href="<c:out value='${homeUrl}' />">Back to home</a></p>
 </main>

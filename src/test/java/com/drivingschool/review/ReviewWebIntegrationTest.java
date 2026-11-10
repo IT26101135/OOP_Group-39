@@ -158,7 +158,7 @@ class ReviewWebIntegrationTest {
                 .andExpect(model().attributeExists("reports"));
         mvc.perform(get("/admin/reports/export.csv").session(adminSession)).andExpect(status().isOk())
                 .andExpect(content().contentType("text/csv;charset=UTF-8"))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=drivespark-reports.csv"));
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.matchesPattern("attachment; filename=drivespark-report-[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv")));
     }
 
     // Missing CSRF protection must block both student submissions and administrator moderation.

@@ -28,7 +28,7 @@ class ErrorStatusMappingTest {
     // A bad number must explain the input problem and return to its own GET form.
     @Test
     void badRequestUsesFriendlyInputPage() {
-        ModelAndView page = resolve(HttpStatus.BAD_REQUEST, null);
+        ModelAndView page = resolve(HttpStatus.BAD_REQUEST, Role.ADMIN);
         assertEquals("Please check your input", page.getModel().get("title"));
         assertEquals("/admin/packages", page.getModel().get("retryUrl"));
     }

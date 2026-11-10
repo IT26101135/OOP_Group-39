@@ -88,7 +88,7 @@ public class AdminBookingController {
         model.addAttribute("filterTo", to);
         model.addAttribute("filterInstructor", instructorId);
         model.addAttribute("filterVehicle", vehicleId);
-        model.addAttribute("filterStatus", status);
+        model.addAttribute("filterStatus", status == null ? "" : status.trim().toUpperCase(java.util.Locale.ROOT));
         model.addAttribute("bookingStatuses", BookingStatus.values());
         model.addAttribute("instructors", activeInstructors());
         model.addAttribute("vehicles", availableVehicles());
@@ -104,7 +104,7 @@ public class AdminBookingController {
                            @RequestParam String instructorId, @RequestParam String vehicleId,
                            RedirectAttributes flash) {
         bookingService.reassign(request, bookingId, instructorId, vehicleId);
-        flash.addFlashAttribute("success", "Booking reassigned.");
+        flash.addFlashAttribute("success", "The instructor and vehicle have been updated.");
         return "redirect:/admin/bookings";
     }
 
@@ -114,7 +114,7 @@ public class AdminBookingController {
     public String forceCancel(HttpServletRequest request, @RequestParam String bookingId,
                               @RequestParam String reason, RedirectAttributes flash) {
         bookingService.forceCancel(request, bookingId, reason);
-        flash.addFlashAttribute("success", "Booking force-cancelled.");
+        flash.addFlashAttribute("success", "The lesson has been cancelled.");
         return "redirect:/admin/bookings";
     }
 

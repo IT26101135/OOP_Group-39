@@ -94,7 +94,7 @@ public class ReviewController {
                          @RequestParam String comment,
                          RedirectAttributes redirectAttributes) {
         reviewService.updateOwnReview(request, reviewId, rating, comment);
-        redirectAttributes.addFlashAttribute("success", "Review updated and returned for approval.");
+        redirectAttributes.addFlashAttribute("success", "Your updated review has been sent for approval.");
         return "redirect:/reviews";
     }
 

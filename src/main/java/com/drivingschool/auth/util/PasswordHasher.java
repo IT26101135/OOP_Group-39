@@ -75,7 +75,7 @@ public final class PasswordHasher {
 
         if (exceedsByteLimit(rawPassword)) {
             throw new ValidationException(
-                    "Password must not exceed 72 UTF-8 bytes."
+                    "This password is too long. Shorten it and try again."
             );
         }
     }

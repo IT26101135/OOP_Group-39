@@ -66,7 +66,7 @@ public class InstructorAvailabilityController {
                            @RequestParam LocalTime endTime,
                            RedirectAttributes flash) {
         scheduleService.addAvailability(request, dayOfWeek, startTime, endTime);
-        flash.addFlashAttribute("success", "Availability added.");
+        flash.addFlashAttribute("success", "Your working hours have been saved.");
         return "redirect:/instructor/availability";
     }
 
@@ -78,7 +78,7 @@ public class InstructorAvailabilityController {
                            @RequestParam String reason,
                            RedirectAttributes flash) {
         scheduleService.addLeave(request, date, reason);
-        flash.addFlashAttribute("success", "Leave day added.");
+        flash.addFlashAttribute("success", "Your day off has been saved.");
         return "redirect:/instructor/availability";
     }
 
@@ -99,7 +99,7 @@ public class InstructorAvailabilityController {
     public String updateLeave(HttpServletRequest request, @RequestParam String id,
             @RequestParam LocalDate date, @RequestParam String reason, RedirectAttributes flash) {
         scheduleService.updateLeave(request, id, date, reason);
-        flash.addFlashAttribute("success", "Leave day updated.");
+        flash.addFlashAttribute("success", "Your day off has been updated.");
         return "redirect:/instructor/availability";
     }
 
@@ -110,7 +110,7 @@ public class InstructorAvailabilityController {
                               @RequestParam String id,
                               RedirectAttributes flash) {
         scheduleService.deleteAvailability(request, id);
-        flash.addFlashAttribute("success", "Availability removed.");
+        flash.addFlashAttribute("success", "The working hours have been removed.");
         return "redirect:/instructor/availability";
     }
 
@@ -121,7 +121,7 @@ public class InstructorAvailabilityController {
                               @RequestParam String id,
                               RedirectAttributes flash) {
         scheduleService.deleteLeave(request, id);
-        flash.addFlashAttribute("success", "Leave day removed.");
+        flash.addFlashAttribute("success", "The day off has been removed.");
         return "redirect:/instructor/availability";
     }
 }

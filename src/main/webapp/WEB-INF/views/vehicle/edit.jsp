@@ -27,7 +27,7 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
     <title>Edit vehicle | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body>
+<body class="ds-account-page">
 
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
@@ -48,24 +48,20 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
             <h2>Vehicle information</h2>
 
             <dl class="ds-vehicle-details my-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                    <dt>Vehicle ID</dt>
-                    <dd><c:out value="${vehicle.id}" /></dd>
-                </div>
 
                 <div>
                     <dt>Category</dt>
-                    <dd><c:out value="${vehicle.vehicleCategory}" /></dd>
+                    <dd><c:out value="${publicDisplay.label(vehicle.vehicleCategory)}" /></dd>
                 </div>
 
                 <div>
                     <dt>Transmission</dt>
-                    <dd><c:out value="${vehicle.transmissionType}" /></dd>
+                    <dd><c:out value="${publicDisplay.label(vehicle.transmissionType)}" /></dd>
                 </div>
 
                 <div>
-                    <dt>Operational status</dt>
-                    <dd><span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${vehicle.operationalStatus}" /></span></dd>
+                    <dt>Vehicle status</dt>
+                    <dd><span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${publicDisplay.label(vehicle.operationalStatus)}" /></span></dd>
                 </div>
             </dl>
 
@@ -119,9 +115,9 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
                        value="<c:out value='${vehicleEditForm.model}' />">
             </div>
 
-            <label class="ds-vehicle-field">Transmission <select name="transmissionType"><c:forEach items="${transmissionTypes}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.transmissionType eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
-            <label class="ds-vehicle-field">Category <select name="vehicleCategory"><c:forEach items="${vehicleCategories}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.vehicleCategory eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
-            <label class="ds-vehicle-field">Status <select name="operationalStatus"><c:forEach items="${operationalStatuses}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.operationalStatus eq v}">selected</c:if>><c:out value="${v}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Transmission <select name="transmissionType"><c:forEach items="${transmissionTypes}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.transmissionType eq v}">selected</c:if>><c:out value="${publicDisplay.label(v)}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Category <select name="vehicleCategory"><c:forEach items="${vehicleCategories}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.vehicleCategory eq v}">selected</c:if>><c:out value="${publicDisplay.label(v)}" /></option></c:forEach></select></label>
+            <label class="ds-vehicle-field">Status <select name="operationalStatus"><c:forEach items="${operationalStatuses}" var="v"><option value="${v}" <c:if test="${vehicleEditForm.operationalStatus eq v}">selected</c:if>><c:out value="${publicDisplay.label(v)}" /></option></c:forEach></select></label>
             <label class="ds-vehicle-field">Insurance expiry <input type="date" name="insuranceExpiry" value="<c:out value='${vehicleEditForm.insuranceExpiry}' />"></label>
             <label class="ds-vehicle-field">Last service <input type="date" name="lastServiceDate" value="<c:out value='${vehicleEditForm.lastServiceDate}' />"></label>
             <label class="ds-vehicle-field">Next service <input type="date" name="nextServiceDate" value="<c:out value='${vehicleEditForm.nextServiceDate}' />"></label>

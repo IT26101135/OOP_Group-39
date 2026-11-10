@@ -248,7 +248,7 @@ public class Booking implements Identifiable {
     // Keeps the reject step in one place for this module.
     public void reject(String reason) {
         if (status != BookingStatus.PENDING) {
-            throw new ValidationException("Only pending requests can be rejected.");
+            throw new ValidationException("This request is no longer waiting for a decision. Refresh your lesson list to see its current status.");
         }
         if (reason == null || reason.isBlank() || reason.trim().length() > 300) {
             throw new ValidationException("A rejection reason up to 300 characters is required.");
@@ -261,7 +261,7 @@ public class Booking implements Identifiable {
     public void confirm(String instructorId, String vehicleId) {
         if (status != BookingStatus.PENDING) {
             throw new ValidationException(
-                    "Only PENDING bookings can be confirmed");
+                    "This request is no longer waiting for confirmation. Refresh your lesson list before trying again.");
         }
 
         validateId(instructorId, "I");
@@ -277,7 +277,7 @@ public class Booking implements Identifiable {
     // Keeps the assign for instructor step in one place for this module.
     public void assignForInstructor(String instructorId, String vehicleId) {
         if (status != BookingStatus.PENDING) {
-            throw new ValidationException("Only pending requests can be assigned.");
+            throw new ValidationException("This request is no longer waiting for assignment. Refresh the schedule to see its current status.");
         }
         validateId(instructorId, "I");
         validateId(vehicleId, "V");
@@ -294,12 +294,13 @@ public class Booking implements Identifiable {
     public void complete(LocalDateTime now, boolean requireLessonEnded) {
         if (status != BookingStatus.CONFIRMED) {
             throw new ValidationException(
-                    "Only CONFIRMED bookings can be completed");
+                    "This lesson is not awaiting completion. Refresh your lesson list and check its status.");
         }
 
         if (requireLessonEnded && now.isBefore(endTime)) {
             throw new ValidationException("This lesson has not ended yet. Completion becomes available at "
-                    + endTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                    + endTime.format(java.time.format.DateTimeFormatter.ofPattern("d MMM uuuu", java.util.Locale.ENGLISH))
+                    + ", " + endTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.ENGLISH)).toLowerCase(java.util.Locale.ENGLISH)
                     + " (Asia/Colombo).");
         }
         this.status = BookingStatus.COMPLETED;
@@ -313,11 +314,12 @@ public class Booking implements Identifiable {
     // Step 1: A student cannot be absent before the lesson starts.
     public void markNoShow(LocalDateTime now, boolean requireLessonEnded) {
         if (status != BookingStatus.CONFIRMED) {
-            throw new ValidationException("Only confirmed lessons can be marked no-show.");
+            throw new ValidationException("This lesson is not awaiting attendance. Refresh your lesson list and check its status.");
         }
-        if (requireLessonEnded && now.isBefore(startTime)) {
-            throw new ValidationException("This lesson has not started yet. No-show becomes available at "
-                    + startTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        if (requireLessonEnded && now.isBefore(endTime)) {
+            throw new ValidationException("This lesson has not ended yet. No-show becomes available at "
+                    + endTime.format(java.time.format.DateTimeFormatter.ofPattern("d MMM uuuu", java.util.Locale.ENGLISH))
+                    + ", " + endTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.ENGLISH)).toLowerCase(java.util.Locale.ENGLISH)
                     + " (Asia/Colombo).");
         }
         status = BookingStatus.NO_SHOW;
@@ -328,7 +330,7 @@ public class Booking implements Identifiable {
         if (status != BookingStatus.PENDING
                 && status != BookingStatus.CONFIRMED) {
             throw new ValidationException(
-                    "Only PENDING or CONFIRMED bookings can be cancelled");
+                    "This request is already closed. Refresh your lesson list to see its current status.");
         }
 
         // Preserve assignments when cancelling a confirmed booking.
@@ -337,7 +339,7 @@ public class Booking implements Identifiable {
 
     // Checks conflicts before changing an existing confirmed lesson's resources.
     public void reassign(String newInstructorId, String newVehicleId) {
-        if (status != BookingStatus.CONFIRMED) throw new ValidationException("Only confirmed lessons can be reassigned.");
+        if (status != BookingStatus.CONFIRMED) throw new ValidationException("This lesson is not confirmed. Refresh the schedule before changing its instructor or vehicle.");
         validateId(newInstructorId, "I");
         validateId(newVehicleId, "V");
         instructorId = newInstructorId;
@@ -347,7 +349,7 @@ public class Booking implements Identifiable {
     // Stores the administrator's reason when a lesson must be cancelled.
     public void forceCancel(String reason) {
         if (status == BookingStatus.COMPLETED || status == BookingStatus.CANCELLED)
-            throw new ValidationException("Completed or cancelled lessons cannot be force-cancelled.");
+            throw new ValidationException("This lesson is already completed or cancelled. Refresh the schedule; its history must be kept.");
         if (reason == null || reason.isBlank() || reason.trim().length() > 300)
             throw new ValidationException("Enter a force-cancellation reason up to 300 characters.");
         status = BookingStatus.CANCELLED;

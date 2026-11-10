@@ -1,0 +1,62 @@
+classDiagram
+direction TB
+class InstructorService {
+  +createInstructor()
+  +sortInstructors()
+}
+class InstructorSorter {
+  +sort()
+  -swapNeighbours()
+}
+class InstructorOrder {
+  <<interface>>
+  +compare()
+}
+class InstructorNameOrder {
+  +compare()
+}
+class InstructorExperienceOrder {
+  +compare()
+}
+class InstructorRatingOrder {
+  +compare()
+}
+class Instructor {
+  +setYearsOfExperience()
+  +getAverageRating()
+}
+class InstructorRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class InstructorScheduleService {
+  +addAvailability()
+  +addLeave()
+}
+class AvailabilityRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class InstructorLeaveRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+InstructorRepository --|> FileRepository
+AvailabilityRepository --|> FileRepository
+InstructorLeaveRepository --|> FileRepository
+InstructorNameOrder ..|> InstructorOrder
+InstructorExperienceOrder ..|> InstructorOrder
+InstructorRatingOrder ..|> InstructorOrder
+InstructorService --> InstructorSorter : uses
+InstructorSorter --> InstructorOrder : uses
+InstructorService --> InstructorRepository : uses
+InstructorScheduleService --> AvailabilityRepository : uses
+InstructorScheduleService --> InstructorLeaveRepository : uses

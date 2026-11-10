@@ -85,7 +85,7 @@ public class ReviewService implements ReviewOperations, ReviewModeration {
     public Review createReview(HttpServletRequest request, String bookingId,
                                int rating, String comment) {
         if (bookings == null) {
-            throw new ValidationException("Booking review checks are unavailable.");
+            throw new ValidationException("We could not check this lesson. Try again before sending your review.");
         }
         User user = authSessionService.requireLogin(request);
         Booking booking = bookings.findByIdStrict(bookingId)
@@ -329,7 +329,7 @@ public class ReviewService implements ReviewOperations, ReviewModeration {
     // Refuses malformed feedback IDs before opening the review file.
     private void validateReviewId(String reviewId) {
         if (reviewId == null || !reviewId.matches("R(?!000)[0-9]{3}")) {
-            throw new ValidationException("Review ID must be between R001 and R999.");
+            throw new ValidationException("We could not identify this review. Return to your reviews and try again.");
         }
     }
 }

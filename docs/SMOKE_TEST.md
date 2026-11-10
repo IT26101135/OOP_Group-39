@@ -1,5 +1,333 @@
 # Smoke test: executed checklist
 
+## Batch C current retest - 10 November 2026
+
+This is the latest run. The app was stopped before the CSS build and clean Maven verification.
+All runs used `scripts/run-demo.ps1`, a fresh shell, run-local variables cleared on shutdown,
+and a fresh empty data folder. Existing `data`, `data-demo` and sample files were not used for browser mutations.
+
+```text
+[INFO] Tests run: 694, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  03:46 min
+[INFO] Finished at: 2026-11-10T13:11:13+05:30
+```
+
+`npm.cmd run build:css` passed (existing Browserslist age warning only).
+Three new tests cover the attendance display boundary, preview override and non-confirmed statuses.
+No existing Java test changed; see the [test inventory and review](BATCH_C_REVIEW.md).
+
+**Normal gate: 30 PASS, 0 FAIL, 3 UNVERIFIED.** Steps 22-24 require the future lesson to end.
+Step 21 verifies that trying to complete it early is refused and does not debit a lesson.
+Steps 25-26 moderate seeded R013 rather than pretending that step 24 created a review.
+Its stored average is checked separately from the new one-decimal display.
+
+| Step | Current check | Result |
+| ---: | --- | --- |
+| 1 | Visitor / | PASS |
+| 2 | Visitor /packages | PASS |
+| 3 | Visitor /instructors | PASS |
+| 4 | Visitor /public/reviews | PASS |
+| 5 | Register a new student | PASS |
+| 6 | New student login | PASS |
+| 7 | Request a package | PASS |
+| 8 | Payment instructions | PASS |
+| 9 | Unpaid booking refused | PASS |
+| 10 | Administrator dashboard | PASS |
+| 11 | Confirm payment | PASS |
+| 12 | Student sees Paid | PASS |
+| 13 | Find available times | PASS |
+| 14 | Request future lesson | PASS |
+| 15 | Read numeric FIFO position | PASS |
+| 16 | Maintenance vehicle rejected | PASS |
+| 17 | Assign FIFO heads then new request | PASS |
+| 18 | Student sees waiting for instructor | PASS |
+| 19 | Instructor sees assigned request | PASS |
+| 20 | Instructor accepts | PASS |
+| 21 | Future completion must be refused | PASS |
+| 22 | Credit debit after real completion | UNVERIFIED |
+| 23 | Progress following completed new lesson | UNVERIFIED |
+| 24 | New review after completed lesson | UNVERIFIED |
+| 25 | Approve existing pending review | PASS |
+| 26 | Public instructor rating updates | PASS |
+| 27 | Report page | PASS |
+| 28 | Business CSV download | PASS |
+| 29 | Student denied administrator dashboard | PASS |
+| 30 | Wrong password | PASS |
+| 31 | Suspended account | PASS |
+| 32 | Cancel within 24 hours | PASS |
+| 33 | Administrator setup checks | PASS |
+
+**Visual/interaction evidence:** 136 page/role viewport checks (34 cases at 1536x864,
+1920x1080, 1280x720 and 390x844), all 200 with no broken images, document overflow
+or out-of-bounds controls. All **44 normal interaction checks PASS**. The 104 scoped
+solid-background text readings reported no text below 4.5:1. This is not a full accessibility certification.
+
+**Separate early-attendance override: 5/5 PASS.** On a new seed only, admin controls
+were enabled; instructor 4 marked B004 No-show without a debit, and instructor 5
+completed B005, reducing S002 from 18 to 17 credits. These do not count as a positive
+completion under the default time gate. No real/live data was touched.
+
+Normal folder: `C:\Users\USER\AppData\Local\Temp\drivespark-preview-e59c0e23d8654ce9b6459d2ac5315559`.
+Override folder: `C:\Users\USER\AppData\Local\Temp\drivespark-preview-a669e7e9f91f487199a685ff6afec5a1`.
+Both previews were stopped and both launcher logs confirm run-only variables were cleared.
+
+Evidence: [before/after gallery](screenshots/batchC/index.html),
+[page results](screenshots/batchC/after-pages.json),
+[33-step results](screenshots/batchC/smoke-results.json),
+[functional probes](screenshots/batchC/functional-probes.json),
+[normal interactions](screenshots/batchC/normal-checks.json),
+[override interactions](screenshots/batchC/override-checks.json),
+[contrast readings](screenshots/batchC/after-contrast.json).
+Physical phones, other browser engines and assistive technology remain **UNVERIFIED**.
+
+## Batch B current retest - 10 November 2026
+
+This is a historical run; see the Batch C retest above for current evidence. Batch A payment, attendance, renewal and cap protections
+remain enabled. The preview was stopped before CSS and Maven builds.
+
+```text
+[INFO] Tests run: 691, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  03:43 min
+[INFO] Finished at: 2026-11-10T11:54:58+05:30
+```
+
+`npm.cmd run build:css` passed (existing Browserslist age warning only). The final
+WAR's JavaScript and CSS were compared with source. The app then ran through
+`scripts/run-demo.ps1` with Java 17, a fresh shell and a fresh empty folder:
+`%TEMP%\drivespark-preview-2e2e1c33150d4c45a45777ae372eecb1`.
+The attendance setting was true; no early-attendance override was used.
+
+**33-step smoke: 30 PASS, 0 FAIL, 3 UNVERIFIED.** The normal gate correctly refuses
+future completion, so the new student's positive completion/debit/review chain
+cannot run without waiting. Seeded pending R013 was used for moderation/rating
+steps 25-26, explicitly separate from the blocked new review.
+
+| Step | Current check | Result |
+| ---: | --- | --- |
+| 1 | Visitor / | PASS |
+| 2 | Visitor /packages | PASS |
+| 3 | Visitor /instructors | PASS |
+| 4 | Visitor /public/reviews | PASS |
+| 5 | Register a new student | PASS |
+| 6 | New student login | PASS |
+| 7 | Request a package | PASS |
+| 8 | Payment instructions | PASS |
+| 9 | Unpaid booking refused | PASS |
+| 10 | Administrator dashboard | PASS |
+| 11 | Confirm payment | PASS |
+| 12 | Student sees Paid | PASS |
+| 13 | Find available times | PASS |
+| 14 | Request future lesson | PASS |
+| 15 | Read numeric FIFO position | PASS |
+| 16 | Maintenance vehicle rejected | PASS |
+| 17 | Assign FIFO heads then new request | PASS |
+| 18 | Student sees waiting for instructor | PASS |
+| 19 | Instructor sees assigned request | PASS |
+| 20 | Instructor accepts | PASS |
+| 21 | Future completion must be refused | PASS |
+| 22 | Credit debit after real completion | UNVERIFIED |
+| 23 | Progress following completed new lesson | UNVERIFIED |
+| 24 | New review after completed lesson | UNVERIFIED |
+| 25 | Approve existing pending review | PASS |
+| 26 | Public instructor rating updates | PASS |
+| 27 | Report page | PASS |
+| 28 | Business CSV download | PASS |
+| 29 | Student denied administrator dashboard | PASS |
+| 30 | Wrong password | PASS |
+| 31 | Suspended account | PASS |
+| 32 | Cancel within 24 hours | PASS |
+| 33 | Administrator setup checks | PASS |
+
+### Batch B additional browser checks
+
+**31 / 31 passed**, using visitor, student and instructor sessions plus the
+administrator. All nineteen evidence screenshots use 1536 x 864.
+
+- Invalid status and reversed date range return 400 with a schedule recovery link;
+  valid lowercase/spaced status selects Pending. No booking data is changed.
+- An empty filter has Clear schedule filters. A missing vehicle links to the
+  existing vehicle list, avoiding a missing-record loop.
+- Contact validation keeps typed fields and CSRF protection. Invalid native input
+  leaves the submit button usable. Two immediate browser submits send one POST.
+- The server also coalesces an identical quick contact retry into one saved enquiry.
+  No-token contact POST still returns 403.
+- The saved enquiry appears in Admin dashboard > Website enquiries. Literal HTML
+  in its text is escaped, not executed. Visitor, student and instructor sessions
+  cannot read those enquiries. Public contact pages never list stored messages.
+- The confirmation says the message was saved, with a package next-step link; it
+  does not promise a sent email. Staff follow up outside the website.
+- New learners see a compact package summary and Browse packages. Unpaid learners
+  see the course allowance and payment instructions. Fully committed learners
+  see current requests instead of a new booking form.
+- Friendly profile lesson types round-trip to canonical storage without changing
+  lesson credit; the test restored Student1 to Manual car afterwards.
+- Student and instructor 403 links lead to their own dashboards. Missing fields
+  with JSON Accept still render the safe HTML recovery page.
+- Repeating completed attendance gives a plain next step rather than raw enum text.
+- A dialog opened after an old confirmation clears its prior decision; Escape
+  sends no account-deletion POST. The reason dialog waits for a reason and closes
+  with Escape. No destructive confirmation was submitted.
+
+[Full review and every changed test](BATCH_B_REVIEW.md).
+[Evidence gallery](screenshots/batchB/index.html),
+[raw checklist](screenshots/batchB/smoke-results.json),
+[31 extra checks](screenshots/batchB/batchB-checks.json).
+
+The owned preview was stopped; its `finally` block reported that run-only variables
+were cleared. Existing live `data` and `data-demo` folders were not used or replaced.
+
+**UNVERIFIED:** positive new-lesson steps 22-24 under the real time gate; every
+zero-package/zero-instructor empty-school branch and every malformed input variant;
+all assistive-technology/hover/focus states; three-size desktop/mobile visuals;
+physical printing and desktop Excel. Batch C visual fixes have not started.
+
+---
+
+
+## Batch A current retest - 10 November 2026
+
+This is the latest functional evidence. It supersedes older attendance and renewal
+expectations below. No Batch B or C fixes are included.
+
+The preview was stopped before `npm.cmd run build:css` and `.\mvnw.cmd clean verify`.
+CSS built successfully; the existing Browserslist age warning remains. The actual
+Maven result was **673 tests, zero failures, errors or skips; BUILD SUCCESS**,
+3 minutes 34 seconds, finished 11:12:54 Asia/Colombo.
+
+The new `scripts/run-demo.ps1` launcher was exercised twice with Java 17. Each run
+spawned a fresh shell and a new empty temporary folder. The normal run explicitly
+used the attendance rule true; the second used `-AllowEarlyAttendance`, false for
+that run only. A second simultaneous launcher was correctly refused. Both previews
+were stopped after checking, and both printed that run-only variables were cleared.
+
+- Normal data: `%TEMP%\drivespark-preview-e85a910d158a4d3bbb2b625f0f0389ee`.
+- Override data: `%TEMP%\drivespark-preview-8bdeff7f5cb64cefbe5cdcc93a071801`.
+- Normal checklist: **30 PASS, 0 FAIL, 3 UNVERIFIED**. Correct refusal of future
+  completion prevents the new student's steps 22-24 from reaching completion.
+- Explicit override checklist: **33 PASS** with step 21 expecting the permitted
+  demonstration completion, plus one passing early no-show check. This is a wiring
+  and downstream-flow check; it is not proof that a real lesson took place.
+- **22 additional normal-run checks passed**, including renewal payment/history,
+  expiry-day boundaries, replacement/assignment at the commitment cap, and schedule
+  deletion/leave protections.
+
+Fixture IDs in both runs: new student S013, request E010 for P001 (LKR 25,000, ten
+lessons), B025 for 24 Nov 2026 at 2:00 pm. The normal run approves existing pending
+R013 for steps 25-26 (average 4.5 to 4.33). The override run creates and approves
+new R017 on B025 (average 4.5 to 4.67). The replacement is stated rather than
+pretending the default run created a completed lesson. Phones/emails are fictional.
+
+| Step | Check | Default rule | Explicit override |
+| ---: | --- | --- | --- |
+| 1 | Visitor / | PASS | PASS |
+| 2 | Visitor /packages | PASS | PASS |
+| 3 | Visitor /instructors | PASS | PASS |
+| 4 | Visitor /public/reviews | PASS | PASS |
+| 5 | Register a new student | PASS | PASS |
+| 6 | New student login | PASS | PASS |
+| 7 | Request a package | PASS | PASS |
+| 8 | Payment instructions | PASS | PASS |
+| 9 | Unpaid booking refused | PASS | PASS |
+| 10 | Administrator dashboard | PASS | PASS |
+| 11 | Confirm payment | PASS | PASS |
+| 12 | Student sees Paid | PASS | PASS |
+| 13 | Find available times | PASS | PASS |
+| 14 | Request future lesson | PASS | PASS |
+| 15 | Read numeric FIFO position | PASS | PASS |
+| 16 | Maintenance vehicle rejected | PASS | PASS |
+| 17 | Assign FIFO heads then new request | PASS | PASS |
+| 18 | Student sees waiting for instructor | PASS | PASS |
+| 19 | Instructor sees assigned request | PASS | PASS |
+| 20 | Instructor accepts | PASS | PASS |
+| 21 | Future completion must be refused | PASS | PASS |
+| 22 | Credit debit after real completion | UNVERIFIED | PASS |
+| 23 | Progress following completed new lesson | UNVERIFIED | PASS |
+| 24 | New review after completed lesson | UNVERIFIED | PASS |
+| 25 | Approve existing pending review | PASS | PASS |
+| 26 | Public instructor rating updates | PASS | PASS |
+| 27 | Report page | PASS | PASS |
+| 28 | Business CSV download | PASS | PASS |
+| 29 | Student denied administrator dashboard | PASS | PASS |
+| 30 | Wrong password | PASS | PASS |
+| 31 | Suspended account | PASS | PASS |
+| 32 | Cancel within 24 hours | PASS | PASS |
+| 33 | Administrator setup checks | PASS | PASS |
+
+Default step 21 requires refusal; override step 21 deliberately permits completion.
+Steps 22-24 remain **UNVERIFIED under the normal browser flow**; the separate
+override verifies debit 10 to 9, progress 1 / 1.0 hours, and a new pending review.
+JUnit additionally checks the real end-time boundaries without waiting on a clock.
+
+### Additional Batch A results
+
+| Scenario | Result | Evidence |
+| --- | --- | --- |
+| Expired Student6 renews | PASS | New E011 awaits payment, then activates with ten credits; E006 is unchanged and retained. |
+| Used-up Student7 renews | PASS | New E012 activates; old E007 remains Paid; old lesson history stays. |
+| One awaiting request | PASS | Student8's duplicate creates no receipt. Concurrent renewal requests are also covered by JUnit. |
+| Renewal with open lessons | PASS | Student1 gets a clear resolution message; no new receipt. Expired-plus-open Pending/Confirmed cases and confirmation rechecks pass in JUnit. |
+| Later-than-expiry new lesson | PASS | E001 ends 25 Dec; 28 Dec request returns 400 and saves nothing. |
+| Later-than-expiry reschedule | PASS | HTTP 400, original B001 byte-equivalent as a parsed record. |
+| Last valid day | PASS | 25 Dec at 2:00 pm accepted. Legacy null validity remains covered by JUnit. |
+| Commitments capped | PASS | Ten open requests for ten credits; extra requests refused. |
+| Replace at the cap | PASS | B025 cancelled only after its replacement is saved; still ten open requests. |
+| Assign at the cap | PASS | Existing FIFO head assigned once; still ten commitments. |
+| Delete hours over Confirmed lesson | PASS | H028 removal returns 400; H028 and B004 Confirmed remain. |
+| Leave over assigned Pending lesson | PASS | Sayumi's B003 date returns 400 with an administrator next step; no leave saved. |
+| Default admin/instructor future completion | PASS | Both return 400; Confirmed state and ten-credit balance retained. |
+| Default future no-show | PASS | HTTP 400, unchanged Confirmed state; during-lesson and exact-end boundaries verified by JUnit. |
+| Explicit early no-show override | PASS | B004 becomes No-show; Student4's 18 credits stay unchanged. |
+| Double payment confirmation | PASS | Repeated E010 confirmation grants no additional credits. |
+
+[Batch A review and every changed test](BATCH_A_REVIEW.md).
+[Evidence gallery](screenshots/batchA/index.html).
+[Normal raw checklist](screenshots/batchA/smoke-results.json),
+[additional checks](screenshots/batchA/batchA-checks.json),
+[override checklist](screenshots/batchA/override/smoke-results.json).
+
+**UNVERIFIED:** actual wall-clock lesson delivery/end in the browser, every legacy
+corruption/multi-file failure, every filter/form permutation, desktop Excel and
+physical printing. No B/C visual repair is claimed; login labels/alignment remain
+known issues. The requested desktop-size matrix belongs to Batch C.
+
+---
+
+
+## Current seed revision: Batch 3, 10 November 2026
+
+This section supersedes older fixture counts and scenario IDs in the historical
+checks below. The current loader and checked-in snapshot use the same records:
+19 accounts, 6 instructors, 12 students, 7 packages, 6 vehicles, 9 enrollments,
+24 bookings, 16 reviews, 42 weekly availability blocks, 3 lesson notes and 1 day off.
+Paid revenue is **LKR 190,500**; 12 approved reviews determine instructor ratings.
+
+Existing admin, instructor1-5 and student1-10 login emails and `DriveSpark123!`
+are unchanged. `instructor6@drivingschool.test` is Sayumi Perera. Added students
+use `chamodi.abeysinghe@learners.example.test` and
+`nivethan.yogarajah@learners.example.test`, with the same fixture password.
+Student 8 is Active; Student 9 is Pending and Student 10 is Suspended.
+
+- Experience descending: Pasindu, Piravarshini, Shahithiyan, Ruwini, Pragash, Sayumi.
+- FIFO: B001 then B002. Assigned pending B003 belongs to Tharushi and Sayumi.
+- E006 is expired; E007 is used up; E008 awaits payment and E009 is cancelled,
+  both belonging to Dharshan (Student 8). There is no E010 in this snapshot.
+- V003 is in maintenance. V006 (Honda Dio) has insurance and service due soon.
+- Notes N001/B006, N002/B007 and N003/B021 give progress examples.
+- A new account starts at S013; a new package P008; a new booking B025.
+
+Use a **fresh empty data folder** for the loader, or a fresh temporary copy of
+`sample-data` with both seed loaders disabled. Existing data-demo folders keep
+old names. All phone/NIC fixtures are deliberately non-real syntax-only values;
+all emails use reserved `.test` domains. Do not dial them or treat them as civil
+identity examples. No licence or accreditation claims are seeded.
+
+See [the current sample-data guide](../sample-data/README.md) and
+[Batch 3 verification](BATCH_3_SEED_REVIEW.md) for the current data and checks.
+The older runs below remain historical evidence, not results for this dataset.
+
+
 **Batch 1 retest is recorded below. It supersedes the original future-completion failure for current code; the original 33-step run remains historical evidence.**
 
 Executed 9 November 2026, about 17:40 Asia/Colombo. HTTP requests against a fresh isolated demo at http://localhost:18080, with cookies and actual CSRF tokens; redirects followed, so recorded 200 means the final page. No browser was available: click descriptions are the equivalent manual procedure, not claimed mouse interaction. No screenshots. Only temporary demo records were changed. Stored JSON evidence was read from the demo directory, never the live ./data directory.

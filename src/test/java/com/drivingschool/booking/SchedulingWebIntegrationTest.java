@@ -214,7 +214,7 @@ class SchedulingWebIntegrationTest {
         packageRecords.delete(course.getId());
         mvc.perform(get("/bookings/" + booking.getId() + "/details").session(studentSession))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("packageDetails", org.hamcrest.Matchers.hasProperty("packageName", org.hamcrest.Matchers.is("Package unavailable (" + course.getId() + ")"))));
+                .andExpect(model().attribute("packageDetails", org.hamcrest.Matchers.hasProperty("packageName", org.hamcrest.Matchers.is("Package no longer listed"))));
     }
 
     // An assigned request and historical rejection have details, but no unassigned FIFO position.
@@ -289,6 +289,108 @@ class SchedulingWebIntegrationTest {
         assertEquals(BookingStatus.COMPLETED, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
         assertEquals(4, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
         assertThrows(ValidationException.class, () -> bookingService.complete(adminRequest(), booking.getId()));
+    }
+
+    @Test
+    void noShowDuringLessonIsRefusedWithoutChangingBalance() {
+        LocalDateTime start = LocalDateTime.now(clock).minusMinutes(30);
+        Booking booking = new Booking(bookings.nextId("B"), student.getId(), student.getActiveEnrollmentId(),
+                start, start.plusHours(1), instructor.getId(), "V001", BookingStatus.CONFIRMED, start.minusDays(1));
+        bookings.save(booking);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        assertTrue(assertThrows(ValidationException.class,
+                () -> bookingService.markNoShowAssignedLesson(teacher, booking.getId()))
+                .getMessage().contains("has not ended"));
+        assertEquals(BookingStatus.CONFIRMED, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+        assertEquals(5, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+    }
+
+    @Test
+    void endedLessonCanBeMarkedNoShowWithoutSpendingCredit() {
+        LocalDateTime end = LocalDateTime.now(clock).minusMinutes(1);
+        Booking booking = new Booking(bookings.nextId("B"), student.getId(), student.getActiveEnrollmentId(),
+                end.minusHours(1), end, instructor.getId(), "V001", BookingStatus.CONFIRMED, end.minusDays(1));
+        bookings.save(booking);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        bookingService.markNoShowAssignedLesson(teacher, booking.getId());
+        assertEquals(BookingStatus.NO_SHOW, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+        assertEquals(5, ((Student) users.findByIdStrict(student.getId()).orElseThrow()).getLessonsRemaining());
+    }
+
+    @Test
+    void demoSettingAlsoAllowsEarlyNoShow() throws Exception {
+        Booking booking = requestLesson();
+        booking.confirm(instructor.getId(), "V001");
+        bookings.update(booking);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "requireLessonEnded", false);
+        try {
+            bookingService.markNoShowAssignedLesson(teacher, booking.getId());
+            assertEquals(BookingStatus.NO_SHOW, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "requireLessonEnded", true);
+        }
+    }
+
+    @Test
+    void bothRequestPathsRefuseDatesBeyondExpiry() {
+        Enrollment receipt = receipts.findByIdStrict(student.getActiveEnrollmentId()).orElseThrow();
+        receipt.setValidUntil(lessonTime.toLocalDate().minusDays(1));
+        receipts.update(receipt);
+        int count = bookings.readAllStrict().size();
+        assertThrows(ValidationException.class, () -> bookingService.requestLesson(studentRequest(), course.getId(), lessonTime));
+        assertTrue(assertThrows(ValidationException.class,
+                () -> bookingService.requestLesson(studentRequest(), course.getId(), instructor.getId(), lessonTime))
+                .getMessage().contains("does not cover later dates"));
+        assertEquals(count, bookings.readAllStrict().size());
+    }
+
+    @Test
+    void expiryDayIsIncludedAndLegacyNullValidityStillWorks() {
+        Enrollment receipt = receipts.findByIdStrict(student.getActiveEnrollmentId()).orElseThrow();
+        receipt.setValidUntil(lessonTime.toLocalDate());
+        receipts.update(receipt);
+        assertEquals(BookingStatus.PENDING,
+                bookingService.requestLesson(studentRequest(), course.getId(), instructor.getId(), lessonTime).getStatus());
+        receipt.setValidUntil(null);
+        receipts.update(receipt);
+        assertEquals(BookingStatus.PENDING,
+                bookingService.requestLesson(studentRequest(), course.getId(), instructor.getId(), lessonTime.plusHours(1)).getStatus());
+    }
+
+    @Test
+    void reschedulingBeyondExpiryKeepsOriginalRequest() throws Exception {
+        Booking original = requestLesson();
+        Enrollment receipt = receipts.findByIdStrict(student.getActiveEnrollmentId()).orElseThrow();
+        receipt.setValidUntil(lessonTime.toLocalDate());
+        receipts.update(receipt);
+        int count = bookings.readAllStrict().size();
+        assertThrows(ValidationException.class, () -> bookingService.rescheduleOwnBooking(
+                studentRequest(), original.getId(), lessonTime.plusWeeks(1)));
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(original.getId()).orElseThrow().getStatus());
+        assertEquals(count, bookings.readAllStrict().size());
+    }
+
+    @Test
+    void legacyRequestBeyondExpiryCannotBeAssignedOrAccepted() {
+        Enrollment receipt = receipts.findByIdStrict(student.getActiveEnrollmentId()).orElseThrow();
+        receipt.setValidUntil(lessonTime.toLocalDate().minusDays(1));
+        receipts.update(receipt);
+        Booking waiting = new Booking(bookings.nextId("B"), student.getId(), student.getActiveEnrollmentId(),
+                lessonTime, lessonTime.plusHours(1), null, null, BookingStatus.PENDING, LocalDateTime.now(clock).minusYears(10));
+        bookings.save(waiting);
+        assertEquals(BookingStatus.REJECTED,
+                bookingService.assign(adminRequest(), waiting.getId(), instructor.getId(), "V001").getStatus());
+        Booking assigned = new Booking(bookings.nextId("B"), student.getId(), student.getActiveEnrollmentId(),
+                lessonTime, lessonTime.plusHours(1), instructor.getId(), "V001", BookingStatus.PENDING, LocalDateTime.now(clock));
+        bookings.save(assigned);
+        MockHttpServletRequest teacher = new MockHttpServletRequest();
+        teacher.setSession(instructorSession);
+        assertThrows(ValidationException.class, () -> bookingService.acceptAssignedLesson(teacher, assigned.getId()));
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(assigned.getId()).orElseThrow().getStatus());
     }
 
     // Only this test opts into the explicit demo switch; normal tests keep the default gate.
@@ -372,7 +474,7 @@ class SchedulingWebIntegrationTest {
         mvc.perform(post("/bookings").session(studentSession).param("_csrf", token("/bookings", studentSession))
                 .param("packageId", course.getId()).param("instructorId", instructor.getId())
                 .param("startTime", lessonTime.toString())).andExpect(status().isBadRequest())
-                .andExpect(model().attribute("message", org.hamcrest.Matchers.containsString("Paid enrollment")));
+                .andExpect(model().attribute("message", org.hamcrest.Matchers.containsString("paid package")));
     }
 
     // Failed rescheduling must leave the original request and its date intact.
@@ -488,6 +590,34 @@ class SchedulingWebIntegrationTest {
     // Gives FIFO checks a private empty line inside this class's temporary directory.
     private void clearTemporaryBookings() {
         for (Booking booking : bookings.readAllStrict()) bookings.delete(booking.getId());
+    }
+
+    @Test
+    void invalidScheduleFiltersReturn400AndKeepRecordsIntact() throws Exception {
+        Booking booking = requestLesson();
+        MockHttpSession admin = (MockHttpSession) adminRequest().getSession(false);
+        for (String query : new String[]{"BOGUS", "<script>"}) {
+            mvc.perform(get("/admin/bookings").session(admin).param("status", query))
+                    .andExpect(status().isBadRequest()).andExpect(view().name("common/error"))
+                    .andExpect(model().attribute("retryUrl", "/admin/bookings"));
+        }
+        mvc.perform(get("/admin/bookings").session(admin).param("from", "2030-02-01").param("to", "2030-01-01"))
+                .andExpect(status().isBadRequest());
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void validStatusIsNormalizedAndFullCommitmentsHideNewRequestForm() throws Exception {
+        Booking booking = requestLesson();
+        MockHttpSession admin = (MockHttpSession) adminRequest().getSession(false);
+        mvc.perform(get("/admin/bookings").session(admin).param("status", " pending "))
+                .andExpect(status().isOk()).andExpect(model().attribute("filterStatus", "PENDING"));
+        Student current = (Student) users.findByIdStrict(student.getId()).orElseThrow();
+        current.setLessonsRemaining(1);
+        users.update(current);
+        mvc.perform(get("/bookings").session(studentSession)).andExpect(status().isOk())
+                .andExpect(model().attribute("canBook", false));
+        assertEquals(BookingStatus.PENDING, bookings.findByIdStrict(booking.getId()).orElseThrow().getStatus());
     }
 
     // Creates a student request using the actual slot and conflict services.

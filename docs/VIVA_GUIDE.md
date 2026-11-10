@@ -1,5 +1,7 @@
 # Viva guide
 
+> **Current guide (10 Nov 2026):** use the [source-checked viva pack](viva-2026/README.md), [six individual diagrams](viva-2026/class-diagrams.html) and [six printable cheat sheets](viva-2026/cheat-sheets.pdf). The older material below is historical and may mention removed interfaces or earlier report layouts.
+
 Owner: **IT26101135 - [Name]** (integration documentation). Member names remain placeholders until the team supplies them.
 
 Begin with your five-sentence story, then trace one browser request through controller, service, model and repository. Each production file below has one owner, matching its source header. A module can use another member's shared file without owning it. Java labels omit `src/main/java/com/drivingschool/`; JSP labels omit `src/main/webapp/WEB-INF/views/`. Links point to the complete path.

@@ -32,14 +32,14 @@ public class CustomErrorViewResolver implements ErrorViewResolver {
     @Override
     // Select a safe explanation without exposing Spring's internal exception details.
     public ModelAndView resolveErrorView(HttpServletRequest request, HttpStatus status, Map<String, Object> model) {
-        String title = "We hit a bump in the road";
+        String title = "We couldn't complete your request";
         String message = "Please try again or contact the academy.";
         if (status == HttpStatus.BAD_REQUEST) {
             title = "Please check your input";
             message = "Some details are missing or invalid. Return to the form and check them.";
         } else if (status == HttpStatus.FORBIDDEN) {
             title = "Access denied";
-            message = "You do not have permission to access this resource.";
+            message = "You don't have access to this page. Return to your account to continue.";
         } else if (status == HttpStatus.NOT_FOUND) {
             title = "We could not find that page";
             message = "Check the address or continue from your own dashboard.";

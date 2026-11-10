@@ -60,7 +60,7 @@ public class StudentAccountService {
                 .anyMatch(enrollment -> enrollment.getStudentId().equals(user.getId()));
         if (hasBookings || hasReviews || hasEnrollments) {
             throw new ValidationException(
-                    "Account cannot be deleted while lesson or review history is attached.");
+                    "Your account has payment, lesson or review history that must be kept. You can update your profile or contact us for help.");
         }
         users.delete(user.getId());
     }

@@ -36,10 +36,10 @@ public class PackageNavigationCard {
     }
     // Explains the learning choice in one short sentence.
     public String getTagline() {
-        if (type == PackageType.AUTOMATIC) return "Make room for the road ahead.";
+        if (type == PackageType.AUTOMATIC) return "Practise driving an automatic car.";
         if (type == PackageType.MOTORCYCLE) return "Build balance and road awareness.";
         if (type == PackageType.REFRESHER) return "Return to driving with confidence.";
-        return "Take control of every journey.";
+        return "Practise clutch control and changing gears.";
     }
     // Distinguishes coming soon from a real priced offer.
     public boolean isAvailable() { return cheapest != null; }

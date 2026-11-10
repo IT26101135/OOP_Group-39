@@ -143,7 +143,7 @@ public class InstructorDashboardController {
                          RedirectAttributes flash) {
         requireInstructor(request);
         bookings.markNoShowAssignedLesson(request, bookingId);
-        flash.addFlashAttribute("success", "Attendance marked no-show.");
+        flash.addFlashAttribute("success", "The student has been marked absent for this lesson.");
         return "redirect:/instructor/dashboard";
     }
 

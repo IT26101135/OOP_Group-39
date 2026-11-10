@@ -18,33 +18,33 @@ CRUD     : READ and UPDATE enrollment payment requests
     <title>Awaiting payment | DriveSpark Academy</title>
     <link rel="icon" href="<c:url value='/images/favicon.svg' />" type="image/svg+xml">
     <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body>
+</head><body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
     <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %>
     <div class="ds-dashboard-content">
         <%-- AdminEnrollmentController supplies only requests still awaiting a decision. --%>
-        <header><p class="ds-eyebrow">THE CASHIER DESK</p><h1>Awaiting payment</h1>
-            <p class="mt-4">Check the receipt outside this system before confirming payment.</p></header>
+        <header><p class="ds-eyebrow">PACKAGE PAYMENTS</p><h1>Awaiting payment</h1>
+            <p class="mt-4">Check that the payment has reached the school before confirming it.</p></header>
         <c:choose>
-            <c:when test="${empty payments}"><section class="ds-empty-state mt-8"><p>No payments waiting.</p></section></c:when>
+            <c:when test="${empty payments}"><section class="ds-empty-state mt-8"><p>There are no package requests awaiting payment. Students can choose an available course from Packages.</p><a class="ds-home-text-link" href="<c:url value='/admin/packages' />">View offered packages</a></section></c:when>
             <c:otherwise><div class="grid gap-6 mt-8">
                 <c:forEach items="${payments}" var="payment">
                     <%-- AdminEnrollmentController supplies names; the receipt keeps its original amount. --%>
                     <article class="ds-feature-card" data-payment-id="<c:out value='${payment.id}' />">
-                        <h2><c:out value="${payment.referenceCode}" /></h2>
+                        <h2><c:out value="${studentNames[payment.studentId]}" /></h2><p><c:out value="${packageNames[payment.packageId]}" /></p><p>Payment reference: <c:out value="${payment.referenceCode}" /></p>
                         <p class="mt-3"><span class="status-badge ds-payment-status" data-status="AWAITING_PAYMENT">Awaiting payment</span></p>
                         <dl class="grid gap-4 my-6 sm:grid-cols-2">
-                            <div><dt>Student</dt><dd><c:out value="${studentNames[payment.studentId]}" /> (<c:out value="${payment.studentId}" />)</dd></div>
+                            <div><dt>Student</dt><dd><c:out value="${studentNames[payment.studentId]}" /></dd></div>
                             <div><dt>Package</dt><dd><c:out value="${packageNames[payment.packageId]}" /></dd></div>
-                            <div><dt>Amount</dt><dd>LKR <c:out value="${payment.amount}" /></dd></div>
-                            <div><dt>Requested</dt><dd><c:out value="${payment.enrolledAt.toLocalDate()}" /></dd></div>
+                            <div><dt>Amount</dt><dd>LKR <c:out value="${publicDisplay.money(payment.amount)}" /></dd></div>
+                            <div><dt>Requested</dt><dd><c:out value="${publicDisplay.date(payment.enrolledAt.toLocalDate())}" /></dd></div>
                         </dl>
                         <%-- The existing shared dialog confirms each decision; the service rechecks it under a lock. --%>
                         <form method="post" action="<c:url value='/admin/enrollments/mark-paid' />" data-confirm="Confirm that payment for ${payment.referenceCode} has been received?">
                             <input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="enrollmentId" value="<c:out value='${payment.id}' />">
-                            <button class="ds-button" type="submit">Mark as Paid</button>
+                            <button class="ds-button" type="submit">Confirm payment</button>
                         </form>
                         <%-- An optional reason stays in the form so cancellation also works without JavaScript. --%>
                         <form class="mt-6" method="post" action="<c:url value='/admin/enrollments/cancel-request' />" data-confirm="Cancel unpaid request ${payment.referenceCode}?">

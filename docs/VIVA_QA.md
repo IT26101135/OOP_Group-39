@@ -1,5 +1,193 @@
 # Viva questions and answers
 
+## Batch C display rules, 10 November 2026
+
+The [visual review](BATCH_C_REVIEW.md) and regenerated [speaking pack](viva-2026/README.md)
+cover 694 tests. Earlier batch notes below are retained as history.
+
+**Why is Complete disabled before a lesson ends?**
+In our system, I show the lesson end time beside the attendance buttons.
+I use the same clock and attendance setting as the server, so the page reflects the existing rule.
+I ask the instructor to refresh after that time; the page does not update itself automatically.
+The explicit early-attendance preview setting enables the controls only for that isolated run.
+
+Show in code: `booking/controller/AttendancePresentationAdvice.java`, `isAvailable` and `availableAt`;
+`booking/model/Booking.java`, `complete` and `markNoShow`; `common/components/attendance-time.jspf`.
+Show in browser: Instructor 4 > Dashboard > future confirmed lesson; Admin > Bookings > Manage lesson.
+
+**Did the rating calculation change?**
+In our system, I keep the saved average and show one decimal on the page.
+For example, a stored average of 4.33 appears as 4.3 out of 5.
+I still use the existing reviews for that calculation.
+
+Show in code: `common/controller/SchoolPresentationAdvice.java`, `PublicDisplay.rating`;
+`public/instructors.jsp`; `instructor/lesson-dashboard.jsp`.
+Show in browser: Admin > Reviews > approve the seeded pending review; Visitor > Instructors.
+
+## Batch B data and recovery rules, 10 November 2026
+
+These answers and the regenerated [speaking pack](viva-2026/README.md) supersede
+older claims that nobody can read saved contact messages. Batch A rules still apply.
+
+**Where does the contact form go?**
+In our system, I save the message for an administrator to read on the dashboard.
+I do not send an email or reply from the website. I show staff the sender's address
+so they can follow up outside the system.
+
+Show in code: `common/service/ContactService.java`, `submit` and `messagesForAdmin`;
+`admin/controller/AdminDashboardController.java`, `showDashboard`;
+`admin/dashboard.jsp`, Website enquiries.
+Show in browser: Visitor > Contact us > Send message; Admin > Dashboard > Website enquiries.
+
+**What happens on a double click or a quick retry?**
+In our system, I block repeated accepted submits in the browser. I also merge the
+same contact message sent again within one minute. I still use server payment and
+booking checks, because a browser guard alone cannot protect saved data.
+
+Show in code: `static/js/site.js`, submit handlers and `showSubmitLoading`;
+`ContactService.submit`; `EnrollmentService.requireAwaiting`; `BookingService.requestLesson`.
+
+**Can Escape accidentally confirm an old action?**
+In our system, I clear the old dialog decision each time it opens. I also clear
+the pending form when it closes. I submit only when the current dialog is confirmed.
+
+Show in code: `static/js/site.js`, `confirmDialog` open and close handlers.
+Show in browser: Student > Dashboard > Account settings > Delete my account > Escape.
+This only opens and cancels the dialog; do not confirm a real deletion for the viva.
+
+**What happens if someone changes a schedule filter in the address?**
+In our system, I check the status and date range before showing results. I return
+a helpful 400 page for invalid values and give a link back to the schedule.
+
+Show in code: `BookingService.filterBookings` and `parseFilterStatus`;
+`admin/bookings.jsp`, string comparison with `status.name()`.
+Show in browser: Admin > Bookings > filter, or `/admin/bookings?status=BOGUS`.
+
+**How do I keep error links useful?**
+In our system, I keep the correct error status and show a safe HTML page. I link
+back to a known form, list or the current role's dashboard. I do not send a student
+to an administrator's form.
+
+Show in code: `GlobalExceptionHandler.handleFormBinding`, `handleWrongMethod`;
+`ErrorPageSupport.prepare`, `recordList` and `allowedLink`.
+
+**What does a student with no package see?**
+In our system, I show a package link before asking for a lesson time. I show the
+package allowance without pretending unpaid lessons are usable. I show friendly
+lesson-type names while keeping their existing stored values.
+
+Show in code: `EnrollmentPresentationService.noPackage`, `describe`;
+`EnrollmentUsageView.isDetailsAvailable`; `BookingController.list`;
+`SchoolPresentationAdvice.PublicDisplay.lessonTypeInput`; `StudentProfileService.storedLessonType`.
+
+Final checks: **691 tests passed, zero failures/errors/skips**, CSS build passed,
+and **31 Batch B browser checks passed**. Normal smoke: **30 PASS, 3 UNVERIFIED**;
+the three still require successful completion of a future lesson with the gate on.
+See [the Batch B review](BATCH_B_REVIEW.md) for precise evidence and limitations.
+
+## Batch A rules, 10 November 2026
+
+This section supersedes older renewal and no-show answers below. The regenerated
+[speaking pack](viva-2026/README.md) and its PDFs include these rules.
+
+**Can a lesson be marked completed or no-show early?**
+In our system, I wait until the lesson ends for both actions. I keep the default
+attendance setting true. I can use an explicit override in a fresh isolated preview.
+
+Show in code: `booking/model/Booking.java`, `complete` and `markNoShow`;
+`booking/service/BookingService.java`, `markNoShowAssignedLesson`;
+`application.properties`, `app.attendance.require-lesson-ended`.
+Show in browser: Instructor login > My schedule > a Confirmed lesson > attendance.
+
+**Can a student buy another package?**
+In our system, I allow another package when the old one is used up or expired and
+there is no open lesson. I keep one payment request at a time and keep the old
+receipts. I check the rules again when the administrator confirms payment.
+
+Show in code: `learningpackage/service/EnrollmentService.java`, `ensureCanEnroll`,
+`renewalProblem`, `paymentStudent` and `markPaid`.
+Show in browser: Student6 login > My enrollments > Choose another package > enroll;
+Admin login > Awaiting payment > Confirm payment; Student6 > My enrollments.
+
+**Does requesting a renewal give lessons immediately?**
+In our system, I save an unpaid request first. I change the active package and
+give the new lesson balance only after payment confirmation. I keep the previous
+payment and lesson records for history.
+
+Show in code: `EnrollmentService.enroll`, `markPaid` and `activateLessons`.
+
+**What if the lesson date is after the package expiry?**
+In our system, I refuse a new promise after the expiry date. I include the last
+valid day and still support older paid receipts with no expiry recorded. I do not
+change old receipt dates to make a request pass.
+
+Show in code: `booking/service/PaidEnrollmentGuard.java`, `problemForLesson` and
+`requirePaidForLesson`; `BookingService.requestLesson`, `rescheduleOwnBooking`,
+`assign`, `acceptAssignedLesson` and `reassign`.
+
+**Can an instructor delete hours or add leave over a lesson?**
+In our system, I protect confirmed lessons when working hours are edited or deleted.
+I also block leave over an assigned pending lesson and ask an administrator to
+resolve it first. I use the existing shared app lock during these schedule changes.
+
+Show in code: `instructor/service/InstructorScheduleService.java`,
+`deleteAvailability`, `updateAvailability`, `validateLeave`;
+`auth/util/AccountWriteCoordinator.java`, `execute`.
+Show in browser: Instructor4 > Availability > remove hours covering B004;
+Instructor6 > Availability > add leave on B003's date.
+
+**Why did a normal startup show only one instructor and one package?**
+In our system, I load the records from the selected data folder. A normal startup
+does not run the optional fixture loader. I use the preview script for a fresh
+folder with six instructors and seven packages.
+
+Show in code: `application.properties`, `app.data-directory` and seed settings;
+`sample/DemoDataSeedRunner.java`, `run`; `scripts/run-demo.ps1`.
+
+**Are the changes a database transaction?**
+In our system, I coordinate writers inside this Java process. I still do not have
+rollback across files or locking across two running application processes.
+
+Validation: **673 tests, zero failures/errors/skips**, `BUILD SUCCESS`, 3 minutes
+34 seconds. Existing commitment-cap tests remain enabled. See the
+[Batch A review](BATCH_A_REVIEW.md) and [current smoke evidence](SMOKE_TEST.md)
+for browser results and their limits. No team-history claim was added.
+
+> **Current guide (10 Nov 2026):** use the [source-checked viva pack](viva-2026/README.md), [six individual diagrams](viva-2026/class-diagrams.html) and [six printable cheat sheets](viva-2026/cheat-sheets.pdf). The older material below is historical and may mention removed interfaces or earlier report layouts.
+
+## Current seed revision: Batch 3, 10 November 2026
+
+This section supersedes older fixture counts and scenario IDs in the historical
+checks below. The current loader and checked-in snapshot use the same records:
+19 accounts, 6 instructors, 12 students, 7 packages, 6 vehicles, 9 enrollments,
+24 bookings, 16 reviews, 42 weekly availability blocks, 3 lesson notes and 1 day off.
+Paid revenue is **LKR 190,500**; 12 approved reviews determine instructor ratings.
+
+Existing admin, instructor1-5 and student1-10 login emails and `DriveSpark123!`
+are unchanged. `instructor6@drivingschool.test` is Sayumi Perera. Added students
+use `chamodi.abeysinghe@learners.example.test` and
+`nivethan.yogarajah@learners.example.test`, with the same fixture password.
+Student 8 is Active; Student 9 is Pending and Student 10 is Suspended.
+
+- Experience descending: Pasindu, Piravarshini, Shahithiyan, Ruwini, Pragash, Sayumi.
+- FIFO: B001 then B002. Assigned pending B003 belongs to Tharushi and Sayumi.
+- E006 is expired; E007 is used up; E008 awaits payment and E009 is cancelled,
+  both belonging to Dharshan (Student 8). There is no E010 in this snapshot.
+- V003 is in maintenance. V006 (Honda Dio) has insurance and service due soon.
+- Notes N001/B006, N002/B007 and N003/B021 give progress examples.
+- A new account starts at S013; a new package P008; a new booking B025.
+
+Use a **fresh empty data folder** for the loader, or a fresh temporary copy of
+`sample-data` with both seed loaders disabled. Existing data-demo folders keep
+old names. All phone/NIC fixtures are deliberately non-real syntax-only values;
+all emails use reserved `.test` domains. Do not dial them or treat them as civil
+identity examples. No licence or accreditation claims are seeded.
+
+See [the current sample-data guide](../sample-data/README.md) and
+[Batch 3 verification](BATCH_3_SEED_REVIEW.md) for the current data and checks.
+The older runs below remain historical evidence, not results for this dataset.
+
+
 Owner: **IT26101135**, integration documentation. Phase C. Checked against the current checkout on **9 November 2026**. Member IDs are used without personal names.
 
 These are short answers to practise aloud. “I used” means the member can explain the code assigned to their module; it does not prove that member personally authored every shared line. Show the source before making a claim. Keep [CLASS_DIAGRAMS.md](CLASS_DIAGRAMS.md), [CRUD_MAP.md](CRUD_MAP.md) and [VIVA_GUIDE.md](VIVA_GUIDE.md) nearby, but follow the actual code if an older map differs.

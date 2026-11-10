@@ -17,43 +17,43 @@ CRUD     : CREATE, READ, UPDATE, DELETE for reviews; reports READ saved data
 <title>Lesson reviews | DriveSpark Academy</title>
 <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
 <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body><%@ include file="/WEB-INF/views/common/navbar.jspf" %>
+</head><body class="ds-account-page"><%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
 <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %><div class="ds-dashboard-content">
 
 <%-- ReviewController supplies role-filtered reviews and completed lessons that have no review yet. --%>
-<header class="mb-8"><p class="ds-eyebrow">YOUR EXPERIENCE MATTERS</p><h1>Lesson reviews</h1>
-<p class="text-slate-400">Share what helped you learn. Approved feedback helps the next learner choose.</p></header>
+<header class="mb-8"><p class="ds-eyebrow">YOUR LESSON FEEDBACK</p><h1>Lesson reviews</h1>
+<p class="text-slate-400">Tell us what helped and what could be better. We check reviews before publishing them.</p></header>
 <c:if test="${navRole eq 'STUDENT'}">
 <section class="ds-card mb-8" aria-labelledby="write-review-title">
 <h2 id="write-review-title">Write a review</h2>
 <c:choose><c:when test="${empty completedBookings}">
-<p class="mt-4 text-slate-400">You have no completed lessons waiting for a review. Your existing feedback is below.</p>
+<p class="mt-4 text-slate-400">You have no completed lessons waiting for a review. After a lesson is completed, you can leave feedback here.</p><a class="ds-home-text-link" href="<c:url value='/bookings' />">View my lessons</a>
 </c:when><c:otherwise>
 <form class="mt-5 grid gap-5" method="post" action="<c:url value='/reviews' />">
 <input type="hidden" name="<c:out value='${csrfParameterName}' />" value="<c:out value='${csrfToken}' />">
 <div class="flex flex-col gap-2"><label for="review-lesson">Completed lesson</label><select class="w-full" id="review-lesson" name="bookingId" required>
 <option value="">Choose a completed lesson</option>
 <c:forEach items="${completedBookings}" var="completed">
-<option value="<c:out value='${completed.id}' />"><c:out value="${completed.id}" /> - <c:out value="${completed.startTime.toLocalDate()}" /> at <c:out value="${completed.startTime.toLocalTime().withSecond(0).withNano(0)}" /></option>
+<option value="<c:out value='${completed.id}' />"><c:out value="${accountDisplay.person(completed.instructorId)}" /> - <c:out value="${publicDisplay.date(completed.startTime.toLocalDate())}" /> at <c:out value="${publicDisplay.time(completed.startTime.toLocalTime())}" /></option>
 </c:forEach></select></div>
 <c:set var="ratingFieldName" value="rating" /><c:set var="ratingFieldId" value="new-review-rating" />
 <c:set var="ratingLabel" value="How was your lesson?" /><c:set var="ratingValue" value="5" />
 <%@ include file="/WEB-INF/views/common/components/star-input.jspf" %>
 <div class="flex flex-col gap-2"><label for="review-comment">Your feedback</label><textarea class="w-full min-h-28" id="review-comment" name="comment" minlength="10" maxlength="1000" required aria-describedby="review-comment-help"></textarea>
-<p id="review-comment-help" class="mt-2 text-xs text-slate-400">Write 10 to 1000 characters. New and edited reviews wait for approval.</p></div>
+<p id="review-comment-help" class="mt-2 text-xs text-slate-400">Write 10 to 1,000 characters. We check new and edited reviews before publishing them.</p></div>
 <div><button class="ds-button" type="submit">Submit review</button></div></form>
 </c:otherwise></c:choose></section></c:if>
 <%-- Each card comes from ReviewController; only the author gets edit and delete forms. --%>
-<section aria-labelledby="visible-reviews-title"><h2 id="visible-reviews-title" class="mb-5">Visible feedback</h2>
-<c:if test="${empty reviews}"><p class="ds-card">No feedback is available yet.</p></c:if>
+<section aria-labelledby="visible-reviews-title"><h2 id="visible-reviews-title" class="mb-5">Lesson feedback</h2>
+<c:if test="${empty reviews}"><div class="ds-card"><p>No feedback is available here yet.</p><c:choose><c:when test="${navRole eq 'STUDENT'}"><p>You can write a review after a completed lesson.</p><a class="ds-home-text-link" href="<c:url value='/bookings' />">View my lessons</a></c:when><c:when test="${navRole eq 'INSTRUCTOR'}"><p>Students can leave feedback after a completed lesson.</p><a class="ds-home-text-link" href="<c:url value='/instructor/dashboard' />">View my schedule</a></c:when><c:otherwise><a class="ds-home-text-link" href="<c:url value='/admin/reviews' />">Review student feedback</a></c:otherwise></c:choose></div></c:if>
 <div class="grid gap-5 xl:grid-cols-2"><c:forEach items="${reviews}" var="review">
 <article class="ds-feature-card" data-reveal>
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><c:set var="ratingValue" value="${review.rating}" /><%@ include file="/WEB-INF/views/common/components/star-display.jspf" %>
-<span class="status-badge" data-status="<c:out value='${review.status}' />"><c:out value="${review.status}" /></span></div>
+<span class="status-badge" data-status="<c:out value='${review.status}' />"><c:out value="${review.status eq 'PENDING' ? 'Awaiting approval' : publicDisplay.label(review.status)}" /></span></div>
 <p class="break-words"><c:out value="${review.comment}" /></p>
-<p class="mt-4 text-xs text-slate-400"><c:out value="${review.id}" /> &middot; <time datetime="<c:out value='${review.createdAt}' />"><c:out value="${review.createdAt.toLocalDate()}" /></time>
-<c:if test="${not empty review.bookingId}"> &middot; Lesson <c:out value="${review.bookingId}" /></c:if></p>
+<p class="mt-4 text-xs text-slate-400"><c:out value="${'Student feedback'}" /> &middot; <time datetime="<c:out value='${review.createdAt}' />"><c:out value="${publicDisplay.date(review.createdAt.toLocalDate())}" /></time>
+<c:if test="${not empty review.bookingId}"> &middot; Lesson <c:out value="${accountDisplay.lesson(review.bookingId)}" /></c:if></p>
 <c:if test="${navRole eq 'STUDENT' and review.studentId eq currentUserId}">
 <details class="mt-5 border-t border-white/10 pt-4"><summary class="cursor-pointer font-semibold text-indigo-200">Edit your feedback</summary>
 <form class="mt-4 grid gap-4" method="post" action="<c:url value='/reviews/update' />">

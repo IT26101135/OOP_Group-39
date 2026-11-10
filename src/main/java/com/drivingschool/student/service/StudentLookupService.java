@@ -56,7 +56,7 @@ public class StudentLookupService implements StudentLookup {
         if (studentId == null
                 || !studentId.matches("S(?!000)[0-9]{3}")) {
             throw new ValidationException(
-                    "Student ID must be between S001 and S999."
+                    "Choose a student from the student list and try again."
             );
         }
     }

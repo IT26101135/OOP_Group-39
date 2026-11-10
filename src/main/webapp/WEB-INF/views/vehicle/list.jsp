@@ -19,19 +19,19 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
     <title>Vehicle fleet | DriveSpark Academy</title>
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
-</head><body>
+</head><body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
 <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %>
 <div class="ds-dashboard-content">
     <%-- VehicleController supplies saved vehicles and successful form messages. --%>
     <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div><p class="ds-eyebrow">READY FOR THE ROAD</p><h1>Vehicle fleet</h1>
+        <div><p class="ds-eyebrow">TRAINING VEHICLES</p><h1>Vehicle fleet</h1>
         <p class="max-w-xl text-slate-400">Keep track of teaching vehicles, service dates and insurance renewals.</p></div>
         <a class="ds-button" href="<c:url value='/admin/vehicles/create' />">Add vehicle</a>
     </header>
     <c:if test="${vehicleCreated or vehicleUpdated or vehicleDeleted}">
-        <p class="ds-vehicle-message mb-6" role="status">Vehicle record saved successfully.</p>
+        <p class="ds-vehicle-message mb-6" role="status"><c:choose><c:when test="${vehicleDeleted}">Vehicle removed.</c:when><c:when test="${vehicleCreated}">Vehicle added.</c:when><c:otherwise>Vehicle details saved.</c:otherwise></c:choose></p>
     </c:if>
     <%-- Each card shows one stored vehicle. Missing dates stay clearly marked as unknown. --%>
     <section aria-label="Vehicle records" class="grid gap-5 xl:grid-cols-2">
@@ -39,17 +39,17 @@ CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
     <c:forEach items="${vehicles}" var="vehicle">
         <article class="ds-feature-card" data-reveal>
             <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-                <div><p class="text-xs font-bold tracking-widest text-indigo-300"><c:out value="${vehicle.id}" /></p>
+                <div><p class="text-xs font-bold tracking-widest text-indigo-300"><c:out value="${'TRAINING VEHICLE'}" /></p>
                 <h2 class="mt-2"><c:out value="${vehicle.registrationNumber}" /></h2>
                 <p><c:out value="${vehicle.make}" /> <c:out value="${vehicle.model}" /></p></div>
-                <span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${vehicle.operationalStatus}" /></span>
+                <span class="status-badge" data-status="<c:out value='${vehicle.operationalStatus}' />"><c:out value="${publicDisplay.label(vehicle.operationalStatus)}" /></span>
             </div>
             <dl class="mb-5 grid grid-cols-2 gap-4 text-sm">
-                <div><dt class="text-slate-400">Category</dt><dd><c:out value="${vehicle.vehicleCategory}" /></dd></div>
-                <div><dt class="text-slate-400">Transmission</dt><dd><c:out value="${vehicle.transmissionType}" /></dd></div>
-                <div><dt class="text-slate-400">Insurance expiry</dt><dd><c:out value="${vehicle.insuranceExpiry}" default="Not recorded" /></dd></div>
-                <div><dt class="text-slate-400">Last service</dt><dd><c:out value="${vehicle.lastServiceDate}" default="Not recorded" /></dd></div>
-                <div><dt class="text-slate-400">Next service</dt><dd><c:out value="${vehicle.nextServiceDate}" default="Not recorded" /></dd></div>
+                <div><dt class="text-slate-400">Category</dt><dd><c:out value="${publicDisplay.label(vehicle.vehicleCategory)}" /></dd></div>
+                <div><dt class="text-slate-400">Transmission</dt><dd><c:out value="${publicDisplay.label(vehicle.transmissionType)}" /></dd></div>
+                <div><dt class="text-slate-400">Insurance expiry</dt><dd><c:out value="${publicDisplay.date(vehicle.insuranceExpiry)}" default="Not recorded" /></dd></div>
+                <div><dt class="text-slate-400">Last service</dt><dd><c:out value="${publicDisplay.date(vehicle.lastServiceDate)}" default="Not recorded" /></dd></div>
+                <div><dt class="text-slate-400">Next service</dt><dd><c:out value="${publicDisplay.date(vehicle.nextServiceDate)}" default="Not recorded" /></dd></div>
             </dl>
             <div class="mb-5 flex flex-wrap gap-2">
                 <c:choose>

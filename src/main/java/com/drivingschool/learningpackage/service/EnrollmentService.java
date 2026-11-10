@@ -95,9 +95,38 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
                         + "Open its payment instructions below before requesting another package.");
             }
         }
-        if (student.getActivePackageId() != null) {
-            throw new DuplicateRecordException("You already have an active paid package.");
+        String problem = renewalProblem(student);
+        if (problem != null) throw new DuplicateRecordException(problem);
+    }
+
+    // A new paid course may replace an expired or used-up course, but not an open lesson.
+    private String renewalProblem(Student student) {
+        boolean previousCourse = student.getActivePackageId() != null;
+        for (Enrollment receipt : enrollments.readAllStrict()) {
+            if (student.getId().equals(receipt.getStudentId()) && receipt.isPaid()) previousCourse = true;
         }
+        // Keep first-payment handling separate from renewal, including older unpaid requests.
+        if (!previousCourse) return null;
+        for (Booking booking : bookings.readAllStrict()) {
+            if (student.getId().equals(booking.getStudentId())
+                    && (booking.getStatus() == BookingStatus.PENDING
+                    || booking.getStatus() == BookingStatus.CONFIRMED)) {
+                return "Resolve your pending or confirmed lessons before choosing another package. "
+                        + "Open My lessons or ask us for help.";
+            }
+        }
+        if (student.getActivePackageId() == null || student.getLessonsRemaining() == 0) return null;
+        if (student.getActiveEnrollmentId() != null) {
+            Optional<Enrollment> current = enrollments.findByIdStrict(student.getActiveEnrollmentId());
+            if (current.isPresent()) {
+                Enrollment receipt = current.get();
+                if (receipt.isPaid() && receipt.getStudentId().equals(student.getId())
+                        && receipt.getPackageId().equals(student.getActivePackageId())
+                        && receipt.getValidUntil() != null
+                        && receipt.getValidUntil().isBefore(LocalDateTime.now(clock).toLocalDate())) return null;
+            }
+        }
+        return "You still have lessons in your current package. Use them before choosing another package.";
     }
 
     // Finds one owned receipt for payment instructions without revealing another student's details.
@@ -111,7 +140,7 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
     public String packageName(String packageId) {
         Optional<LearningPackage> selected = packages.findByIdStrict(packageId);
         if (selected.isPresent()) return selected.get().getName();
-        return "Package " + packageId;
+        return "Package no longer listed";
     }
 
     // Shows the administrator only requests that still need a payment decision.
@@ -131,7 +160,7 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
         auth.requireAdmin(request);
         Optional<User> found = users.findByIdStrict(studentId);
         if (found.isPresent()) return found.get().getName();
-        return "Student " + studentId;
+        return "Student name unavailable";
     }
 
     // Confirms payment once; the cashier lock keeps two admins from granting lessons twice.
@@ -186,13 +215,14 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
                 .orElseThrow(() -> new RecordNotFoundException("Student account not found."));
         if (!(account instanceof Student)) throw new ValidationException("This request needs a student account.");
         if (account.getStatus() == AccountStatus.SUSPENDED) {
-            throw new ValidationException("Payment cannot be confirmed: the student is Suspended.");
+            throw new ValidationException("This account is suspended. Review the account before confirming payment.");
         }
         if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new ValidationException("Payment cannot be confirmed: the student account is Pending approval.");
+            throw new ValidationException("Approve the student account before confirming payment.");
         }
         Student student = (Student) account;
-        if (student.getActivePackageId() != null) throw new ValidationException("The student already has an active Paid package.");
+        String problem = renewalProblem(student);
+        if (problem != null) throw new ValidationException(problem);
         return student;
     }
 
@@ -200,7 +230,7 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
     private LearningPackage payablePackage(String packageId) {
         LearningPackage selected = packages.findByIdStrict(packageId)
                 .orElseThrow(() -> new RecordNotFoundException("Package not found."));
-        if (!selected.isActive()) throw new ValidationException("Payment cannot be confirmed: the package is inactive.");
+        if (!selected.isActive()) throw new ValidationException("This package is no longer available. Review the request before confirming payment.");
         return selected;
     }
 
@@ -267,7 +297,7 @@ public class EnrollmentService implements EnrollmentOperations, EnrollmentAdmini
     // Refuses access unless the current account meets the require own enrollment rule.
     private Enrollment requireOwnEnrollment(Student student, String enrollmentId) {
         if (enrollmentId == null || !enrollmentId.matches("E(?!000)[0-9]{3}")) {
-            throw new ValidationException("Enrollment ID must be E001 to E999.");
+            throw new ValidationException("We could not identify this package request. Return to your packages and try again.");
         }
         Optional<Enrollment> found = enrollments.findByIdStrict(enrollmentId);
         if (found.isEmpty()) throw new RecordNotFoundException("Enrollment not found.");

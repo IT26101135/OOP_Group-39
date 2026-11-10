@@ -32,7 +32,7 @@ public class PaidEnrollmentGuard {
     private final UserRepository users;
     private final LearningPackageRepository packages;
     private final Clock clock;
-    private static final String REQUIRED = "A Paid enrollment with lessons remaining is required. See My enrollments.";
+    private static final String REQUIRED = "You need a paid package with lessons remaining. Check My enrollments.";
 
     // Receives the existing filing drawers and school clock.
     public PaidEnrollmentGuard(EnrollmentRepository enrollments, UserRepository users,
@@ -51,6 +51,26 @@ public class PaidEnrollmentGuard {
         if (problem != null) throw new ValidationException(problem);
     }
 
+    // A paid receipt must also cover the date of the lesson being promised.
+    public void requirePaidForLesson(String studentId, String enrollmentId, LocalDate lessonDate) {
+        String problem = problemForLesson(studentId, enrollmentId, lessonDate);
+        if (problem != null) throw new ValidationException(problem);
+    }
+
+    // The expiry day itself is included; old receipts without an expiry remain supported.
+    public String problemForLesson(String studentId, String enrollmentId, LocalDate lessonDate) {
+        String problem = problemFor(studentId, enrollmentId);
+        if (problem != null) return problem;
+        Enrollment receipt = enrollments.findByIdStrict(enrollmentId).orElseThrow();
+        if (lessonDate != null && receipt.getValidUntil() != null
+                && lessonDate.isAfter(receipt.getValidUntil())) {
+            return "Choose a lesson on or before "
+                    + receipt.getValidUntil().format(java.time.format.DateTimeFormatter.ofPattern("d MMM uuuu", java.util.Locale.ENGLISH))
+                    + ". Your package does not cover later dates. Check My enrollments.";
+        }
+        return null;
+    }
+
     // Gives queue processing a reason it can save rather than crashing on an invalid request.
     // CRUD: READ   - finds or lists enrollments
     public String problemFor(String studentId, String enrollmentId) {
@@ -61,12 +81,12 @@ public class PaidEnrollmentGuard {
         Enrollment enrollment = found.get();
         if (!enrollment.getStudentId().equals(studentId)) return REQUIRED;
         if (!enrollment.isPaid()) return "Enrollment " + enrollment.getReferenceCode() + " is "
-                + enrollment.getStatusLabel() + ". Only Paid enrollments can book lessons. See My enrollments.";
+                + enrollment.getStatusLabel() + ". You can book lessons after payment is confirmed. Check My enrollments.";
         // Step 2: Recheck the owner, their remaining tickets and the package's current availability.
         Optional<User> account = users.findByIdStrict(studentId);
         if (account.isEmpty() || !(account.get() instanceof Student)) return REQUIRED;
         Student student = (Student) account.get();
-        if (student.getStatus() != AccountStatus.ACTIVE) return "The student account must be Active. See My enrollments.";
+        if (student.getStatus() != AccountStatus.ACTIVE) return "Your account is not active. Contact us before booking lessons.";
         if (!matchesBalance(student, enrollment)) return REQUIRED;
         return packageProblem(enrollment);
     }
@@ -80,9 +100,9 @@ public class PaidEnrollmentGuard {
     // Old paid receipts may have no expiry; new receipts must still be within their validity.
     private String packageProblem(Enrollment enrollment) {
         Optional<LearningPackage> selected = packages.findByIdStrict(enrollment.getPackageId());
-        if (selected.isEmpty() || !selected.get().isActive()) return "The learning package is inactive. See My enrollments.";
+        if (selected.isEmpty() || !selected.get().isActive()) return "This package is no longer available. Check My enrollments or contact us.";
         if (enrollment.getValidUntil() != null && enrollment.getValidUntil().isBefore(LocalDate.now(clock))) {
-            return "The paid enrollment has expired. See My enrollments.";
+            return "Your package has expired. Check My enrollments or contact us about more lessons.";
         }
         return null;
     }

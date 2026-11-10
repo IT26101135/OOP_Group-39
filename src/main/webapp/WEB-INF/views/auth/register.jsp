@@ -20,7 +20,7 @@ CRUD     : See CRUD labels on the record operations.
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="description" content="Create a DriveSpark Academy student account and start planning your learning journey.">
+    <meta name="description" content="Create your student account to choose a package and request driving lessons.">
     <meta name="theme-color" content="#050505">
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
@@ -28,14 +28,15 @@ CRUD     : See CRUD labels on the record operations.
     <title>Register | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body class="ds-vignette-page">
+<body class="ds-form-page ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-container ds-section ds-auth-page ds-public-auth">
     <%-- LocalPhotoAdvice supplies this scene; the shared edge fade leaves the form unchanged. --%>
-    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="The road ahead"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
+    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="Mountain road at sunset"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
+    <div class="ds-auth-content">
     <%-- AuthController supplies the introduction and account messages below. --%>
-    <header class="ds-auth-heading"><p class="ds-eyebrow">START SOMETHING GOOD</p><h1>Your first step.</h1>
+    <header class="ds-auth-heading"><p class="ds-eyebrow">STUDENT REGISTRATION</p><h1>Create your account.</h1>
     <p>Create your student account and log in immediately. Lessons become available after your package payment is confirmed.</p></header>
 
     <c:if test="${not empty formError}">
@@ -71,7 +72,7 @@ CRUD     : See CRUD labels on the record operations.
                    value="<c:out value='${registrationForm.phone}' />">
 
             <small id="phone-help">
-                Use 7–15 digits, optionally starting with +.
+                Use 7 to 15 digits. You can start with + for the country code.
             </small>
         </p>
 
@@ -82,8 +83,7 @@ CRUD     : See CRUD labels on the record operations.
                    aria-describedby="password-help password-strength-hint"><button class="ds-password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false">Show</button></span>
 
             <small id="password-help">
-                Use at least 8 characters and no more than 72 UTF-8 bytes.
-                Some characters use more than one byte.
+                Use at least 8 characters. Very long passwords, especially with symbols or non-English letters, may need to be shortened.
             </small>
             <small id="password-strength-hint" class="block text-slate-300" aria-live="polite">Use at least 8 characters, including a letter and a number.</small>
         </p>
@@ -102,6 +102,7 @@ CRUD     : See CRUD labels on the record operations.
         Already registered?
         <a href="<c:out value='${loginUrl}' />">Log in</a>
     </p>
+    </div>
 </main>
 
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>

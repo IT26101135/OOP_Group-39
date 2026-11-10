@@ -1,0 +1,62 @@
+classDiagram
+direction TB
+class BookingController {
+  +list()
+}
+class StudentBookingOperations {
+  <<interface>>
+  +requestLesson()
+  +getOwnBookings()
+}
+class AdminBookingOperations {
+  <<interface>>
+  +processNext()
+  +forceCancel()
+}
+class BookingService {
+  +requestLesson()
+  +processNext()
+  +acceptAssignedLesson()
+}
+class BookingConflictChecker {
+  +conflictReason()
+}
+class BookingRequestQueue {
+  +enqueue()
+  +dequeue()
+  +positionOf()
+}
+class Booking {
+  +confirm()
+  +complete()
+  +cancel()
+}
+class BookingRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class FileRepository {
+  +save()
+  +readAllStrict()
+  +update()
+}
+class BookingOrder {
+  <<interface>>
+  +order()
+}
+class PendingRequestOrder {
+  +order()
+}
+class LessonTimeOrder {
+  +order()
+}
+BookingService ..|> StudentBookingOperations
+BookingService ..|> AdminBookingOperations
+BookingRepository --|> FileRepository
+PendingRequestOrder ..|> BookingOrder
+LessonTimeOrder ..|> BookingOrder
+BookingController --> StudentBookingOperations : uses
+BookingService --> BookingConflictChecker : uses
+BookingService --> BookingRequestQueue : uses
+BookingService --> BookingRepository : uses

@@ -127,7 +127,7 @@ public class InstructorAccountService {
             // Keep both assigned lessons and pending preferences linked to a real profile.
             for (com.drivingschool.booking.model.Booking booking : bookings.readAllStrict()) {
                 if (id.equals(booking.getInstructorId()) || id.equals(booking.getRequestedInstructorId())) {
-                    throw new ValidationException("Instructor cannot be deleted while lesson history is attached.");
+                    throw new ValidationException("Keep this instructor because they have lesson history. You can mark them inactive instead.");
                 }
             }
             instructorService.deleteInstructor(id);

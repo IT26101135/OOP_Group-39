@@ -25,18 +25,19 @@ CRUD     : See CRUD labels on the record operations.
     <link rel="icon" type="image/svg+xml" href="<c:url value='/images/favicon.svg' />">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login | DriveSpark Academy</title>
+    <title>Log in | DriveSpark Academy</title>
     <link rel="stylesheet" href="<c:out value='${appCssUrl}' />">
 </head>
-<body class="ds-vignette-page">
+<body class="ds-form-page ds-vignette-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 
 <main id="main-content" class="ds-container ds-section ds-auth-page ds-public-auth">
     <%-- LocalPhotoAdvice supplies this scene; the shared edge fade leaves the form unchanged. --%>
-    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="The road ahead"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
+    <aside class="ds-auth-photo ds-photo-surface ds-page-photo ds-edge-vignette" aria-label="Mountain road at sunset"><c:set var="photoKey" value="hero-road" /><c:set var="photoAlt" value="Scenic mountain road at sunset" /><c:set var="photoEager" value="true" /><%@ include file="/WEB-INF/views/common/components/local-photo.jspf" %></aside>
+    <div class="ds-auth-content">
     <%-- AuthController supplies the introduction and account messages below. --%>
-    <header class="ds-auth-heading"><p class="ds-eyebrow">YOUR ROAD AHEAD</p><h1>Welcome back.</h1>
-    <p>Log in to continue your journey to confident driving.</p></header>
+    <header class="ds-auth-heading"><p class="ds-eyebrow">YOUR ACCOUNT</p><h1>Welcome back.</h1>
+    <p>Check your lessons, payments and progress.</p></header>
 
     <c:if test="${param.registered != null}">
         <p role="status">Your account was created. You can log in now.</p>
@@ -87,6 +88,7 @@ CRUD     : See CRUD labels on the record operations.
         <a href="<c:out value='${registerUrl}' />">Register</a>
     </p>
     <p><a href="<c:url value='/forgot-password' />">Forgot password?</a></p>
+    </div>
 </main>
 
 <%@ include file="/WEB-INF/views/common/footer.jspf" %>

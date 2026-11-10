@@ -111,7 +111,7 @@ public class InstructorService implements InstructorCatalog {
     public Instructor getInstructorById(String id) {
         return repository.findByIdStrict(id)
                 .orElseThrow(() -> new RecordNotFoundException(
-                        "Instructor not found: " + id));
+                        "This instructor is no longer listed. Return to the instructor list."));
     }
 
     // Builds a validated replacement so a bad edit cannot damage the saved profile.

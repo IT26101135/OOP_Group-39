@@ -1,5 +1,7 @@
 # OOP and SOLID map
 
+> **Current guide (10 Nov 2026):** use the [source-checked viva pack](viva-2026/README.md), [six individual diagrams](viva-2026/class-diagrams.html) and [six printable cheat sheets](viva-2026/cheat-sheets.pdf). The older material below is historical and may mention removed interfaces or earlier report layouts.
+
 Owner: **IT26101135 - [Name]** (integration documentation).
 
 These are concrete examples to explain, not a claim that every class satisfies every principle perfectly. Each member has all five requested concepts and all five SOLID letters below. A class-declaration row names a relationship rather than a callable method. Shared classes retain their single file owner even when another member explains how their module uses them.

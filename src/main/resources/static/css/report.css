@@ -15,7 +15,7 @@ CRUD     : READ (shows report totals)
 .ds-report-bar { fill: #D4D4D4; }
 .ds-report-table { min-width: 0; }
 .ds-report-table th, .ds-report-table td { overflow-wrap: anywhere; white-space: normal; }
-.ds-report-table tbody th { font-weight: 400; color: #A3A3A3; text-align: left; }
+.ds-report-table tbody th { font-weight: 400; color: #475569; text-align: left; }
 html:not(.ds-js) [data-print] { display: none; }
 /* White paper needs dark labels throughout, including headings and formerly muted text. */
 @media print {
@@ -35,3 +35,6 @@ html:not(.ds-js) [data-print] { display: none; }
   .ds-report-track { fill: #E5E5E5; }
   .ds-report-bar { fill: #404040; transform: none !important; animation: none !important; }
 }
+
+.ds-report-table tr:last-child { font-weight: 600; }
+@media print { .ds-report-header h1 { font-size: 26pt !important; } .ds-report-section { padding: 16px !important; } .ds-report-table { font-size: 9pt; } .ds-report-table th, .ds-report-table td { padding: 7px; } }

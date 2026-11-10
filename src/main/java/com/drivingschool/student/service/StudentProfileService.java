@@ -96,12 +96,23 @@ public class StudentProfileService implements com.drivingschool.student.api.Stud
         replacement.setNic(nic);
         replacement.setDateOfBirth(dateOfBirth);
         replacement.setAddress(address);
-        replacement.setLicenseTypeWanted(licenseTypeWanted);
+        replacement.setLicenseTypeWanted(storedLessonType(licenseTypeWanted));
         replacement.setEmergencyContact(emergencyContact);
         replacement.setActivePackageId(current.getActivePackageId());
         replacement.setLessonsRemaining(current.getLessonsRemaining());
         replacement.setActiveEnrollmentId(current.getActiveEnrollmentId());
         return replacement;
+    }
+
+    private String storedLessonType(String value) {
+        if (value == null) return null;
+        return switch (value.trim().toUpperCase(Locale.ROOT)) {
+            case "MANUAL", "MANUAL CAR" -> "MANUAL";
+            case "AUTOMATIC", "AUTOMATIC CAR" -> "AUTOMATIC";
+            case "MOTORCYCLE" -> "MOTORCYCLE";
+            case "REFRESHER" -> "REFRESHER";
+            default -> value.trim();
+        };
     }
 
     // OOP: EXCEPTION HANDLING - A duplicate email becomes a friendly conflict message.

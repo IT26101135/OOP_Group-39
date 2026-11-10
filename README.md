@@ -1,5 +1,13 @@
 # DriveSpark Academy
 
+Current review materials: [112 source-linked viva answers](docs/viva-2026/README.md), [individual member diagrams](docs/viva-2026/class-diagrams.pdf), [six one-page cheat sheets](docs/viva-2026/cheat-sheets.pdf), and [the combined report/UI review](docs/BATCH_4_5_REVIEW.md).
+
+Latest work: [Batch C visual review, test inventory and evidence](docs/BATCH_C_REVIEW.md) and
+[before/after screenshots at all four sizes](docs/screenshots/batchC/index.html).
+CSS build and full verification passed: **694 tests, zero failures/errors/skips**.
+The [smoke checklist](docs/SMOKE_TEST.md) separates the default attendance gate from
+the explicit isolated override. Batch C is stopped for review.
+
 Documentation owner: **IT26101135 - [Name]**. Member names remain placeholders until supplied by the team.
 
 
@@ -51,7 +59,7 @@ Spring annotations connect some classes automatically. `@SpringBootApplication` 
 - Authentication uses BCrypt hashes, server-side account statuses, sessions, role guards, CSRF checks, and simulated password reset tokens. New student accounts are Active and can log in immediately. Accounts explicitly marked Pending or Suspended remain blocked.
 - Students can edit profiles, request enrollment, view lesson balance/progress, request an available one-hour instructor slot with an active paid package, see FIFO position, cancel/reschedule under the 24-hour rule, and review a completed lesson once.
 - Instructors can manage weekly availability and leave, accept/decline assigned requests, record attendance, lesson notes and skill scores, and view their reviews.
-- Admins can manage students, instructors, packages and vehicles; process the FIFO request queue; reassign and force-cancel bookings; moderate reviews; and view report tables, animated SVG charts, CSV exports and a white print layout.
+- Admins can manage students, instructors, packages and vehicles; process the FIFO request queue; reassign and force-cancel bookings; moderate reviews; read website enquiries; and view business report tables, CSV exports and a white print layout.
 - Booking creation and processing share `BookingConflictChecker`; it checks enrollment, future time, instructor schedule/leave and conflicts, student overlap, vehicle status/type and vehicle overlap.
 - Records are persisted as JSON Lines files through `FileRepository<T>` under `app.data-directory` (default `./data`).
 
@@ -59,26 +67,55 @@ Known limits: there is no payment gateway, email reset delivery, relational data
 
 ### Demo seed and sample logins
 
-The repeat-safe fixture runner starts only when `DRIVESPARK_DEMO_SEED_ENABLED=true`. Use a fresh data folder for a clean demo:
+Normal IDE startup reads the existing `./data` folder and does not seed it. If that
+folder contains one instructor and one package, those are the records you will see.
+Do not enable the fixture loader over your existing data to replace those records.
+
+For the current fictional records, stop the running app, select Java 17 or later,
+and build with `.\mvnw.cmd clean verify`. Then use:
 
 ```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-demo.ps1
+```
+
+The launcher opens a fresh shell, creates a fresh empty temporary data folder and
+opens the app on **http://localhost:18080**. It refuses a second running DriveSpark
+app or an out-of-date WAR, and clears its run-only variables when the app stops.
+It keeps the temporary folder for inspection. If your shell selects an older Java,
+pass `-JavaHome 'C:\path\to\your\jdk-17'`. Optional `-Port 18081` changes the port.
+Use the same script from an IDE terminal for this preview; the ordinary IDE main
+class configuration deliberately keeps its normal data directory and seed default.
+
+The repeat-safe fixture runner starts only when `DRIVESPARK_DEMO_SEED_ENABLED=true`. Open a fresh shell with Java 17 selected. Use a fresh empty data folder for each clean demo:
+
+```powershell
+$seedRunDirectory = Join-Path $env:TEMP ("drivespark-seed-" + [guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Path $seedRunDirectory | Out-Null
 $env:DRIVESPARK_DEMO_SEED_ENABLED = "true"
 $env:DRIVESPARK_ADMIN_SEED_ENABLED = "false"
-$env:APP_DATA_DIRECTORY = Join-Path $env:TEMP "drivespark-viva-demo"
-.\mvnw.cmd spring-boot:run
+$env:APP_DATA_DIRECTORY = $seedRunDirectory
+try { .\mvnw.cmd spring-boot:run }
+finally {
+    Remove-Item Env:DRIVESPARK_DEMO_SEED_ENABLED, Env:DRIVESPARK_ADMIN_SEED_ENABLED,
+        Env:APP_DATA_DIRECTORY -ErrorAction SilentlyContinue
+}
 ```
 
 All seeded users use `DriveSpark123!`:
 
 - Admin: `admin@drivingschool.test`
-- Instructors: `instructor1@drivingschool.test` through `instructor5@drivingschool.test`
-- Students: `student1@drivingschool.test` through `student10@drivingschool.test` (students 1–7 Active, 8–9 Pending, 10 Suspended)
+- Instructors: `instructor1@drivingschool.test` through `instructor6@drivingschool.test`
+- Students: `student1@drivingschool.test` through `student10@drivingschool.test` (1-8 Active, 9 Pending, 10 Suspended). Also `chamodi.abeysinghe@learners.example.test` and `nivethan.yogarajah@learners.example.test` (Active, no package yet).
 
-The fixtures contain 6 packages, 6 vehicles, 9 enrollments (7 Paid, 1 Awaiting payment, 1 Cancelled), 15 bookings and 10 reviews. The seed idempotency test repeats the loader, checks stable record counts and ensures handled receipts and exhausted balances stay unchanged. Turn `DRIVESPARK_DEMO_SEED_ENABLED` off after the demo. The first seed expects a fresh isolated data directory; do not seed over real coursework records. Names such as `DemoMake` and placeholder contact/social links are demonstration content, not real businesses or destinations.
+The current fixtures contain 19 accounts (1 admin, 6 instructors, 12 students), 7 packages, 6 vehicles, 9 enrollments (7 Paid, 1 Awaiting payment, 1 Cancelled), 24 bookings and 16 reviews (12 Approved, 2 Pending, 2 Hidden). Captured Paid revenue is LKR 190,500. Ratings are calculated from approved reviews. Three lesson notes and one day off are included. The repeat-seed test checks counts, relationships, lesson balances, expiry, ratings, experience sorting and preservation of handled requests. All identities and vehicle registrations are fictional; phone and NIC patterns deliberately satisfy this app's syntax without representing real contactable identities. See [the current snapshot and login guide](sample-data/README.md). **Existing data-demo folders retain their old names and records. Use a fresh empty data folder for this revision; do not seed over live data.** Verification: **650 tests passed**, **365 structural checks passed**, and **90 isolated browser/data checks passed**. See [Batch 3 seed review](docs/BATCH_3_SEED_REVIEW.md).
 
 ### Attendance and booking commitments (Batch 1)
 
-`app.attendance.require-lesson-ended` defaults to `true`. Administrators and assigned instructors can complete a Confirmed lesson only at or after its end. No-show is available at or after its start. A blocked action explains the available date/time in Asia/Colombo and leaves status and lesson balance unchanged. Completion deducts one lesson; no-show still does not deduct one.
+`app.attendance.require-lesson-ended` defaults to `true`. Administrators and assigned instructors can complete a Confirmed lesson only at or after its end. No-show is also available only at or after its end. A blocked action explains the available date/time in Asia/Colombo and leaves status and lesson balance unchanged. Completion deducts one lesson; no-show still does not deduct one.
+
+The preview launcher accepts `-AllowEarlyAttendance` for a quick isolated demonstration.
+That sets the attendance rule to false only in its fresh preview shell. Without that
+switch the launcher explicitly uses the safe default true.
 
 For a fast isolated demonstration only, set `$env:DRIVESPARK_ATTENDANCE_REQUIRE_LESSON_ENDED = "false"` alongside the demo variables **in a fresh shell just for that app run**. This bypasses both attendance time gates; payment, ownership, status and commitment checks remain in force. Remove all four demo variables in `finally` after stopping the app:
 
@@ -96,6 +133,60 @@ finally {
 ```
 
 A student's total Pending and Confirmed bookings cannot exceed their remaining lessons. Both request paths, rescheduling and admin assignment check the stored balance under the existing shared lock. Rescheduling replaces one commitment, so the old request is excluded; assignment counts its existing request once. Over-cap historical data is refused without silently rejecting or removing requests. Cancel an open request to free room. FIFO ordering and payment confirmation are unchanged.
+
+### Renewal, lesson dates and working hours (Batch A)
+
+An expired or used-up package can be replaced when the student has no Pending or
+Confirmed booking. Only one Awaiting payment request is allowed. Old paid receipts
+and lesson history remain; a renewal request grants no credit and leaves the old
+package alone. Payment confirmation rechecks eligibility under the shared lock,
+then switches the active receipt and starts the new validity period. An unexpired
+package with lessons left cannot be replaced, including on its last valid day.
+
+New requests, rescheduling, assignment, acceptance and reassignment must keep the
+lesson date on or before the paid receipt's expiry. The expiry day is included;
+legacy paid receipts with no stored expiry remain supported. A legacy FIFO request
+outside validity is rejected with a saved reason. Existing completion payment rules
+still apply; this change does not promise that an already-expired receipt can be
+used to complete an old lesson.
+
+Working hours cannot be edited or deleted beneath a Confirmed lesson. Adding or
+moving leave is blocked by Confirmed lessons and assigned Pending lessons on that
+day, with an instruction to ask an administrator to resolve them. Unassigned
+waiting requests are not assignments; later assignment still checks leave. Schedule
+changes share the booking/account JVM lock so their conflict check and file write
+cannot race another in-process booking write. File storage still has no multi-file
+transaction or cross-process lock.
+
+### Data and recovery paths (Batch B)
+
+Contact submissions are saved and can be read under **Admin dashboard > Website
+enquiries**, newest first. Visitors are told the message was saved; the website
+does not send an email confirmation or reply. Staff follow up outside the app
+using the sender's address. Enquiries are escaped when displayed and are never
+included in public pages or student/instructor dashboards. The section is read-only;
+there is no reply sender, read/unread state or enquiry deletion feature.
+
+Identical contact retries within one minute are coalesced inside this app process.
+The browser also blocks repeated accepted form submissions, while server payment,
+booking and review rules remain authoritative. Cancelling a confirmation dialog,
+including Escape after an earlier confirmation, does not submit its form.
+
+Invalid schedule statuses and reversed date ranges return a helpful 400 page.
+Missing or mistyped form parameters use an HTML recovery page instead of raw JSON.
+Status codes are retained; recovery links point to the user's own role and known
+forms/lists. A missing vehicle links back to the vehicle list rather than the same
+missing edit page. Contact validation keeps the submitted fields for correction.
+
+Students without a package get a compact summary and a direct package link. Unpaid
+requests show the course allowance separately from lessons available after payment.
+Full commitment balances link to current requests and hide the new-request form;
+the server still rechecks the cap. Profile lesson types show friendly names and
+normalize known choices back to their existing stored values, preserving custom text.
+
+The [Batch B review](docs/BATCH_B_REVIEW.md) lists every changed test and the browser
+evidence. Login label contrast/alignment and the other visual audit findings are
+still scheduled for Batch C.
 
 ### Module folders and owners
 
@@ -260,7 +351,7 @@ The checked-in CSS and local assets let the app run without Node after dependenc
 
 New student accounts can log in immediately. Enrolling saves one **Awaiting payment** request per student, the current package price and a reference such as `ENR-E001`. It does not activate a package, grant lessons or start the validity countdown. The payment instructions and My enrollments pages show the reference and captured amount.
 
-Pay by bank transfer or at the school office, then send the receipt and reference using your own email service. Set `ADMIN_EMAIL` before starting the app to change the contact address; `app.payment.admin-email` in `application.properties` defaults to `admin@drivespark.test`. This is a placeholder address. Contact the school for its real bank details. **The system does not send email and does not upload receipts.** Administrators use Awaiting payment to confirm a receipt or cancel an unpaid request. Both actions use the shared confirmation dialog; cancellation has an optional reason. Confirmation starts validity on that day and grants the package lesson count.
+Pay by bank transfer or at the school office, then send the receipt and reference using your own email service. Set `app.school.email` in `application.properties` to the school contact address. Public contact lines and payment instructions use this same setting. It defaults to empty, so no email address is displayed until supplied. The old `ADMIN_EMAIL` / `app.payment.admin-email` setting is no longer used. Contact the school for its real bank details. **The system does not send email and does not upload receipts.** Administrators use Awaiting payment to confirm a receipt or cancel an unpaid request. Both actions use the shared confirmation dialog; cancellation has an optional reason. Confirmation starts validity on that day and grants the package lesson count.
 
 Enrollment `status` is `AWAITING_PAYMENT`, `PAID` or `CANCELLED`. The existing `paymentStatus` getter maps Paid to `PAID`, and both other states to `UNPAID`. References are derived from the permanent enrollment ID. Old saved receipts without the new state or reference still load as Paid; an explicitly old `UNPAID` receipt loads as Awaiting payment. Missing payment fields also default to Paid for old-format compatibility. Existing paid balances and expiry dates remain intact; no data files need deleting.
 
@@ -373,7 +464,7 @@ The student dashboard, booking header and enrollment cards now connect the packa
 
 Balances are stored on the student account, not on every receipt. Older receipts say **Historical enrollment — remaining balance not recorded**; current catalog lesson counts are labelled **Current package offering**, because original purchased lesson counts are not captured in receipts. Setting the account balance to zero clears its active package/enrollment IDs; with no active IDs and zero balance, the latest Paid receipt represents the exhausted package. Older Paid receipts still do not borrow its balance. Null validity says **Validity not recorded**. Missing packages say **Package unavailable (P001)** with their actual ID; a missing enrollment shows **Package unavailable** and type **Not recorded**.
 
-Display statuses are Active, Used up, Expired, Awaiting payment, Cancelled, Historical and Unavailable. Payment status remains visible separately. Unusable receipts do not offer a Book link. A fully requested Active package links to existing bookings instead of offering another lesson. Renewal wording is deliberately explicit: **Contact the school to renew. Buying another package is not available yet.** This display work does not implement renewal.
+Display statuses are Active, Used up, Expired, Awaiting payment, Cancelled, Historical and Unavailable. Payment status remains visible separately. Unusable receipts do not offer a Book link. A fully requested Active package links to existing bookings instead of offering another lesson. Batch A adds renewal: eligible Expired/Used up summaries link to packages, open lessons must be resolved first, and an existing renewal request links to My enrollments for payment instructions.
 
 
 Step 1 verification (9 November 2026): CSS build passed; `clean verify` completed **684 tests, 0 failures, 0 errors, 0 skipped**, BUILD SUCCESS. Student, instructor and admin display areas were inspected in Chrome at 1536 x 864; 25 HTTP assertions for normal and fallback states passed. See [the Step 1 verification and owner/file inventory](docs/VIVA_QA.md#step-1-verification-evidence--9-november-2026). The isolated demo was stopped and run-only demo variables cleared.

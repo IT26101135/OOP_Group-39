@@ -14,6 +14,7 @@ package com.drivingschool.instructor.service;
 import com.drivingschool.auth.model.Role;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.service.AuthSessionService;
+import com.drivingschool.auth.util.AccountWriteCoordinator;
 import com.drivingschool.booking.model.Booking;
 import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
@@ -76,68 +77,81 @@ public class InstructorScheduleService implements InstructorScheduleOperations {
 
     // Adds working hours only when their times are valid and do not overlap.
     // CRUD: CREATE - adds a new availability block and saves it
-    public synchronized Availability addAvailability(HttpServletRequest request,
+    public Availability addAvailability(HttpServletRequest request,
             DayOfWeek day, LocalTime start, LocalTime end) {
-        // Step 1: Validate the hours and check for an overlapping block.
-        String instructorId = requireInstructor(request).getId();
-        Availability checked = new Availability("H001", instructorId, day, start, end);
-        ensureNoOverlap(checked, null);
-        // Step 2: Give the checked block its permanent filing number and save it.
-        Availability block = new Availability(availability.nextId("H"), instructorId, day, start, end);
-        availability.save(block);
-        return block;
+        synchronized (AccountWriteCoordinator.class) {
+            // Step 1: Validate the hours and check for an overlapping block.
+            String instructorId = requireInstructor(request).getId();
+            Availability checked = new Availability("H001", instructorId, day, start, end);
+            ensureNoOverlap(checked, null);
+            // Step 2: Give the checked block its permanent filing number and save it.
+            Availability block = new Availability(availability.nextId("H"), instructorId, day, start, end);
+            availability.save(block);
+            return block;
+        }
     }
 
     // Edits owned working hours while preserving confirmed lessons and avoiding overlap.
     // CRUD: UPDATE - changes an existing availability block
-    public synchronized Availability updateAvailability(HttpServletRequest request,
+    public Availability updateAvailability(HttpServletRequest request,
             String id, DayOfWeek day, LocalTime start, LocalTime end) {
-        // Step 1: Find this instructor's block before considering changes.
-        String instructorId = requireInstructor(request).getId();
-        Availability current = ownBlock(instructorId, id);
-        Availability replacement = new Availability(id, instructorId, day, start, end);
-        // Step 2: Preserve confirmed lessons and reject overlapping hours.
-        ensureBlockHasNoConfirmedLessons(current);
-        ensureNoOverlap(replacement, id);
-        availability.update(replacement);
-        return replacement;
+        synchronized (AccountWriteCoordinator.class) {
+            // Step 1: Find this instructor's block before considering changes.
+            String instructorId = requireInstructor(request).getId();
+            Availability current = ownBlock(instructorId, id);
+            Availability replacement = new Availability(id, instructorId, day, start, end);
+            // Step 2: Preserve confirmed lessons and reject overlapping hours.
+            ensureBlockHasNoConfirmedLessons(current);
+            ensureNoOverlap(replacement, id);
+            availability.update(replacement);
+            return replacement;
+        }
     }
 
     // Records a future day off after checking for duplicate leave and confirmed lessons.
     // CRUD: CREATE - adds a new leave record and saves it
-    public synchronized InstructorLeave addLeave(HttpServletRequest request, LocalDate date, String reason) {
-        String instructorId = requireInstructor(request).getId();
-        // New requests must be today or later; stored historical records remain readable.
-        validateLeave(instructorId, date, null);
-        InstructorLeave leave = new InstructorLeave(leaves.nextId("L"), instructorId, date, reason);
-        leaves.save(leave);
-        return leave;
+    public InstructorLeave addLeave(HttpServletRequest request, LocalDate date, String reason) {
+        synchronized (AccountWriteCoordinator.class) {
+            String instructorId = requireInstructor(request).getId();
+            // New requests must be today or later; stored historical records remain readable.
+            validateLeave(instructorId, date, null);
+            InstructorLeave leave = new InstructorLeave(leaves.nextId("L"), instructorId, date, reason);
+            leaves.save(leave);
+            return leave;
+        }
     }
 
     // Changes an owned leave record after checking its new date is safe.
     // CRUD: UPDATE - changes an existing leave record
-    public synchronized InstructorLeave updateLeave(HttpServletRequest request,
+    public InstructorLeave updateLeave(HttpServletRequest request,
             String id, LocalDate date, String reason) {
-        String instructorId = requireInstructor(request).getId();
-        ownLeave(instructorId, id);
-        validateLeave(instructorId, date, id);
-        InstructorLeave replacement = new InstructorLeave(id, instructorId, date, reason);
-        leaves.update(replacement);
-        return replacement;
+        synchronized (AccountWriteCoordinator.class) {
+            String instructorId = requireInstructor(request).getId();
+            ownLeave(instructorId, id);
+            validateLeave(instructorId, date, id);
+            InstructorLeave replacement = new InstructorLeave(id, instructorId, date, reason);
+            leaves.update(replacement);
+            return replacement;
+        }
     }
 
     // Removes only a working block belonging to this instructor.
     // CRUD: DELETE - removes a availability block
     public void deleteAvailability(HttpServletRequest request, String id) {
-        ownBlock(requireInstructor(request).getId(), id);
-        availability.delete(id);
+        synchronized (AccountWriteCoordinator.class) {
+            Availability block = ownBlock(requireInstructor(request).getId(), id);
+            ensureBlockHasNoConfirmedLessons(block);
+            availability.delete(id);
+        }
     }
 
     // Removes only a leave record belonging to this instructor.
     // CRUD: DELETE - removes a leave record
     public void deleteLeave(HttpServletRequest request, String id) {
-        ownLeave(requireInstructor(request).getId(), id);
-        leaves.delete(id);
+        synchronized (AccountWriteCoordinator.class) {
+            ownLeave(requireInstructor(request).getId(), id);
+            leaves.delete(id);
+        }
     }
 
     // Keeps one teaching hour from appearing in two blocks on the same day.
@@ -166,6 +180,14 @@ public class InstructorScheduleService implements InstructorScheduleOperations {
             }
         }
         ensureDayHasNoConfirmedLessons(instructorId, date);
+        for (Booking booking : bookings.readAllStrict()) {
+            if (instructorId.equals(booking.getInstructorId())
+                    && booking.getStartTime().toLocalDate().equals(date)
+                    && booking.getStatus() == BookingStatus.PENDING) {
+                throw new ValidationException("You have an assigned lesson waiting for your decision on this day. "
+                        + "Ask an administrator to resolve it before adding leave.");
+            }
+        }
     }
 
     // Refuses leave if a student is already promised a lesson on that day.
@@ -187,7 +209,7 @@ public class InstructorScheduleService implements InstructorScheduleOperations {
                     && booking.getStartTime().getDayOfWeek() == block.getDayOfWeek()
                     && !booking.getStartTime().toLocalTime().isBefore(block.getStartTime())
                     && booking.getStartTime().toLocalTime().isBefore(block.getEndTime())) {
-                throw new ValidationException("Reschedule confirmed lessons before editing these working hours.");
+                throw new ValidationException("Ask an administrator to reschedule confirmed lessons before changing or removing these working hours.");
             }
         }
     }

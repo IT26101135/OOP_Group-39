@@ -20,12 +20,12 @@ CRUD     : See CRUD labels on the record operations.
     <link rel="icon" href="<c:url value='/images/favicon.svg' />" type="image/svg+xml">
     <link rel="stylesheet" href="<c:url value='/css/tailwind.css' />">
 </head>
-<body>
+<body class="ds-account-page">
 <%@ include file="/WEB-INF/views/common/navbar.jspf" %>
 <main id="main-content" class="ds-container ds-section ds-dashboard-shell">
     <%@ include file="/WEB-INF/views/common/dashboard-sidebar.jspf" %>
     <div class="ds-dashboard-content">
-        <p class="ds-eyebrow">EVERY LESSON MOVES YOU FORWARD</p>
+        <p class="ds-eyebrow">YOUR LESSON RECORD</p>
         <h1>My learning progress</h1>
         <%-- This block shows a page section. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
 <section class="mb-8 grid gap-4 sm:grid-cols-2" aria-label="Completed learning">
@@ -38,13 +38,13 @@ CRUD     : See CRUD labels on the record operations.
 <section aria-labelledby="feedback-heading">
             <h2 id="feedback-heading" class="mb-5">Instructor feedback</h2>
             <c:choose>
-                <c:when test="${empty progress.lessonRecords}"><div class="ds-empty-state"><h3>Your progress starts with a lesson</h3><p>Instructor notes and skill ratings will appear here after your lessons.</p><a class="ds-button mt-4" href="<c:url value='/bookings' />">View my bookings</a></div></c:when>
+                <c:when test="${empty progress.lessonRecords}"><div class="ds-empty-state"><h3>No lesson feedback yet</h3><p>Your instructor can add notes and skill ratings after a completed lesson.</p><a class="ds-button mt-4" href="<c:url value='/bookings' />">View my bookings</a></div></c:when>
                 <c:otherwise>
                     <div class="grid gap-5">
                     <c:forEach items="${progress.lessonRecords}" var="record">
                         <%-- This block shows one saved record. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
 <article class="ds-feature-card">
-                            <h3>Lesson <c:out value="${record.bookingId}" /></h3>
+                            <h3>Lesson <c:out value="${accountDisplay.lesson(record.bookingId)}" /></h3>
                             <p class="whitespace-pre-line"><c:out value="${record.notes}" /></p>
                             <%-- This block shows the saved details. StudentProfileController, StudentPasswordController or StudentProgressController supplies the page data. --%>
 <dl class="mt-5 grid gap-4 sm:grid-cols-2">
