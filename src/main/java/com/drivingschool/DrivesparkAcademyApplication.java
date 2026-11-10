@@ -19,7 +19,8 @@ import java.time.Clock;
 import java.time.ZoneId;
 
 @SpringBootApplication
-public class DrivesparkAcademyApplication {
+public class
+rivesparkAcademyApplication {
 
     // Gives all time-dependent rules the same Colombo clock.
     @Bean
@@ -33,3 +34,4 @@ public class DrivesparkAcademyApplication {
     }
 
 }
+

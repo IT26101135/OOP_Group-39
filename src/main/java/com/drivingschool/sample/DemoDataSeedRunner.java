@@ -1,14 +1,4 @@
 /**
-============================================================
-MEMBER   : IT26101132 - [Name]
-MODULE   : Vehicles and Sample Data
-FILE     : DemoDataSeedRunner.java
-WHAT IT DOES (simple words): Adds repeat-safe example people, lessons, vehicles and reviews.
-REAL-LIFE EXAMPLE: Like a fleet logbook showing which teaching cars need attention.
-OOP USED : See labelled classes and methods below; presentation files display their results
-CRUD     : CREATE, READ, UPDATE, DELETE for vehicles
-============================================================
-*/
 package com.drivingschool.sample;
 
 import com.drivingschool.auth.model.*;
