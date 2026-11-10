@@ -1,7 +1,6 @@
 package com.drivingschool.booking.service;
 
 import com.drivingschool.booking.model.Booking;
-import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.common.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +25,7 @@ class BookingConflictCheckerTest {
             String studentId,
             String instructorId,
             String vehicleId,
-            BookingStatus status,
+            Booking.BookingStatus status,
             LocalDateTime bookingStart,
             LocalDateTime bookingEnd) {
 
@@ -46,14 +45,14 @@ class BookingConflictCheckerTest {
     private Booking createPendingBooking() {
         return createBooking(
                 "B001", "S001", null, null,
-                BookingStatus.PENDING, start, end
+                Booking.BookingStatus.PENDING, start, end
         );
     }
 
     private Booking createConfirmedBooking() {
         return createBooking(
                 "B001", "S001", "I001", "V001",
-                BookingStatus.CONFIRMED, start, end
+                Booking.BookingStatus.CONFIRMED, start, end
         );
     }
 

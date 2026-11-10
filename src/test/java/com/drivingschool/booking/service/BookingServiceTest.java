@@ -7,7 +7,6 @@ import com.drivingschool.auth.model.Role;
 import com.drivingschool.auth.model.User;
 import com.drivingschool.auth.service.AuthSessionService;
 import com.drivingschool.booking.model.Booking;
-import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.booking.repository.BookingRepository;
 import com.drivingschool.learningpackage.api.EnrollmentLookup;
 import com.drivingschool.learningpackage.api.EnrollmentSummary;
@@ -111,7 +110,7 @@ class BookingServiceTest {
         assertEquals("EN001", result.getEnrollmentId());
         assertEquals(startTime, result.getStartTime());
         assertEquals(startTime.plusMinutes(60), result.getEndTime());
-        assertEquals(BookingStatus.PENDING, result.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, result.getStatus());
 
         assertNull(result.getInstructorId());
         assertNull(result.getVehicleId());
@@ -239,7 +238,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 3, 9, 0),
                 LocalDateTime.of(2026, 11, 3, 10, 0),
-                null, null, BookingStatus.PENDING,
+                null, null, Booking.BookingStatus.PENDING,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 
@@ -362,7 +361,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 5, 9, 30),
                 LocalDateTime.of(2026, 11, 5, 10, 30),
-                null, null, BookingStatus.PENDING,
+                null, null, Booking.BookingStatus.PENDING,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 
@@ -401,7 +400,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 3, 9, 0),
                 LocalDateTime.of(2026, 11, 3, 10, 0),
-                null, null, BookingStatus.CANCELLED,
+                null, null, Booking.BookingStatus.CANCELLED,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 
@@ -416,7 +415,7 @@ class BookingServiceTest {
         );
 
         assertEquals("B002", result.getId());
-        assertEquals(BookingStatus.PENDING, result.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, result.getStatus());
 
         verify(bookingRepository).save(result);
     }
@@ -442,7 +441,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 3, 9, 0),
                 LocalDateTime.of(2026, 11, 3, 10, 0),
-                "I001", "V001", BookingStatus.COMPLETED,
+                "I001", "V001", Booking.BookingStatus.COMPLETED,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 
@@ -481,7 +480,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 5, 9, 0),
                 LocalDateTime.of(2026, 11, 5, 10, 0),
-                null, null, BookingStatus.PENDING,
+                null, null, Booking.BookingStatus.PENDING,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 
@@ -496,7 +495,7 @@ class BookingServiceTest {
         );
 
         assertNotNull(result);
-        assertEquals(BookingStatus.PENDING, result.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, result.getStatus());
 
         verify(bookingRepository).save(result);
     }
@@ -707,7 +706,7 @@ class BookingServiceTest {
                 "B001", "S001", "EN001",
                 LocalDateTime.of(2026, 11, 3, 9, 0),
                 LocalDateTime.of(2026, 11, 3, 10, 0),
-                "I001", "V001", BookingStatus.CONFIRMED,
+                "I001", "V001", Booking.BookingStatus.CONFIRMED,
                 LocalDateTime.of(2026, 11, 1, 9, 0)
         );
 

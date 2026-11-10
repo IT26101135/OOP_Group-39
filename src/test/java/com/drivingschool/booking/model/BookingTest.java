@@ -40,7 +40,7 @@ class BookingTest {
                 end,
                 null,
                 null,
-                BookingStatus.PENDING,
+                Booking.BookingStatus.PENDING,
                 created
         );
     }
@@ -89,7 +89,7 @@ class BookingTest {
         assertEquals("E001", booking.getEnrollmentId());
         assertEquals(start, booking.getStartTime());
         assertEquals(end, booking.getEndTime());
-        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, booking.getStatus());
         assertNull(booking.getInstructorId());
         assertNull(booking.getVehicleId());
         assertEquals(created, booking.getCreatedAt());
@@ -100,7 +100,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B000", "S001", "E001",
                         start, end, null, null,
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -108,7 +108,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S000", "E001",
                         start, end, null, null,
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -116,7 +116,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", " ",
                         start, end, null, null,
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -124,7 +124,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         end, start, null, null,
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -132,7 +132,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, start, null, null,
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -140,7 +140,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, "I001", "V001",
-                        BookingStatus.PENDING, created));
+                        Booking.BookingStatus.PENDING, created));
     }
 
     @Test
@@ -148,7 +148,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, null, null,
-                        BookingStatus.CONFIRMED, created));
+                        Booking.BookingStatus.CONFIRMED, created));
     }
 
     @Test
@@ -156,7 +156,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, "I001", null,
-                        BookingStatus.CONFIRMED, created));
+                        Booking.BookingStatus.CONFIRMED, created));
     }
 
     @Test
@@ -164,7 +164,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, null, "V001",
-                        BookingStatus.CONFIRMED, created));
+                        Booking.BookingStatus.CONFIRMED, created));
     }
 
     @Test
@@ -173,7 +173,7 @@ class BookingTest {
 
         booking.confirm("I001", "V001");
 
-        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.CONFIRMED, booking.getStatus());
         assertEquals("I001", booking.getInstructorId());
         assertEquals("V001", booking.getVehicleId());
     }
@@ -184,7 +184,7 @@ class BookingTest {
 
         booking.complete();
 
-        assertEquals(BookingStatus.COMPLETED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.COMPLETED, booking.getStatus());
     }
 
     @Test
@@ -193,7 +193,7 @@ class BookingTest {
 
         booking.cancel();
 
-        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.CANCELLED, booking.getStatus());
         assertNull(booking.getInstructorId());
         assertNull(booking.getVehicleId());
     }
@@ -204,7 +204,7 @@ class BookingTest {
 
         booking.cancel();
 
-        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.CANCELLED, booking.getStatus());
         assertEquals("I001", booking.getInstructorId());
         assertEquals("V001", booking.getVehicleId());
     }
@@ -216,7 +216,7 @@ class BookingTest {
         assertThrows(ValidationException.class,
                 () -> booking.confirm("I002", "V002"));
 
-        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.CONFIRMED, booking.getStatus());
         assertEquals("I001", booking.getInstructorId());
         assertEquals("V001", booking.getVehicleId());
     }
@@ -227,7 +227,7 @@ class BookingTest {
 
         assertThrows(ValidationException.class, booking::complete);
 
-        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, booking.getStatus());
     }
 
     @Test
@@ -237,7 +237,7 @@ class BookingTest {
 
         assertThrows(ValidationException.class, booking::cancel);
 
-        assertEquals(BookingStatus.COMPLETED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.COMPLETED, booking.getStatus());
     }
 
     @Test
@@ -251,7 +251,7 @@ class BookingTest {
         assertThrows(ValidationException.class, booking::complete);
         assertThrows(ValidationException.class, booking::cancel);
 
-        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        assertEquals(Booking.BookingStatus.CANCELLED, booking.getStatus());
         assertEquals("I001", booking.getInstructorId());
         assertEquals("V001", booking.getVehicleId());
     }
@@ -265,7 +265,7 @@ class BookingTest {
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(BookingStatus.PENDING, restored.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, restored.getStatus());
         assertNull(restored.getInstructorId());
         assertNull(restored.getVehicleId());
         assertBookingDataEquals(original, restored);
@@ -280,7 +280,7 @@ class BookingTest {
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(BookingStatus.CONFIRMED, restored.getStatus());
+        assertEquals(Booking.BookingStatus.CONFIRMED, restored.getStatus());
         assertBookingDataEquals(original, restored);
     }
 
@@ -294,7 +294,7 @@ class BookingTest {
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(BookingStatus.COMPLETED, restored.getStatus());
+        assertEquals(Booking.BookingStatus.COMPLETED, restored.getStatus());
         assertBookingDataEquals(original, restored);
     }
 
@@ -308,7 +308,7 @@ class BookingTest {
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(BookingStatus.CANCELLED, restored.getStatus());
+        assertEquals(Booking.BookingStatus.CANCELLED, restored.getStatus());
         assertEquals("I001", restored.getInstructorId());
         assertEquals("V001", restored.getVehicleId());
         assertBookingDataEquals(original, restored);
@@ -324,7 +324,7 @@ class BookingTest {
         String json = mapper.writeValueAsString(original);
         Booking restored = mapper.readValue(json, Booking.class);
 
-        assertEquals(BookingStatus.CANCELLED, restored.getStatus());
+        assertEquals(Booking.BookingStatus.CANCELLED, restored.getStatus());
         assertNull(restored.getInstructorId());
         assertNull(restored.getVehicleId());
         assertBookingDataEquals(original, restored);
@@ -359,7 +359,7 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, null, null,
-                        BookingStatus.COMPLETED, created));
+                        Booking.BookingStatus.COMPLETED, created));
     }
 
     @Test
@@ -369,7 +369,7 @@ class BookingTest {
         assertThrows(ValidationException.class,
                 () -> booking.confirm("I000", "V001"));
 
-        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, booking.getStatus());
         assertNull(booking.getInstructorId());
         assertNull(booking.getVehicleId());
     }
@@ -381,7 +381,7 @@ class BookingTest {
         assertThrows(ValidationException.class,
                 () -> booking.confirm("I001", "V000"));
 
-        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        assertEquals(Booking.BookingStatus.PENDING, booking.getStatus());
         assertNull(booking.getInstructorId());
         assertNull(booking.getVehicleId());
     }
@@ -391,12 +391,12 @@ class BookingTest {
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, "INVALID", "V001",
-                        BookingStatus.CONFIRMED, created));
+                        Booking.BookingStatus.CONFIRMED, created));
 
         assertThrows(ValidationException.class, () ->
                 new Booking("B001", "S001", "E001",
                         start, end, "I001", "INVALID",
-                        BookingStatus.CONFIRMED, created));
+                        Booking.BookingStatus.CONFIRMED, created));
     }
 
     @Test
