@@ -4,6 +4,7 @@ package com.drivingschool.booking.repository;
 
 import com.drivingschool.DrivesparkAcademyApplication;
 import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -60,7 +61,7 @@ class BookingRepositorySpringIntegrationTest {
                     start.plusHours(1),
                     null,
                     null,
-                    Booking.BookingStatus.PENDING,
+                    BookingStatus.PENDING,
                     createdAt
             );
 
