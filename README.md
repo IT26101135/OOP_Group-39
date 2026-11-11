@@ -369,24 +369,6 @@ Total time: 01:00 min
 
 `npm run build:css`, compile, documentation links and `git diff --check` also passed. New Phase 5 tests add student account CRUD/history protection (6) and package lifecycle/deletion protection (4). Existing tests were not weakened or changed. Accessibility evidence and its limits are in [the checklist](docs/TEST_CHECKLIST.md); this is not the complete Phase 6 role audit.
 
-## Premium UI maintenance and verification
-
-Shared presentation owner: **IT26101136** (`app.css`, generated `tailwind.css`, `site.js`, layout fragments, local font/license and image guide). Root README and test evidence owner: **IT26101135**. Report stylesheet owner: **IT26101137**. Existing module ownership remains unchanged.
-
-For CSS/template changes, run `npm run build:css`, then restart the app. For the full Java suite, use `.\mvnw.cmd clean verify`. Include generated `tailwind.css`, the local font and its license in the eventual member PR; exclude `target/` and `node_modules/`. No Git write commands are performed by this workflow.
-
-Phase E verification is recorded in [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md). Accessibility tooling is a temporary development check and is not loaded by the application. Member names remain `[Name]` until the group supplies them.
-
-### Final restyle verification (2026-11-08)
-
-```text
-Tests run: 575, Failures: 0, Errors: 0, Skipped: 0
-BUILD SUCCESS
-Total time: 57.501 s
-```
-
-The final browser audit checked 32 page/role combinations at 375/768/1280px, plus expanded controls and error pages. It found no automated WCAG-tagged violations in the checked final states. Print previews/PDFs and CSV export were checked. Screen-reader testing and full measured contrast over every gradient state remain UNVERIFIED; see the checklist for the exact scope. No tests were changed.
-
 ### Manual-payment demonstration
 
 1. Register and log in as a new Active student in temporary demo data.
@@ -456,38 +438,6 @@ The following credits are supplied for the intended photographs. As checked on 2
 | vehicle-motorcycle.webp | PRESENT | 42800 | 1200 × 800 | Photo by Raj Pillay on Pexels (Pexels License) - https://www.pexels.com/photo/triumph-street-triple-765-r-27704082/ |
 
 
-### Package and lesson information in role pages
-
-The student dashboard, booking header and enrollment cards now connect the package name/type to lesson usage, validity and a status badge. Requested counts Pending bookings (including assigned requests awaiting instructor approval); Confirmed is counted separately. Completed counts saved Completed bookings for that exact enrollment. Cancelling and no-show do not count as completed lessons. Instructor and admin booking rows resolve the package through the booking's own enrollment, including history.
-
-`EnrollmentPresentationService` is read-only. It loads enrollments and packages once per presentation request into ID maps, and uses only authorized booking lists for displayed rows. `EnrollmentUsageView` is a display DTO, separate from the existing `learningpackage/api/EnrollmentSummary` contract. No persistence format or payment/booking transition was changed.
-
-Balances are stored on the student account, not on every receipt. Older receipts say **Historical enrollment — remaining balance not recorded**; current catalog lesson counts are labelled **Current package offering**, because original purchased lesson counts are not captured in receipts. Setting the account balance to zero clears its active package/enrollment IDs; with no active IDs and zero balance, the latest Paid receipt represents the exhausted package. Older Paid receipts still do not borrow its balance. Null validity says **Validity not recorded**. Missing packages say **Package unavailable (P001)** with their actual ID; a missing enrollment shows **Package unavailable** and type **Not recorded**.
-
-Display statuses are Active, Used up, Expired, Awaiting payment, Cancelled, Historical and Unavailable. Payment status remains visible separately. Unusable receipts do not offer a Book link. A fully requested Active package links to existing bookings instead of offering another lesson. Batch A adds renewal: eligible Expired/Used up summaries link to packages, open lessons must be resolved first, and an existing renewal request links to My enrollments for payment instructions.
 
 
-Step 1 verification (9 November 2026): CSS build passed; `clean verify` completed **684 tests, 0 failures, 0 errors, 0 skipped**, BUILD SUCCESS. Student, instructor and admin display areas were inspected in Chrome at 1536 x 864; 25 HTTP assertions for normal and fallback states passed. See [the Step 1 verification and owner/file inventory](docs/VIVA_QA.md#step-1-verification-evidence--9-november-2026). The isolated demo was stopped and run-only demo variables cleared.
 
-
-### Read-only booking details — IT26101134
-
-Students and administrators can choose **View booking details** on their existing booking cards. The new GET `/bookings/{bookingId}/details` page shows the lesson time, status, booking-linked package/type/validity, enrollment, requested/assigned instructor, vehicle, queue position (only while unassigned Pending), and any rejection/cancellation reason. It links back to the correct role's booking list; changes remain on the existing pages.
-
-The owning student and administrators may read the page. Another student or an instructor gets403; signed-out visitors are sent to login. The service checks access as well as the controller's login annotation. Missing package/enrollment references retain safe display fallbacks. The new page is READ only and does not change the FIFO queue, booking status or lesson balance. Existing routes/form fields are unchanged.
-
-Verification: `clean verify` on9 November2026 completed **692 tests, 0 failures, 0 errors, 0 skipped**, BUILD SUCCESS. Eleven isolated-demo HTTP assertions passed, including unchanged record/counter files. Details and file ownership are recorded in docs/VIVA_QA.md. The demo was stopped and its run-only variables cleared.
-
-
-### Approved file cleanup
-
-Removed the unused shared fragments pagination.jspf, skeleton.jspf, search-bar.jspf and breadcrumbs.jspf. Existing page-specific search/breadcrumb controls remain. Removed the obsolete root build.log and 44 .gitkeep files in populated src directories. Kept data/.gitkeep and the placeholder in the otherwise empty student/repository directory. All Java classes, tests, routes, security, required algorithms and sample data remain unchanged by this cleanup.
-
-
-Cleanup verification (9 November 2026): `.\mvnw.cmd clean verify` completed **692 tests, 0 failures, 0 errors, 0 skipped — BUILD SUCCESS**, including WAR packaging. All 241 Java files matched their pre-cleanup SHA-256 hashes. No tests were changed. See the dated cleanup evidence in docs/VIVA_QA.md.
-
-## Java cleanup (2026-11-09)
-
-Unused instructor interval/lookup, vehicle lookup and enrollment lookup classes were removed. Working CRUD pages, file storage, OOP interfaces, the manual instructor bubble sort and manual booking queue remain. The empty legacy `instructor-availability.txt` sample and its counter are retained for compatibility and are not read by the application. See the [removal and verification record](docs/JAVA_SIMPLIFICATION.md).
-
-Cleanup verification: `clean verify` passed **646 tests, 0 failures, 0 errors, 0 skipped**. The 46-test decrease is exclusively tests of removed unused code. All **45 isolated HTTP checks passed**. No visual change was made; browser appearance was not rechecked.
