@@ -3,6 +3,7 @@
 package com.drivingschool.booking.repository;
 
 import com.drivingschool.booking.model.Booking;
+import com.drivingschool.booking.model.BookingStatus;
 import com.drivingschool.common.exception.DuplicateRecordException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +48,7 @@ class BookingRepositoryTest {
                 start.plusHours(1),
                 null,
                 null,
-                Booking.BookingStatus.PENDING,
+                BookingStatus.PENDING,
                 LocalDateTime.of(2026, 10, 30, 10, 0)
         );
     }
@@ -70,7 +71,7 @@ class BookingRepositoryTest {
         assertEquals("EN001", saved.getEnrollmentId());
         assertEquals(booking.getStartTime(), saved.getStartTime());
         assertEquals(booking.getEndTime(), saved.getEndTime());
-        assertEquals(Booking.BookingStatus.PENDING, saved.getStatus());
+        assertEquals(BookingStatus.PENDING, saved.getStatus());
         assertNull(saved.getInstructorId());
         assertNull(saved.getVehicleId());
         assertEquals(booking.getCreatedAt(), saved.getCreatedAt());
@@ -92,7 +93,7 @@ class BookingRepositoryTest {
                 start.plusHours(1),
                 "I001",
                 "V001",
-                Booking.BookingStatus.CONFIRMED,
+                BookingStatus.CONFIRMED,
                 LocalDateTime.of(2026, 10, 30, 10, 0)
         );
 
@@ -104,7 +105,7 @@ class BookingRepositoryTest {
 
         assertEquals("I001", saved.getInstructorId());
         assertEquals("V001", saved.getVehicleId());
-        assertEquals(Booking.BookingStatus.CONFIRMED, saved.getStatus());
+        assertEquals(BookingStatus.CONFIRMED, saved.getStatus());
     }
 
     @Test
@@ -131,7 +132,7 @@ class BookingRepositoryTest {
         assertEquals(booking.getEndTime(), saved.getEndTime());
         assertEquals(booking.getCreatedAt(), saved.getCreatedAt());
 
-        assertEquals(Booking.BookingStatus.CONFIRMED, saved.getStatus());
+        assertEquals(BookingStatus.CONFIRMED, saved.getStatus());
         assertEquals("I001", saved.getInstructorId());
         assertEquals("V001", saved.getVehicleId());
     }
